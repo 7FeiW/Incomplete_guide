@@ -1,0 +1,38 @@
+build/
+*.egg-info/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+.pytest_cache
+# don't track cython generated c file
+src/frag_gnn/frag/compute_frags.c
+data/
+wandb/
+figs/
+extra/
+*.code-workspace
+jobs/
+slurm_scripts/
+# default virtualenv on CC
+FRAG-GNN-GPU2/
+FRAG-GNN-GPU*/
+python_env/
+tmp_ckpt/
+job_id/
+# VSCode
+*.code-workspace
+saved_ckpts
+saved_ckpt
+metrics.pickle
+src/frag_gnn/massformer/algos.c
+cysignals_crash_logs
+python_env/*
+data
+debug_output
+
+containers/apptainer_images
+containers/apptainer
+model_eval
+ckpts
