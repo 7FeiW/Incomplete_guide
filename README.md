@@ -2,7 +2,7 @@
 
 ## What is this
 
-This is a demo Python code repository for Python-based computational research. It demonstrates a workflow for research projects and includes aspects for releasing projects as Python wheels (Python packages) or weights-only models (ML projects). Note: this will not cover web-based releases. It is still a work in progress.
+This is a demo Python code repository for Python-based computational research. This is a incomplete guide (and very working in progress) for python research codebase from research scientist and programer's perspective.
 
 ## Table of Contents
 1. [What is this](#what-is-this)
@@ -58,7 +58,7 @@ pip install git+file///path/to/your/git/project/
 
 ### Unit Test and Pytest Framework
 
-* I will add slides from CMPUT174/175 once I find them
+* I will add more stuff once I find them
 * For now, check out (<https://docs.pytest.org/en/stable/>), and also nice online resources here (<https://realpython.com/pytest-python-testing/>) and here (<https://www.datacamp.com/tutorial/pytest-tutorial-a-hands-on-guide-to-unit-testing>)
 
 ### Code Release (if you have a src directory)
