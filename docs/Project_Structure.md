@@ -76,8 +76,7 @@ Regardless of the project size, here is a list of things you should consider:
   - Creating human-readable, shareable reports.
 - Use **configs** (in `configs`) for:
   - Configuration for each expremients, use git to keep track of them.
-- If data file size is large, keep data or generated files in `data`, and exclude them from the git repository (add them to `.gitignore`).
-- Document your code and project structure in (`README.md` and `docs`).
+
 - Use **tests** for unit tests (in `test`). 
   - You can use pytest (<https://docs.pytest.org/en/stable/>). 
   - This is highly recommended if you have complicated projects. 
@@ -97,7 +96,9 @@ Regardless of the project size, here is a list of things you should consider:
     - Place these additional files/scripts in `setup_scripts/`, such as `requirements_preprocessing.txt`, `requirements_training.txt`, or `setup_env_hpc.sh`.
     - This enables selective installation and environment setup, which is often critical when certain dependencies conflict or are only available on some platforms.
 - Use **.gitignore** to exclude files you don't want tracked by git, e.g., data files, caches.
+  - If data file size is large, keep data or generated files in `data`, and exclude them from the git repository.
 - Use **.gitattributes** for
   - Define default line endings, very useful for cross-platform development, e.g., `LF` vs `CRLF`
   - Marking files as binary to avoid unwanted diffs or merges
   - Customizing merge and diff behavior
+- Document your code and project structure in (`README.md` and `docs`).
