@@ -98,6 +98,6 @@ Regardless of the project size, here is a list of things you should consider:
     - This enables selective installation and environment setup, which is often critical when certain dependencies conflict or are only available on some platforms.
 - Use **.gitignore** to exclude files you don't want tracked by git, e.g., data files, caches.
 - Use **.gitattributes** for
-  - define default line endings, very useful for cross-platform development, e.g., `LF` vs `CRLF`
+  - Define default line endings, very useful for cross-platform development, e.g., `LF` vs `CRLF`
   - Marking files as binary to avoid unwanted diffs or merges
   - Customizing merge and diff behavior
