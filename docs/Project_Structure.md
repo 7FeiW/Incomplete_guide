@@ -7,7 +7,8 @@ Use this when you need to:
 my_project/
 ├── README.md             # Project description and instructions
 ├── requirements.txt      # Dependencies for the project
-├── .gitignore            # Files/directories to ignore in version control
+├── .gitignore            # Files to ignore in version control
+├── .gitattributes        # Files to Managing file encodings and Customizing merge and diff behavior
 ├── main.py               # Main script for running the project
 ├── other_scripts.py      # Additional utility scripts
 ├── notebook.ipynb        # Jupyter notebook for analysis or visualization
@@ -48,7 +49,8 @@ my_project/
 │   ├── hpc_setup.sh
 │   └── linux_requirement.txt
 ├── configs/              # configuretions
-├── .gitignore            # Files/directories to ignore in version control
+├── .gitignore            # File to ignore in version control
+├── .gitattributes        # File to Managing file encodings and Customizing merge and diff behavior 
 ├── pyproject.toml        # Modern package configuration (e.g., Poetry, Hatch)
 ├── requirements.txt      # Project dependencies (can be generated from pyproject.toml)
 ├── README.md             # Project description and instructions
@@ -94,3 +96,8 @@ Regardless of the project size, here is a list of things you should consider:
     - In complex/restricted environments (like HPCs), you may need multiple requirements files or customized setup scripts for different job types (e.g., preprocessing, training, visualization).
     - Place these additional files/scripts in `setup_scripts/`, such as `requirements_preprocessing.txt`, `requirements_training.txt`, or `setup_env_hpc.sh`.
     - This enables selective installation and environment setup, which is often critical when certain dependencies conflict or are only available on some platforms.
+- Use **.gitignore** to exclude files you don't want tracked by git, e.g., data files, caches.
+- Use **.gitattributes** for
+  - define default line endings, very useful for cross-platform development, e.g., `LF` vs `CRLF`
+  - Marking files as binary to avoid unwanted diffs or merges
+  - Customizing merge and diff behavior
