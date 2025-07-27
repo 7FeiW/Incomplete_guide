@@ -1,5 +1,20 @@
 # FW's Incomplete Guide to Python Research Codebase
 
+## Table of Contents
+1. [What is this](#what-is-this)
+2. [How to Manage Your Code](#how-to-manage-your-code)
+   - [Coding Convention](docs/Coding_Convention.md)
+   - [Project Structure](docs/Project_Structure.md)
+   - [Version Control and Git](#version-control-and-git)
+   - [PIP and Conda](#pip-and-conda)
+   - [Unit Test and Pytest Framework](#unit-test-and-pytest-framework)
+   - [Code Release](#code-release)
+3. [On Topics of Code Performance](#on-topics-of-code-performance)
+   - [Things About Python Performance](#things-about-python-performance)
+   - [Other Things About Code Performance](#other-things-about-code-performance)
+4. [Logging and Monitoring](#logging-and-monitoring)
+5. [Deploy and Run on Remote Compute](#deploy-and-run-on-remote-compute)
+
 ## What is this
 
 This is a demo Python code repository for Python-based computational research. It demonstrates a workflow for research projects and includes aspects for releasing projects as Python wheels (Python packages) or weights-only models (ML projects). Note: this will not cover web-based releases. It is still a work in progress.
@@ -246,7 +261,13 @@ To assess whether your code is CPU-bound, GPU-bound, or memory-bound, you can us
 
 ### Logging
 
-Logs help identify issues by providing a record of events, errors, and system behaviors. Logs should be in different tiers.
+Logs help identify issues by providing a record of events, errors, and system behaviors. Logs should be in different tiers:
+
+- **Debug Logs**: Provide detailed information, typically of interest only when diagnosing problems.
+- **Info Logs**: Confirm that things are working as expected.
+- **Warning Logs**: Indicate that something unexpected happened, or indicative of some problem in the near future (e.g., ‘disk space low’). The software is still working as expected.
+- **Error Logs**: Indicate that due to a more serious problem, the software has not been able to perform some function.
+- **Critical Logs**: Indicate a serious error, indicating that the program itself may be unable to continue running.
 
 ### Monitoring
 
@@ -254,22 +275,22 @@ Logs help identify issues by providing a record of events, errors, and system be
 
 ### Access to Git Repo
 
-1. Create a different SSH key `mykey2` and add it to your Bitbucket account
-   1.1 For Bitbucket, URL: <https://bitbucket.org/account/settings/ssh-keys/>
-   1.2 In case you need help on how to create a key: <https://support.atlassian.com/bitbucket-cloud/docs/configure-ssh-and-two-step-verification/>
-2. Upload to `~/.ssh/` directory and change file permission to 600 using `chmod 600 mykey2`
+1. Create a different SSH key `mykey2` and add it to your Bitbucket account:
+   - For Bitbucket, URL: <https://bitbucket.org/account/settings/ssh-keys/>
+   - In case you need help on how to create a key: <https://support.atlassian.com/bitbucket-cloud/docs/configure-ssh-and-two-step-verification/>
+2. Upload to `~/.ssh/` directory and change file permission to 600 using `chmod 600 mykey2`.
 3. Edit `~/.ssh/config` (create one if not there):
-   3.1 For Bitbucket:
-   ```bash
-   Host bitbucket.org
-   HostName bitbucket.org
-   IdentityFile ~/.ssh/mykey2
-   IdentitiesOnly yes
-   ```
-   3.2 For GitHub, change this text to:
-   ```bash
-   Host github.com
-   HostName github.com
-   IdentityFile ~/.ssh/mykey2
-   IdentitiesOnly yes
-   ```
+   - For Bitbucket:
+     ```bash
+     Host bitbucket.org
+     HostName bitbucket.org
+     IdentityFile ~/.ssh/mykey2
+     IdentitiesOnly yes
+     ```
+   - For GitHub, change this text to:
+     ```bash
+     Host github.com
+     HostName github.com
+     IdentityFile ~/.ssh/mykey2
+     IdentitiesOnly yes
+     ```
