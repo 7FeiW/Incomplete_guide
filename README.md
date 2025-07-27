@@ -1,5 +1,9 @@
 # FW's Incomplete Guide to Python Research Codebase
 
+## What is this
+
+This is a demo Python code repository for Python-based computational research. It demonstrates a workflow for research projects and includes aspects for releasing projects as Python wheels (Python packages) or weights-only models (ML projects). Note: this will not cover web-based releases. It is still a work in progress.
+
 ## Table of Contents
 1. [What is this](#what-is-this)
 2. [How to Manage Your Code](#how-to-manage-your-code)
@@ -14,110 +18,6 @@
    - [Other Things About Code Performance](#other-things-about-code-performance)
 4. [Logging and Monitoring](#logging-and-monitoring)
 5. [Deploy and Run on Remote Compute](#deploy-and-run-on-remote-compute)
-
-## What is this
-
-This is a demo Python code repository for Python-based computational research. It demonstrates a workflow for research projects and includes aspects for releasing projects as Python wheels (Python packages) or weights-only models (ML projects). Note: this will not cover web-based releases. It is still a work in progress.
-
-## How to Manage Your Code
-
-### Coding Convention
-
-
-* Also check this git repo if you need another example for setup.py and setup.cfg (https://github.com/pypa/sampleproject)
-
-#### A crash course on naming convention
-
-> "A Foolish Consistency is the Hobgoblin of Little Minds" - TarkaDaal
-
-PEP8 is the *official* naming standard for Python code (<https://peps.python.org/pep-0008/>). Follow the guideline, but tweak it for your specific needs.
-
-Function and variable names should follow **snake_case** and clearly describe what the function does
-   * Use lowercase with words separated by underscores: use `do_something()`, not `dosomething()`, use `training_data` not `trainingdata`
-   * Use longer, more descriptive names over abbreviations, e.g., `get_data()` instead of `data()` or `gd()`, `training_split()` instead of `tsplit`
-   * The name should NOT be ambiguous: do not use `val()`, `data()`, `process()`, `data`
-   * Function names should describe what the function does: use `calculate_tax()` instead of `tax()`
-
-Class names should follow **PascalCase**
-   * Use `MyClass` not `my_class` or `myClass`
-   * If class names contain an acronym, use capitalized letters for acronyms, e.g., `CUDAError`
-
-Constants
-   * Use all uppercase letters and separate words with underscores, e.g., `MAX_RETRIES`
-
-Modules and Packages
-   * Use short, all-lowercase names, e.g., `util` or `math`
-   
-Special Names - These are something you should be aware of at least; use leading or trailing `_` with caution
-   * Names with a single leading underscore `_variable` indicate "internal use" or "protected" members. If you don't know what private methods are, check out [this guide](https://www.datacamp.com/tutorial/python-private-methods-explained)
-   * Names with double leading underscores `__variable` trigger name mangling in classes - Python will rename this to `Class__variable`
-   * Names with double leading and trailing underscores `__init__`, `__str__` are reserved for special methods
-
-Here is a table of examples:
-
-|Entity	|Convention	|Example|
-| ------- |  ------- |  ------- |
-|Variable	|snake_case	|user_id|
-|Function	|snake_case	|get_user_data|
-|Class	|CapWords (PascalCase)	|UserProfile|
-|Constant	|UPPER_CASE_WITH_UNDERSCORES	|MAX_RETRIES|
-|Module	|lowercase (underscores optional)	|data_utils.py|
-|Package	|lowercase (no underscores)	|datapackage|
-|Exception	|CapWords + 'Error'	|InputValidationError|
-
-#### A crash course on documentation and type hint
-
-PEP257 (<https://peps.python.org/pep-0257/>) is the *official* standard for Python documentation. Follow the guideline, but tweak it for your specific needs
-   * TODO: add something here
-
-### Project Structure
-
-| components                                | Develop New ML method | Run ML method | Develop Full Package |
-| ----------------------------------------- | --------------------- | ------------- | -------------------- |
-| `setup_scripts` or `requirement.txt` | ☑                    | ☑            | ☑                   |
-| `preprocessing_scripts`                 | ☑                    | ☑            |                      |
-| `scripts`                              | ☑                    | ☑            |                      |
-| `postprocessing`                        |                       |               |                      |
-| `data`                                  | ☑                    | ☑            |                      |
-| `notebooks`                             |                       |               |                      |
-| `.gitignore`                            | ☑                    | ☑            | ☑                   |
-| `.gitattributes`                        | ☑                    | ☑            | ☑                   |
-| `src`                                  | ☑                    |               | ☑                   |
-| `setup.py`                              | ☑                    |               | ☑                   |
-| `tests`                                 |                       |               | ☑                   |
-| `dist`                                  |                       |               |                      |
-
-#### For ease of life, we will organize this project into the following directories
-
-`setup_scripts` or `requirement.txt`: `setup_scripts` is the location for environment setups. Use bash scripts to define Python libraries you need. `requirement.txt` is environment setup for pip or conda. Be careful with pip or conda generated `requirement.txt`, as this may break in a cross-platform setup. Use one `requirement.txt` in the main directory if you are developing a public-facing package, use multiple ones in the `setup_scripts` if you need to run this code on restricted Python environments such as some HPC.
-
-`preporcessing_scripts`:This directory is location for  preprocessing scripts goes. Number each of your task, and add documentation eg. task 1 is doing `<something>` and its expecting `<input>` will `<output>`
-
-`scripts`: This is the place where training and evaluation scripts go.
-
-`postprocessing`: This directory is location for postprocessing scripts goes. Number each of your task, and add documentation eg. task 1 is doing `<something>` and its expecting `<input>` will `<output>`
-
-`data`: This directory is the location for data.
-
-`notebooks`: This directory is the location for Jupyter notebooks. Use notebooks for data analysis and plotting. Do not use this for model training. It is hard to compare.
-
-`dist`: Where dist files will be, only use this if you want to release this as a pip install package.
-
-#### Useful git files
-
-`.gitignore`: Use this file to exclude files you don't want tracked by git, e.g., data files, caches.
-
-`.gitattributes`: Use this to define default line endings, very useful for cross-platform development, e.g., `LF` vs `CRLF`.
-
-#### For Python package development
-
-**This is needed if you want to develop a Python package or your project is very complicated, e.g., complicated importing**
-
-`src`: This directory is the location for Python packages if you don't want to place them directly in the project root. I prefer this way, as placing them directly in the project root gives me a headache. If you wish to use other approaches, check out my other repo at (<https://bitbucket.org/wishartlab/cfm-toolkit/src/master/?search_id=3487d7be-19a5-481c-bc3c-bd50849f69ff>).
-
-`setup.py`: A file that you include in the root of your project, which contains information about your package and its dependencies. The file is used by pip, the package installer for Python, to install your package and its dependencies.
-
-`tests`: This directory is the location for unit tests. You can use pytest (<https://docs.pytest.org/en/stable/>). This is highly recommended if you have complicated projects. For more details...
 
 ### Version Control and Git
 
