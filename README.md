@@ -16,7 +16,7 @@ This is a demo Python code repository for Python-based computational research. T
 3. [On Topics of Code Performance](#on-topics-of-code-performance)
    - [Things About Python Performance](#things-about-python-performance)
    - [Other Things About Code Performance](#other-things-about-code-performance)
-4. [Logging and Monitoring](#logging-and-monitoring)
+4. [Logging and Monitoring](docs/Logging.md)
 5. [Deploy and Run on Remote Compute](#deploy-and-run-on-remote-compute)
 
 ### Version Control and Git
@@ -156,20 +156,6 @@ To assess whether your code is CPU-bound, GPU-bound, or memory-bound, you can us
 2. **Dataloader**: One of the more common bottlenecks in GPU-accelerated machine learning tasks is in fact the dataloader, the part of the program that reads data from hard drives and loads them into system memory and GPU memory. A slow dataloader often results in lower GPU usage, since the GPU is waiting for data to be transferred from hard drive/system RAM to VRAM.
 3. **Know Your Hardware**: Understanding what the best hardware for your task is always important. Not all GPUs and CPUs are equal. In terms of CPUs, keep in mind some CPUs have faster AVX2 and/or AVX512 support. In terms of GPUs, some later models will support TF32 and BF16. If your program can take advantage of them, it will lead to 2x to 100x speed increases on the correct hardware.
 4. **Evaluation Code**: While not very common, evaluation step code can also be a bottleneck. Keep in mind that evaluation is performed after each training epoch and would take a significant amount of time. Thus, pick only necessary metrics to monitor during the training process, while performing full-scale evaluation after training is finished.
-
-## Logging and Monitoring
-
-### Logging
-
-Logs help identify issues by providing a record of events, errors, and system behaviors. Logs should be in different tiers:
-
-- **Debug Logs**: Provide detailed information, typically of interest only when diagnosing problems.
-- **Info Logs**: Confirm that things are working as expected.
-- **Warning Logs**: Indicate that something unexpected happened, or indicative of some problem in the near future (e.g., ‘disk space low’). The software is still working as expected.
-- **Error Logs**: Indicate that due to a more serious problem, the software has not been able to perform some function.
-- **Critical Logs**: Indicate a serious error, indicating that the program itself may be unable to continue running.
-
-### Monitoring
 
 ## Deploy and Run on Remote Compute
 
