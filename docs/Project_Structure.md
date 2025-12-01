@@ -20,6 +20,40 @@ my_project/
     └── test_core.py      # Tests for core functionality
 ```
 
+### Research Projects with multiple tasks
+Use this when you need to:
+1. Create a minimal structure for a project with a few sub tasks
+2. Avoid distributing your package as a wheel file (e.g., you don't need `pip install mypackage`).
+
+```
+my_project/
+├── data/                 # data directory for this project
+│   ├── task_1_data
+│   └── task_2_data
+├── docs/                 # Project documentation (e.g., user guides, API docs)
+├── scripts/              # Utility scripts for experiments
+├── task_1/   # Scripts for preprocessing data
+│   ├── 01_extract_data.py
+│   └── 02_create_dataset.py
+├── task_2/   # Scripts for preprocessing data
+│   ├── 01_extract_data.py
+│   └── 02_create_dataset.py
+├── notebooks/            # Jupyter notebooks for analysis and visualization
+│   ├── data_notebook.ipynb
+│   └── result_notebook.ipynb
+├── setup_scripts/
+│   ├── hpc_setup.sh
+│   └── linux_requirement.txt
+├── configs/              # configuretions
+│   ├── config_task_1.json
+│   └── config_task_2.json
+├── .gitignore            # File to ignore in version control
+├── .gitattributes        # File to Managing file encodings and Customizing merge and diff behavior 
+├── requirements.txt      # Project dependencies (can be generated from pyproject.toml)
+├── README.md             # Project description and instructions
+└── LICENSE               # Project license
+```
+
 ### Large and Complicated Research Project Example
 Use this when you:
 1. Are developing a large, complex, or collaborative codebase. Need a modular structure for scalability and collaboration. A long-term project with multiple contributors.
