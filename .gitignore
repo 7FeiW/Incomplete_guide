@@ -15,6 +15,7 @@ extra/
 *.code-workspace
 jobs/
 slurm_scripts/
+slurm_scripts_working_dir/
 # default virtualenv on CC
 FRAG-GNN-GPU2/
 FRAG-GNN-GPU*/

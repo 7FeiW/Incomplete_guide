@@ -144,19 +144,23 @@ Add following directory if you are work with SLURM system on a HPC, adopt to you
 
 - **slurm_scripts** is the directory for your slurm scripts, use this to save slurm script template,
 - **slurm_working_dir** is the working directory for your slurm scripts, file in this directory should not be tracked by git, thus, add this directory to `.gitignore`. Use a python to create complicated slurm bash file, or copy scipt template from `slurm_scripts` and modify to your task.
-- **job** is the working directory for your slurm task output
+- **job** is the working directory for your slurm task output, addd this directory to `.gitignore` as well.
 
 ```
 ├── slurm_scripts/        # this is where your slurm script will go
 │   ├── script_1.sh
 │   └── script_2.sh
-├── slurm_working_dir/        # this is where your slurm script will go
+├── slurm_working_dir/    # this is where your slurm script will go
 │   ├── script_1.sh
-│   └── script_2.sh
-├── jobs/                 # this is where your slurm job output will go
-│   ├── hpc_setup.sh
-│   └── linux_requirement.txt
-└── LICENSE               # Project license
-    ├── hpc_setup.sh
-    └── linux_requirement.txt
+│   └── script_2.sh         
+└── jobs                  # this is where your slurm job output will go
+    ├── job_out_1.out
+    └── job_out_2.out
+```
+
+### Working with Apptainer
+```
+├── apptainer/        # this is where your apptainer files
+    ├── script_1.sh
+    └── script_2.sh
 ```
