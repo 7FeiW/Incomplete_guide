@@ -136,3 +136,27 @@ Regardless of the project size, here is a list of things you should consider:
   - Marking files as binary to avoid unwanted diffs or merges
   - Customizing merge and diff behavior
 - Document your code and project structure in (`README.md` and `docs`).
+
+
+### Working with SLURM
+
+Add following directory if you are work with SLURM system on a HPC, adopt to your usage accordingly.
+
+- **slurm_scripts** is the directory for your slurm scripts, use this to save slurm script template,
+- **slurm_working_dir** is the working directory for your slurm scripts, file in this directory should not be tracked by git, thus, add this directory to `.gitignore`. Use a python to create complicated slurm bash file, or copy scipt template from `slurm_scripts` and modify to your task.
+- **job** is the working directory for your slurm task output
+
+```
+├── slurm_scripts/        # this is where your slurm script will go
+│   ├── script_1.sh
+│   └── script_2.sh
+├── slurm_working_dir/        # this is where your slurm script will go
+│   ├── script_1.sh
+│   └── script_2.sh
+├── jobs/                 # this is where your slurm job output will go
+│   ├── hpc_setup.sh
+│   └── linux_requirement.txt
+└── LICENSE               # Project license
+    ├── hpc_setup.sh
+    └── linux_requirement.txt
+```
