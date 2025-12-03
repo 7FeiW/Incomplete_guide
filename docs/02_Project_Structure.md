@@ -1,29 +1,14 @@
-### Simple Research Project Example
-Use this when you need to:
-1. Create a minimal structure for quick prototyping, a lightweight project for research or demonstration purposes.
-2. Avoid distributing your package as a wheel file (e.g., you don't need `pip install mypackage`).
+# Project Structures
 
-```
-my_project/
-├── README.md             # Project description and instructions
-├── requirements.txt      # Dependencies for the project
-├── .gitignore            # Files to ignore in version control
-├── .gitattributes        # Files to Managing file encodings and Customizing merge and diff behavior
-├── main.py               # Main script for running the project
-├── other_scripts.py      # Additional utility scripts
-├── notebook.ipynb        # Jupyter notebook for analysis or visualization
-├── my_project/           # Core Python package
-│   ├── __init__.py       # Makes 'my_project' a Python package
-│   ├── core.py           # Core functionality
-│   └── utils.py          # Utility functions
-└── tests/                # Unit tests
-    └── test_core.py      # Tests for core functionality
-```
+Projects have different goals,lifecycles and programming complexity. Pick a structure that matches the project's primary goal rather than forcing one canonical layout. Below are three common research project setups:
 
-### Research Projects with multiple tasks
+## Task oriented Research Project Setup
+
+This is setup for a task-oriented layout when the project contains a handful of related experiments or distinct preprocessing/training tasks. This layout keeps data, configs, and scripts organized per task while still being lightweight. 
+
 Use this when you need to:
 1. Create a minimal structure for a project with a few sub tasks
-2. Avoid distributing your package as a wheel file (e.g., you don't need `pip install mypackage`).
+2. No intention to distributing your package as a wheel file (e.g., you don't need `pip install mypackage`).
 
 ```
 my_project/
@@ -54,11 +39,36 @@ my_project/
 └── LICENSE               # Project license
 ```
 
-### Large and Complicated Research Project Example
+## Task oriented Research Project Setup
+
+Use this when you need to:
+
+```
+my_project/
+├── README.md             # Project description and instructions
+├── requirements.txt      # Dependencies for the project
+├── .gitignore            # Files to ignore in version control
+├── .gitattributes        # Files to Managing file encodings and Customizing merge and diff behavior
+├── main.py               # Main script for running the project
+├── other_scripts.py      # Additional utility scripts
+├── notebook.ipynb        # Jupyter notebook for analysis or visualization
+├── my_project/           # Core Python package
+│   ├── __init__.py       # Makes 'my_project' a Python package
+│   ├── core.py           # Core functionality
+│   └── utils.py          # Utility functions
+└── tests/                # Unit tests
+    └── test_core.py      # Tests for core functionality
+```
+
+### Large and Complicated Research Project
+
+Use a `src/`-based, well-tested package layout when the code will be maintained long-term, shared between teams, or released as an installable package. This layout supports testing, CI, clear dependency management, and cleaner imports. This setup are intended to facility large scale code development, and also aim for package distribution. 
+
 Use this when you:
 1. Are developing a large, complex, or collaborative codebase. Need a modular structure for scalability and collaboration. A long-term project with multiple contributors.
 2. Want to distribute or deploy your package (e.g., as a wheel via `pip install`).
 3. Have many experimental scripts, notebooks, or datasets.
+4. eg. A complicated machine leanring model, a new commputational tool.
 
 ```
 my_project/
@@ -91,7 +101,7 @@ my_project/
 └── LICENSE               # Project license
 ```
 
-### Notes:
+## Notes:
 Regardless of the project size, here is a list of things you should consider:
 
 - Put **core** logic code in Python modules (`my_package` or `src/my_package`).This is important for code reusabiliy
@@ -138,7 +148,7 @@ Regardless of the project size, here is a list of things you should consider:
 - Document your code and project structure in (`README.md` and `docs`).
 
 
-### Working with SLURM
+## Working with SLURM
 
 Add following directory if you are work with SLURM system on a HPC, adopt to your usage accordingly.
 
@@ -158,7 +168,7 @@ Add following directory if you are work with SLURM system on a HPC, adopt to you
     └── job_out_2.out
 ```
 
-### Working with Apptainer
+## Working with Apptainer
 ```
 ├── apptainer/        # this is where your apptainer files
     ├── script_1.sh
