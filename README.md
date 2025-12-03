@@ -2,15 +2,15 @@
 
 ## What is this
 
-This is a demo Python code repository for Python-based computational research. This is a incomplete guide (and very working in progress) for python research codebase from research scientist and programer's perspective.
+This is repository of documents for Python-based computational research. This is a incomplete guide (and very working in progress) for python research codebase from research scientist and programer's perspective.
 
 ## Table of Contents
 1. [What is this](#what-is-this)
 2. [How to Manage Your Code](#how-to-manage-your-code)
    - [Coding Convention](docs/Coding_Convention.md)
    - [Project Structure](docs/Project_Structure.md)
-   - [Version Control and Git](#version-control-and-git)
-   - [PIP and Conda](#pip-and-conda)
+   - [Version Control and Git](docs/Version-Control-and-Git.md)
+   - [Python Environment](#docs/Python_Env.md)
    - [Unit Test and Pytest Framework](#unit-test-and-pytest-framework)
    - [Code Release](#code-release)
 3. [On Topics of Code Performance](#on-topics-of-code-performance)
@@ -19,42 +19,6 @@ This is a demo Python code repository for Python-based computational research. T
 4. [Logging and Monitoring](docs/Logging.md)
 5. [Deploy and Run on Remote Compute](#deploy-and-run-on-remote-compute)
 
-### Version Control and Git
-
-> “I’m not a great programmer; I’m just a good programmer with great tools.” — Linus Torvalds
-
-Git clients to choose:
-
-1. **Git**
-2. **Git Fork** <https://git-fork.com/>
-3. **GitLens** for VS Code <https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens>
-
-### PIP and Conda (If you have a src directory)
-
-Use PIP or Conda editable package for package development. This is very useful to **avoid *absolute imports***.
-
-* If you use pip as main package manager: `pip install -e .`
-* If you use conda as main package manager: `conda develop install .`. If this is the first time, you will have to install conda develop.
-
-If you wish to let users install this package from git:
-
-```bash
-# For HTTP
-pip install git+https://bitbucket.org/<project_owner>/<project_name>
-# Example: pip install git+https://bitbucket.org/egemsoft/esefpy-web
-```
-
-```bash
-# For SSH
-pip install git+ssh://git@bitbucket.org/<project_owner>/<project_name>.git/
-# Example: pip install git+ssh://git@bitbucket.org/egemsoft/esefpy-web.git
-```
-
-```bash
-# For Local Git Repository
-pip install git+file///path/to/your/git/project/
-# Example: pip install git+file:///Users/ahmetdal/workspace/celery/
-```
 
 ### Unit Test and Pytest Framework
 
