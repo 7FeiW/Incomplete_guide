@@ -4,11 +4,14 @@ Projects have different goals,lifecycles and programming complexity. Pick a stru
 
 ## Task oriented Research Project Setup
 
-This is setup for a task-oriented layout when the project contains a handful of related experiments or distinct preprocessing/training tasks. This layout keeps data, configs, and scripts organized per task while still being lightweight. 
+This is setup for a task-oriented layout when the project contains a handful of related experiments or distinct preprocessing/training tasks. This layout keeps data, configs, and scripts organized per task while still being lightweight.s
 
-Use this when you need to:
-1. Create a minimal structure for a project with a few sub tasks
-2. No intention to distributing your package as a wheel file (e.g., you don't need `pip install mypackage`).
+Use this when:
+1. You have a project with a few tasks.
+
+Limitations:
+1. Each task does not share a lot of custom built common functions.
+2. No intention to distributing your package as a wheel file.
 
 ```
 my_project/
@@ -39,9 +42,16 @@ my_project/
 └── LICENSE               # Project license
 ```
 
-## Task oriented Research Project Setup
+## Multi Tasks with shared Common Code #1
 
 Use this when you need to:
+1. You have a project with a few tasks.
+2. Each task does share a lot of custom built common functions.
+
+Limitations for this setup:
+1. Does not support distributing your package as a wheel file.
+2. Import shared code is a bit painful.
+
 
 ```
 my_project/
@@ -49,20 +59,25 @@ my_project/
 ├── requirements.txt      # Dependencies for the project
 ├── .gitignore            # Files to ignore in version control
 ├── .gitattributes        # Files to Managing file encodings and Customizing merge and diff behavior
-├── main.py               # Main script for running the project
-├── other_scripts.py      # Additional utility scripts
-├── notebook.ipynb        # Jupyter notebook for analysis or visualization
-├── my_project/           # Core Python package
+├── 01_task_1.py          # task_1 for this project
+├── 02_task_2.py          # task_2 for this project
+├── common/               # Core Python package
 │   ├── __init__.py       # Makes 'my_project' a Python package
 │   ├── core.py           # Core functionality
 │   └── utils.py          # Utility functions
+├── setup_scripts/
+│   ├── hpc_setup.sh
+│   └── linux_requirement.txt
+├── configs/              # configuretions
+│   ├── config_task_1.json
+│   └── config_task_2.json
 └── tests/                # Unit tests
     └── test_core.py      # Tests for core functionality
 ```
 
-### Large and Complicated Research Project
+## Large and Complicated Research Project
 
-Use a `src/`-based, well-tested package layout when the code will be maintained long-term, shared between teams, or released as an installable package. This layout supports testing, CI, clear dependency management, and cleaner imports. This setup are intended to facility large scale code development, and also aim for package distribution. 
+Use a `src/`-based, well-tested package layout when the code will be maintained long-term, shared between teams, or released as an installable package. This layout supports testing, CI, clear dependency management, and cleaner imports. This setup are intended to facility large scale code development, and also aim for package distribution.
 
 Use this when you:
 1. Are developing a large, complex, or collaborative codebase. Need a modular structure for scalability and collaboration. A long-term project with multiple contributors.
@@ -146,7 +161,7 @@ Regardless of the project size, here is a list of things you should consider:
   - Marking files as binary to avoid unwanted diffs or merges
   - Customizing merge and diff behavior
 - Document your code and project structure in (`README.md` and `docs`).
-
+- Naming your task script start with numbers, eg. `01_data_process.py`, add `0` in front if you want make sure `09` appeared before `10`. 
 
 ## Working with SLURM
 
