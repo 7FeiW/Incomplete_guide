@@ -9,6 +9,15 @@
 - **GitLens** — excellent VS Code extension: https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens
 
 ## Git Workflow For Research Project
+Research Project share a lot of commonity of other software develpment project, however:
+- Researchers do not deploy multiple times a day. We generate analyses, not production artifacts.
+- Researchers do not have a fixed release plan, we are must like only create a a few release once project is finished or reach a milestone.
+- Experiments produce figures, models, papers, they are not "merge immediately then deploy"
+- Research tasks often need:
+    - Multiple iteration cycles
+    - Quick integration
+    - Minimal isolation
+    - Tags for preprint, revision, dataset versions
 
 ### Use Trunk-Based Git Workflow for Research Project
 Uses a **trunk-based development workflow**.  That is All work is done in **short-lived branches** that merge frequently into the mainline branch (**`main`**) - a.k.a trunk. 
@@ -90,3 +99,13 @@ PR requirements:
 - Document experimental branches
 - Tag important analysis states
 - Use Issues to track tasks and bugs
+
+
+## Why Not Use a Feature-Based Workflow?
+
+A traditional feature-based workflow (e.g., long-lived feature branches, Git Flow) is common in enterprise software but poorly suited for scientific research. In this model, developers create large, isolated branches that may live for weeks or months before merging. Although this approach can work for highly structured product development, it introduces several problems in computational research environments.
+
+
+## Why Not Use a GitHub WorkFlow?
+
+GitHub Flow is a lightweight branching model commonly used for web development and continuous deployment. It emphasizes simplicity and rapid integration. The core idea is that all work happens on short-lived branches that branch off from main. Once changes are tested and reviewed through a pull request, they are merged back into main and deployed immediately. Although GitHub Flow resembles trunk-based development, there are key differences in expectations and usage patterns.
