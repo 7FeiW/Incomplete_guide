@@ -1,3 +1,29 @@
+
+## Deploy and Run on Remote Compute
+
+### Access to Git Repo
+
+1. Create a different SSH key `mykey2` and add it to your Bitbucket account:
+   - For Bitbucket, URL: <https://bitbucket.org/account/settings/ssh-keys/>
+   - In case you need help on how to create a key: <https://support.atlassian.com/bitbucket-cloud/docs/configure-ssh-and-two-step-verification/>
+2. Upload to `~/.ssh/` directory and change file permission to 600 using `chmod 600 mykey2`.
+3. Edit `~/.ssh/config` (create one if not there):
+   - For Bitbucket:
+     ```bash
+     Host bitbucket.org
+     HostName bitbucket.org
+     IdentityFile ~/.ssh/mykey2
+     IdentitiesOnly yes
+     ```
+   - For GitHub, change this text to:
+     ```bash
+     Host github.com
+     HostName github.com
+     IdentityFile ~/.ssh/mykey2
+     IdentitiesOnly yes
+     ```
+
+
 # AllianceCan / Compute Canada / DRAC
 
 This document gives a short, practical overview of the national research-computing organizations and common workflows you will encounter on Canadian HPC resources, plus quick examples for finding software and using containers with Apptainer.
