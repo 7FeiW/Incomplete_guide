@@ -8,9 +8,25 @@
 - **Git Fork** — GUI client: https://git-fork.com/
 - **GitLens** — excellent VS Code extension: https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens
 
+## Quick Git Basic
+
+Here are the essential commands to get started:
+
+- **`git init`**: Initialize a new Git repository.
+- **`git clone <url>`**: Clone a repository into a new directory.
+- **`git status`**: Show the working tree status.
+- **`git add <file>`**: Add file contents to the index (staging area).
+- **`git commit -m "message"`**: Record changes to the repository.
+- **`git push`**: Update remote refs along with associated objects.
+- **`git pull`**: Fetch from and integrate with another repository or a local branch.
+- **`git log`**: Show commit logs.
+- **`git branch`**: List, create, or delete branches.
+- **`git checkout <branch>`** / **`git switch <branch>`**: Switch branches or restore working tree files.
+- **`git merge <branch>`**: Join two or more development histories together.
+
 ## Git Workflow For Research Project
 Research Project share a lot of commonity of other software develpment project, however:
-- Researchers do not deploy multiple times a day. We generate analyses, not production artifacts.
+- Researchers do not deploy to production multiple times a day.
 - Researchers do not have a fixed release plan, we are must like only create a a few release once project is finished or reach a milestone.
 - Experiments produce figures, models, papers, they are not "merge immediately then deploy"
 - Research tasks often need:
@@ -19,12 +35,34 @@ Research Project share a lot of commonity of other software develpment project, 
     - Minimal isolation
     - Tags for preprint, revision, dataset versions
 
-### Use Trunk-Based Git Workflow for Research Project
-Uses a **trunk-based development workflow**.  That is All work is done in **short-lived branches** that merge frequently into the mainline branch (**`main`**) - a.k.a trunk. 
+### Workflow for One Man Army
+
+Uses a **trunk-based development workflow**. That is All work is done in **Not So Short-Lived branches** that merge frequently into the mainline branch (**`main`**) - a.k.a trunk. It is common to just commit to `main` branch, it is not the best case but things are far less complicated if there is only one developer on the project. 
 
 Core Idea:
 - **Single trunk (`main`)**: Always deployable and reproducible; no long-lived branches.
-- **Short-lived branches**: <1 day lifespan, 1 developer per branch.
+- **Not So Short-lived branches**: Few Day lifespan, focus on a single task. 
+
+```mermaid
+flowchart LR
+    A[main<br>Always stable] --> B[Create short-lived branch]
+    B --> C[Work & Commit]
+    C --> D[Push & PR]
+    D --> E[Review & Merge]
+    E --> A
+    E --> F[Tag milestones]
+    
+    style A fill:#e1f5fe,stroke:#333,stroke-width:2px
+    style F fill:#fff3e0
+```
+
+### Workflow for a Team
+
+Uses a **trunk-based development workflow**.  That is All work is done in **Not So Short-Lived branches** that merge frequently into the mainline branch (**`main`**) - a.k.a trunk. 
+
+Core Idea:
+- **Single trunk (`main`)**: Always deployable and reproducible; no long-lived branches.
+- **Not So Short-lived branches**: Few Day lifespan, 1 developer per branch.
 
 This workflow is gear towards to ensure
 - Continuous reproducibility  
@@ -43,15 +81,48 @@ This workflow is gear towards to ensure
 - In the case that there is a deployment requirement, keep main as the **runnable and stable**
 - Use this branch to integrate latest change from each feature branch
 
-**Short-Lived Branches** branch：
+**Not So Short-Lived Branches** branch：
 - Every task should occur in its own temporary branch.
 - These branch should be small in scope and focused on one change
 - These branch shoul be Merged within a few days and Deleted after merging
+- This is based on the idea of **Short-Lived** Branches, however nature of the research project means each of these branch would be as short-lived as their purely software development couter parts.
 
 **Long-Lived Branches** branch:
-- Idealy we should not have any long lived branch
-- Use this to store refactoring code
-- DO NOT use this to store new features or new task, as switch between branch would be hard to deal with in a day-to-day base.
+- Idealy we should **not** have any long lived branch, because it will make merge code back to main branch a headache.
+- Use this for refactoring code.
+- **DO NOT** use this to store new features or new task, as switch between branch would be hard to deal with in a day-to-day base.
+
+In a collabtrated team:
+
+```mermaid
+flowchart TB
+    subgraph "Researcher A"
+        A1[Create branch A] --> A2[Work on experiment]
+        A2 --> A3[Commit & push]
+        A3 --> A4[Create PR]
+    end
+    
+    subgraph "Researcher B"
+        B1[Create branch B] --> B2[Work on analysis]
+        B2 --> B3[Commit & push]
+        B3 --> B4[Create PR]
+    end
+    
+    A4 --> C[Review each other's PRs]
+    B4 --> C
+    
+    C --> D{Merge approved?}
+    D -->|Yes| E[Merge to main]
+    D -->|No| F[Request changes]
+    F --> A2
+    F --> B2
+    
+    E --> G[main: Integrated work]
+    G --> H[Tag: v1.0-experiment]
+    
+    style G fill:#e1f5fe
+    style H fill:#fff3e0
+```
 
 ### Commit 
 
