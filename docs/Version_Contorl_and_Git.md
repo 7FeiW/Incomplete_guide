@@ -11,14 +11,17 @@
 ## Git Workflow For Research Project
 
 ### Use Trunk-Based Git Workflow for Research Project
-Uses a **trunk-based development workflow**.  That is All work is done in **short-lived branches** that merge frequently into the mainline branch (**`main`**). 
+Uses a **trunk-based development workflow**.  That is All work is done in **short-lived branches** that merge frequently into the mainline branch (**`main`**) - a.k.a trunk. 
 
-This ensures:
+Core Idea:
+- **Single trunk (`main`)**: Always deployable and reproducible; no long-lived branches.
+- **Short-lived branches**: <1 day lifespan, 1 developer per branch.
+
+This workflow is gear towards to ensure
 - Continuous reproducibility  
+- Minimal merge conflicts
 - Incremental scientific development  
 - Clean and traceable version history 
-- Main is always deployable
-- Minimal merge conflicts  
 
 ### Branching Model
 
