@@ -45,6 +45,17 @@ This workflow is gear towards to ensure
 - DO NOT use this to store new features or new task, as switch between branch would be hard to deal with in a day-to-day base.
 
 ### Commit 
+
+Don’t Commit Large Data Files, Git slows down if large binary files are added.
+Use:
+- cloud storage
+- data servers
+
+Commit only:
+- metadata
+- configs
+- scripts
+
 Commit Often, Use concise, descriptive commit messages:
 
 Commit Message examples:
@@ -55,14 +66,7 @@ Commit Message examples:
 
 Avoid vague messages like “fix stuff” or “update file”.
 
-### Pull Request
-
-PR requirements:
-- Code runs without breaking existing functionality  
-- Clear commit messages  
-- Reviewer approval (if working collaboratively) 
-
-### Use Tags
+### Use Tags for “Published” States
 
 Use Git tags to mark important scientific or development milestones:
 ```
@@ -70,3 +74,19 @@ git tag -a v0.1-preprint -m "Version for preprint submission"
 git tag -a v1.0-paper -m "Final version matching accepted manuscript"
 git push origin --tags
 ```
+
+### Pull Request
+
+PR requirements:
+- Code runs without breaking existing functionality  
+- Clear commit messages  
+- Reviewer approval (if working collaboratively) 
+
+### Collaboration Guidelines
+
+- Never push directly to main
+- Always use a branch + PR
+- Keep PRs small and focused
+- Document experimental branches
+- Tag important analysis states
+- Use Issues to track tasks and bugs
