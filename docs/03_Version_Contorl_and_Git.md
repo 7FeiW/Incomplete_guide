@@ -67,11 +67,42 @@ flowchart LR
     style F fill:#fff3e0
 ```
 
+#### Commit 
+
+Don’t Commit Large Data Files, Git slows down if large binary files are added.
+Use:
+- cloud storage
+- data servers
+
+Commit only:
+- metadata
+- configs
+- scripts
+
+Commit Often, Use concise, descriptive commit messages:
+
+Commit Message examples:
+- `Add dropout hyperparameter to model config`
+- `Fix off-by-one error in data indexing`
+- `Implement LR sweep experiment`
+- `Update methods text in manuscript`
+
+Avoid vague messages like “fix stuff” or “update file”.
+
+#### Use Tags for “Published” States
+
+Use Git tags to mark important scientific or development milestones:
+```
+git tag -a v0.1-preprint -m "Version for preprint submission"
+git tag -a v1.0-paper -m "Final version matching accepted manuscript"
+git push origin --tags
+```
+
 ### Workflow for a Team
 
 A **trunk-based development workflow** is in most time well fitted for research project. That is:
 - **Single trunk (`main`)**: Always deployable and reproducible; no long-lived branches.
-- **Not So Short-lived branches**: Few Day lifespan, 1 developer per branch, work is done in this branch, that merge frequently into the mainline branch (**`main`**) - a.k.a trunk. 
+- **Not So Short-lived branches**: Few Day lifespan, 1 developer per branch, work is done in this branch, that merge frequently into the mainline branch (**`main`**) - a.k.a trunk. Note that `commit` and `tags` discussed in **one man army workflow** are still appied to this case.
 
 This workflow is gear towards to ensure
 - Continuous reproducibility  
@@ -131,37 +162,6 @@ flowchart TB
     
     style G fill:#e1f5fe
     style H fill:#fff3e0
-```
-
-### Commit 
-
-Don’t Commit Large Data Files, Git slows down if large binary files are added.
-Use:
-- cloud storage
-- data servers
-
-Commit only:
-- metadata
-- configs
-- scripts
-
-Commit Often, Use concise, descriptive commit messages:
-
-Commit Message examples:
-- `Add dropout hyperparameter to model config`
-- `Fix off-by-one error in data indexing`
-- `Implement LR sweep experiment`
-- `Update methods text in manuscript`
-
-Avoid vague messages like “fix stuff” or “update file”.
-
-### Use Tags for “Published” States
-
-Use Git tags to mark important scientific or development milestones:
-```
-git tag -a v0.1-preprint -m "Version for preprint submission"
-git tag -a v1.0-paper -m "Final version matching accepted manuscript"
-git push origin --tags
 ```
 
 ### Pull Request
