@@ -2,6 +2,24 @@
 
 > “I’m not a great programmer; I’m just a good programmer with great tools.” — Linus Torvalds
 
+## Table of Contents
+
+- [Git clients and extensions](#git-clients-and-extensions)
+- [Quick Git Basic](#quick-git-basic)
+- [Git Workflow For Research Project](#git-workflow-for-research-project)
+    - [What is a Git Branch?](#what-is-a-git-branch)
+    - [Aligning Branches with Research Ideas](#aligning-branches-with-research-ideas)
+    - [Workflow for One Man Army](#workflow-for-one-man-army)
+        - [Commit](#commit)
+        - [Use Tags for “Published” States](#use-tags-for-published-states)
+    - [Workflow for a Team](#workflow-for-a-team)
+        - [Branching Model](#branching-model)
+        - [Pull Request](#pull-request)
+        - [Collaboration Guidelines](#collaboration-guidelines)
+- [Why Not Use a Feature-Based Workflow?](#why-not-use-a-feature-based-workflow)
+- [Why Not Use a GitHub WorkFlow?](#why-not-use-a-github-workflow)
+
+
 ## Git clients and extensions:
 
 - **Git (CLI)** — the canonical tool; learn the core commands below.

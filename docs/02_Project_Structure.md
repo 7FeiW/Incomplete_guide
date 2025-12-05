@@ -1,4 +1,4 @@
-# Project Structures
+# Project Structure
 
 ## Table of Contents
 
@@ -13,7 +13,7 @@ Projects vary in goals, lifecycles, and complexity. Choose a structure that alig
 
 ---
 
-## Task‑Oriented Project Setup
+## Task-Oriented Project Setup
 
 Use this structure when the project contains a small number of related experiments or preprocessing/training tasks. It keeps data, configurations, and scripts organized per task while remaining lightweight.
 
@@ -57,7 +57,7 @@ my_project/
 
 ---
 
-## Multi‑Task Project with Shared Common Code
+## Multi-Task Project with Shared Common Code
 
 Use this structure when the project contains multiple tasks that share a meaningful amount of custom code. Shared modules live in a `common/` directory.
 
