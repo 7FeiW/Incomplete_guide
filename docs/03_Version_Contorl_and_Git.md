@@ -35,6 +35,12 @@ Research Project share a lot of commonity of other software develpment project, 
     - Minimal isolation
     - Tags for preprint, revision, dataset versions
 
+## Further reading and tools:
+
+- Git official docs: https://git-scm.com/docs
+- Pro Git book: https://git-scm.com/book/en/v2
+- pre-commit: https://pre-commit.com/
+
 ### What is a Git Branch?
 
 A **branch** in Git is essentially a lightweight movable pointer to a commit. The default branch name in Git is `main` (or `master` in older repositories). As you make commits, the branch pointer moves forward automatically.

@@ -94,12 +94,6 @@ pip freeze > requirements.txt
 python -m venv .venv; source .venv/bin/activate; pip install -r requirements.txt
 ```
 
-Further reading and tools:
-
-- Git official docs: https://git-scm.com/docs
-- Pro Git book: https://git-scm.com/book/en/v2
 - pip-tools: https://github.com/jazzband/pip-tools
 - Poetry: https://python-poetry.org/
-- pre-commit: https://pre-commit.com/
-
 
