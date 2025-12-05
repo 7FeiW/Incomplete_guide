@@ -1,191 +1,219 @@
 # Project Structures
 
-Projects have different goals,lifecycles and programming complexity. Pick a structure that matches the project's primary goal rather than forcing one canonical layout. Below are three common research project setups:
+## Table of Contents
 
-## Task oriented Research Project Setup
+1. [Task-Oriented Project Setup](#task-oriented-project-setup)
+2. [Multi-Task Project with Shared Common Code](#multi-task-project-with-shared-common-code)
+3. [Large and Complex Research Project](#large-and-complex-research-project)
+4. [General Best Practices](#general-best-practices)
+5. [Working with SLURM](#working-with-slurm)
+6. [Working with Apptainer](#working-with-apptainer)
 
-This is setup for a task-oriented layout when the project contains a handful of related experiments or distinct preprocessing/training tasks. This layout keeps data, configs, and scripts organized per task while still being lightweight.s
+Projects vary in goals, lifecycles, and complexity. Choose a structure that aligns with the primary purpose of the project rather than forcing a single canonical layout. Below are three common research project setups, each optimized for different use cases.
 
-Use this when:
-1. You have a project with a few tasks.
+---
 
-Limitations:
-1. Each task does not share a lot of custom built common functions.
-2. No intention to distributing your package as a wheel file.
+## Task‑Oriented Project Setup
+
+Use this structure when the project contains a small number of related experiments or preprocessing/training tasks. It keeps data, configurations, and scripts organized per task while remaining lightweight.
+
+### Use this when:
+
+1. The project has only a few tasks.
+
+### Limitations:
+
+1. Tasks do not share many custom-built common functions.
+2. There is no intention to distribute the project as an installable package (e.g., wheel).
 
 ```
 my_project/
-├── data/                 # data directory for this project
+├── data/                 # Data directory for this project
 │   ├── task_1_data
 │   └── task_2_data
-├── docs/                 # Project documentation (e.g., user guides, API docs)
+├── docs/                 # Documentation (user guides, API docs)
 ├── scripts/              # Utility scripts for experiments
-├── task_1/   # Scripts for preprocessing data
+├── task_1/               # Task-specific scripts
 │   ├── 01_extract_data.py
 │   └── 02_create_dataset.py
-├── task_2/   # Scripts for preprocessing data
+├── task_2/               # Task-specific scripts
 │   ├── 01_extract_data.py
 │   └── 02_create_dataset.py
-├── notebooks/            # Jupyter notebooks for analysis and visualization
+├── notebooks/            # Jupyter notebooks for exploration
 │   ├── data_notebook.ipynb
 │   └── result_notebook.ipynb
 ├── setup_scripts/
 │   ├── hpc_setup.sh
 │   └── linux_requirement.txt
-├── configs/              # configuretions
+├── configs/              # Configuration files
 │   ├── config_task_1.json
 │   └── config_task_2.json
-├── .gitignore            # File to ignore in version control
-├── .gitattributes        # File to Managing file encodings and Customizing merge and diff behavior 
-├── requirements.txt      # Project dependencies (can be generated from pyproject.toml)
-├── README.md             # Project description and instructions
-└── LICENSE               # Project license
+├── .gitignore
+├── .gitattributes
+├── requirements.txt      # Dependencies
+├── README.md
+└── LICENSE
 ```
 
-## Multi Tasks with shared Common Code #1
+---
 
-Use this when you need to:
-1. You have a project with a few tasks.
-2. Each task does share a lot of custom built common functions.
+## Multi‑Task Project with Shared Common Code
 
-Limitations for this setup:
-1. Does not support distributing your package as a wheel file.
-2. Import shared code is a bit painful.
+Use this structure when the project contains multiple tasks that share a meaningful amount of custom code. Shared modules live in a `common/` directory.
 
+### Use this when:
+
+1. There are several tasks.
+2. Tasks share substantial custom code.
+
+### Limitations:
+
+1. Not suitable for distributing as a Python package.
+2. Importing shared code can be slightly cumbersome.
 
 ```
 my_project/
-├── README.md             # Project description and instructions
-├── requirements.txt      # Dependencies for the project
-├── .gitignore            # Files to ignore in version control
-├── .gitattributes        # Files to Managing file encodings and Customizing merge and diff behavior
-├── 01_task_1.py          # task_1 for this project
-├── 02_task_2.py          # task_2 for this project
-├── common/               # Core Python package
-│   ├── __init__.py       # Makes 'my_project' a Python package
-│   ├── core.py           # Core functionality
-│   └── utils.py          # Utility functions
+├── README.md
+├── requirements.txt
+├── .gitignore
+├── .gitattributes
+├── 01_task_1.py
+├── 02_task_2.py
+├── common/               # Shared library code
+│   ├── __init__.py
+│   ├── core.py
+│   └── utils.py
 ├── setup_scripts/
 │   ├── hpc_setup.sh
 │   └── linux_requirement.txt
-├── configs/              # configuretions
+├── configs/
 │   ├── config_task_1.json
 │   └── config_task_2.json
-└── tests/                # Unit tests
-    └── test_core.py      # Tests for core functionality
+└── tests/
+    └── test_core.py
 ```
 
-## Large and Complicated Research Project
+---
 
-Use a `src/`-based, well-tested package layout when the code will be maintained long-term, shared between teams, or released as an installable package. This layout supports testing, CI, clear dependency management, and cleaner imports. This setup are intended to facility large scale code development, and also aim for package distribution.
+## Large and Complex Research Project
 
-Use this when you:
-1. Are developing a large, complex, or collaborative codebase. Need a modular structure for scalability and collaboration. A long-term project with multiple contributors.
-2. Want to distribute or deploy your package (e.g., as a wheel via `pip install`).
-3. Have many experimental scripts, notebooks, or datasets.
-4. eg. A complicated machine leanring model, a new commputational tool.
+Use a `src/`-based structure when the project must scale, be maintained long-term, support collaboration, or be distributed (e.g., uploaded to PyPI). This layout supports modern development practices such as CI, structured testing, and modular design.
+
+### Use this when:
+
+1. The codebase is large, complex, or collaborative.
+2. You plan to distribute or deploy your package.
+3. The project involves many scripts, datasets, or models.
+4. You are developing a sophisticated computational tool or ML model.
 
 ```
 my_project/
-├── src/                  # Source code directory (recommended for larger projects)
-│   └── my_package/       # Main package for your application
-│       ├── __init__.py   # Makes 'my_package' a Python package
-│       ├── utils.py      # Utility functions
-│       ├── config.py     # Configuration settings
-│       └── models.py     # Models (e.g., machine learning models)
-├── tests/                # Unit and integration tests
-│   └── test_main.py      # Main test file
-├── data/                 # Data directory for datasets
-├── docs/                 # Project documentation (e.g., user guides, API docs)
-├── scripts/              # Utility scripts for experiments
-├── preprocess_scripts/   # Scripts for preprocessing data
+├── src/
+│   └── my_package/       # Main Python package
+│       ├── __init__.py
+│       ├── utils.py
+│       ├── config.py
+│       └── models.py
+├── tests/
+│   └── test_main.py
+├── data/
+├── docs/
+├── scripts/
+├── preprocess_scripts/
 │   ├── 01_extract_data.py
 │   └── 02_create_dataset.py
-├── notebooks/            # Jupyter notebooks for analysis and visualization
+├── notebooks/
 │   ├── data_notebook.ipynb
 │   └── result_notebook.ipynb
 ├── setup_scripts/
 │   ├── hpc_setup.sh
 │   └── linux_requirement.txt
-├── configs/              # configuretions
-├── .gitignore            # File to ignore in version control
-├── .gitattributes        # File to Managing file encodings and Customizing merge and diff behavior 
-├── pyproject.toml        # Modern package configuration (e.g., Poetry, Hatch)
-├── requirements.txt      # Project dependencies (can be generated from pyproject.toml)
-├── README.md             # Project description and instructions
-└── LICENSE               # Project license
+├── configs/
+├── .gitignore
+├── .gitattributes
+├── pyproject.toml        # Modern build/packaging configuration
+├── requirements.txt
+├── README.md
+└── LICENSE
 ```
 
-## Notes:
-Regardless of the project size, here is a list of things you should consider:
+---
 
-- Put **core** logic code in Python modules (`my_package` or `src/my_package`).This is important for code reusabiliy
-  - Logic for data processing
-  - Logic for new machine leanring model
-- Use preprocessing scripts (in `preprocessing_scripts`) for:
-  - Data cleaning.
-  - Number preprocessing scripts to keep the running order obvious.
-- Use **scripts** (in `scripts`) for:
-  - Training models at scale.
-  - Automated data processing.
-- Use **notebooks**(in `notebooks`) for:
-  - Data exploration and visualization.
-  - Running quick experiments on small sample datasets.
-  - Demonstrating model predictions and results.
-  - Creating human-readable, shareable reports.
-- Use **configs** (in `configs`) for:
-  - Configuration for each expremients, use git to keep track of them.
+## General Best Practices
 
-- Use **tests** for unit tests (in `test`). 
-  - You can use pytest (<https://docs.pytest.org/en/stable/>). 
-  - This is highly recommended if you have complicated projects. 
-  - If your have a lot of verifiable case, eg. math problem, rule based chem or bio problems 
-- Use `setup_scripts` or `requirements.txt` for environment setups:
-  - **setup_scripts Directory**:
-    - Place any *environment setup scripts* (usually Bash scripts like `.sh` files) in a dedicated folder, e.g., `setup_scripts/`.
-    - These scripts can automate environment creation, Python version setup, and the installation of required libraries, which is especially helpful for high-performance computing (HPC) clusters, custom workstations, and environments where pip or conda alone aren’t sufficient (e.g., due to system-level dependencies or restricted access).
-    - You can define logic to select between pip, conda, or module load commands, increasing portability across platforms.
-  - **requirements.txt**:
-    - A plain text file typically in your root directory to describe Python dependencies for pip (or conda, though conda often uses `environment.yml`).
-    - Ideal for open-source/public-facing projects, where you want to make installation simple and reproducible via `pip install -r requirements.txt`.
-    - Limitation: Pip (and even conda) generated requirements can include exact versions and local system quirks, which may not work identically on all platforms, especially across OSes or different hardware/compilers.
-    - Using *one* requirements.txt in the root is recommended for public distribution. For restricted or customized environments (e.g., specific library paths, module loading on HPC), use customized scripts instead.
-  - **Multiple requirements.txt or setup_scripts/**:
-    - In complex/restricted environments (like HPCs), you may need multiple requirements files or customized setup scripts for different job types (e.g., preprocessing, training, visualization).
-    - Place these additional files/scripts in `setup_scripts/`, such as `requirements_preprocessing.txt`, `requirements_training.txt`, or `setup_env_hpc.sh`.
-    - This enables selective installation and environment setup, which is often critical when certain dependencies conflict or are only available on some platforms.
-- Use **.gitignore** to exclude files you don't want tracked by git, e.g., data files, caches.
-  - If data file size is large, keep data or generated files in `data`, and exclude them from the git repository.
-- Use **.gitattributes** for
-  - Define default line endings, very useful for cross-platform development, e.g., `LF` vs `CRLF`
-  - Marking files as binary to avoid unwanted diffs or merges
-  - Customizing merge and diff behavior
-- Document your code and project structure in (`README.md` and `docs`).
-- Naming your task script start with numbers, eg. `01_data_process.py`, add `0` in front if you want make sure `09` appeared before `10`. 
+Regardless of project size, keep the following guidelines in mind:
+
+### Code Organization
+
+* Place **core logic** into Python modules rather than notebooks or scripts.
+
+  * Data processing routines
+  * Model definitions
+  * Long-term utilities
+* Use `preprocess_scripts/` for data extraction and cleaning.
+* Use `scripts/` for running training jobs or automated workflows.
+* Use `notebooks/` for exploration, visualization, and prototyping.
+* Store experiment-specific settings in `configs/` and track them using Git.
+
+### Testing
+
+* Use a `tests/` directory for unit tests.
+* Prefer `pytest` for modern, flexible test workflows.
+* Highly recommended for mathematically verifiable or rule‑based tasks.
+
+### Environment Setup
+
+* Place environment setup scripts (e.g., HPC bootstrap scripts) in `setup_scripts/`.
+* Use a single `requirements.txt` for simple public distributions.
+* For complex environments (e.g., HPC constraints, conflicting dependencies), use multiple requirement files or platform‑specific scripts.
+
+### Git Hygiene
+
+* Use `.gitignore` to exclude large data files, temporary outputs, and caches.
+* Use `.gitattributes` to:
+
+  * Enforce line ending consistency
+  * Mark binary files
+  * Customize merge and diff behaviors
+
+### Documentation
+
+* Use `README.md` for project overviews.
+* Use `docs/` for extended documentation.
+
+### Naming Conventions
+
+* Number task scripts (`01_task.py`, `02_task.py`) to ensure predictable execution order.
+* Use leading zeros when needed (e.g., `09` before `10`).
+
+---
 
 ## Working with SLURM
 
-Add following directory if you are work with SLURM system on a HPC, adopt to your usage accordingly.
+Add these directories when developing on HPC systems using SLURM.
 
-- **slurm_scripts** is the directory for your slurm scripts, use this to save slurm script template,
-- **slurm_working_dir** is the working directory for your slurm scripts, file in this directory should not be tracked by git, thus, add this directory to `.gitignore`. Use a python to create complicated slurm bash file, or copy scipt template from `slurm_scripts` and modify to your task.
-- **job** is the working directory for your slurm task output, addd this directory to `.gitignore` as well.
+* **slurm_scripts/** — templates for SLURM submission scripts.
+* **slurm_working_dir/** — working directory for active SLURM jobs (excluded via `.gitignore`).
+* **jobs/** — outputs and logs from job runs (also ignored by Git).
 
 ```
-├── slurm_scripts/        # this is where your slurm script will go
+├── slurm_scripts/
 │   ├── script_1.sh
 │   └── script_2.sh
-├── slurm_working_dir/    # this is where your slurm script will go
+├── slurm_working_dir/
 │   ├── script_1.sh
-│   └── script_2.sh         
-└── jobs                  # this is where your slurm job output will go
+│   └── script_2.sh
+└── jobs/
     ├── job_out_1.out
     └── job_out_2.out
 ```
 
+---
+
 ## Working with Apptainer
+
 ```
-├── apptainer/        # this is where your apptainer files
-    ├── script_1.sh
-    └── script_2.sh
+├── apptainer/
+│   ├── script_1.sh
+│   └── script_2.sh
 ```
