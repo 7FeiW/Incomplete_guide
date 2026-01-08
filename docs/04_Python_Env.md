@@ -96,7 +96,7 @@ Constraints files
 
 - Use `-c constraints.txt` to constrain versions without listing packages in that file.
 
-Editable installs (during development)
+### Editable installs (during development)
 
 ```bash
 pip install -e .
@@ -130,6 +130,14 @@ conda env export > environment.yml
 conda env create -f environment.yml
 ```
 
+### Editable installs (during development)
+Since `conda develop` not longer avabiale, use `pip` within conda
+```bash
+pip install -e .
+# or with extras
+pip install -e '.[dev]'
+```
+
 Notes:
 
 - Prefer `conda install` for packages that require compiled binaries (e.g., NumPy, SciPy) to avoid local builds.
@@ -141,6 +149,8 @@ Mixing `conda` and `pip`:
 - Exported `environment.yml` may include pip-installed packages under a `pip:` section.
 
 ---
+## UV
+[https://docs.astral.sh/uv/]
 
 ## Cross-platform issues (pip and conda)
 

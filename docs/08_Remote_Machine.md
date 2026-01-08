@@ -23,7 +23,6 @@
      IdentitiesOnly yes
      ```
 
-
 # AllianceCan / Compute Canada / DRAC
 
 This document gives a short, practical overview of the national research-computing organizations and common workflows you will encounter on Canadian HPC resources, plus quick examples for finding software and using containers with Apptainer.
