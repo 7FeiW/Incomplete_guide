@@ -95,9 +95,9 @@ GitHub Copilot offers different models optimized for different tasks:
 
 **Examples**:
 ```
-"Add JWT authentication to the API with email verification"
-"Refactor the payment system to support multiple currencies"
-"Add caching layer using Redis to improve performance"
+"Add distributed training support using PyTorch DDP for multi-GPU experiments"
+"Implement automated hyperparameter tuning using Optuna with experiment tracking"
+"Build data validation pipeline for preprocessing datasets with quality metrics and logging"
 ```
 
 **Workflow**:
@@ -260,22 +260,23 @@ Navigate to [github.com/copilot/agents](https://github.com/copilot/agents) to ac
 #### Step 2: Write a Clear Request
 
 ```
-Task: Add a data validation module for training datasets
+Task: Add distributed training support for multi-GPU experiments
 
 Requirements:
-1. Create src/my_package/validation.py with functions to check data quality
-2. Validate that features have no NaN values (impute or drop if found)
-3. Check that labels are within expected ranges
-4. Log validation results with sample statistics
-5. Raise ValueError if validation fails with descriptive message
-6. Add comprehensive unit tests
+1. Create src/my_package/distributed.py with DDP initialization and cleanup
+2. Wrap model training loop to support torch.distributed across GPUs
+3. Save checkpoints only on rank-0 to avoid write conflicts
+4. Add learning rate scheduling that accounts for batch size scaling
+5. Log training metrics to MLflow for experiment tracking
+6. Add unit tests that validate gradient synchronization
 
 Success criteria:
-- Training script validates dataset before training starts
-- Validation output includes row counts, missing value rates, label distribution
-- All tests pass locally
+- Training script runs on single GPU and multi-GPU without code changes
+- Training time scales near-linearly with GPU count
+- Checkpoints save correctly without corruption
+- All tests pass with 2+ GPU simulation
 
-Reference pattern: See how preprocessing is done in preprocess_scripts/02_create_dataset.py
+Reference pattern: See distributed setup in scripts/fine_tuning.py and model initialization patterns in src/my_package/models.py
 ```
 
 #### Step 3: Agent Implements & Tests
@@ -302,7 +303,19 @@ This is a machine learning research project for model training and inference pip
 - **Key patterns**: Modular src/ package, numbered preprocessing scripts, experiment config tracking
 ```
 
-**2. Exact Build & Test Commands** (agents must validate their work)
+**2. Plans & Specifications** (link persistent feature plans)
+```markdown
+## Feature Plans & Specifications
+
+Ongoing and cross-cutting features are documented in docs/:
+- `docs/experiment-tracking-plan.md` — MLflow integration and distributed logging phases
+- `docs/data-validation-plan.md` — Data quality checks and preprocessing pipeline schema
+- `docs/distributed-training-plan.md` — Multi-GPU and SLURM cluster training setup
+
+When implementing these features, reference the corresponding plan file for requirements and implementation phases.
+```
+
+**3. Exact Build & Test Commands** (agents must validate their work)
 ```markdown
 ## Setup & Validation
 
@@ -487,6 +500,72 @@ Edge cases to handle:
 - **Don't merge without review** — agents make errors; always review
 - **Don't assume agent knows undocumented patterns** — if it's not in instructions or code, it won't be followed
 - **Don't ignore test failures** — agent might have broken something subtle
+
+### Plan Organization Strategy
+
+Plans guide Copilot agents and maintain project continuity. Use two types depending on scope and lifecycle:
+
+#### Persistent Plans (Long-Lived Features)
+
+Use `docs/feature-name-plan.md` for plans that represent **persistent project specifications** — features that span multiple sprints, ongoing architectural decisions, or cross-team initiatives.
+
+**Characteristics**:
+- Versioned in Git alongside codebase
+- Referenced in `.github/copilot-instructions.md`
+- Updated as requirements evolve
+- Remain as documentation after implementation
+- Shared reference for team and future developers
+
+**Example**: `docs/experiment-tracking-plan.md`
+```
+# Experiment Tracking & Reproducibility Plan
+
+## Goals
+- Centralize experiment logging with MLflow or WandB
+- Capture hyperparameters, metrics, and model artifacts
+- Enable reproducible model checkpoints with seed tracking
+- Support cross-team experiment comparison
+
+## Implementation Phases
+1. Phase 1: MLflow integration for local experiments (week 1-2)
+2. Phase 2: Distributed logging for multi-GPU training (week 3-4)
+3. Phase 3: Web UI dashboard and artifact versioning (week 5)
+
+## Reference in copilot-instructions.md
+See docs/experiment-tracking-plan.md for logging requirements and integration phases.
+```
+
+#### Temporary Plans (One-Off Refactors)
+
+Use inline plans **next to the relevant module** for one-off refactors or sprint-specific tasks — save them in default location or as `.plan` files in the module directory, then **delete after merge**.
+
+**Characteristics**:
+- Temporary; not versioned long-term
+- Scoped to a single refactor or sprint task
+- Deleted once PR merges
+- Not shared in `copilot-instructions.md`
+- Local guidance for quick agent tasks
+
+**Example**: `src/models/.refactor-cache-layer.plan`
+```
+# Temp Plan: Add Caching Layer to Model Loading
+
+## Scope
+Refactor model loading to use Redis cache for performance.
+
+## Changes
+1. Update src/models/loader.py to check Redis first
+2. Add Redis config to src/config.py
+3. Update tests in tests/test_models.py
+4. Update requirements.txt with redis
+
+## Delete after merge to main.
+```
+
+**Why delete after merge?**
+- Keeps repo clean of stale plans
+- Prevents confusion (old plans become outdated)
+- Temporary guidance shouldn't be permanent
 
 ### Practical Development Patterns
 
