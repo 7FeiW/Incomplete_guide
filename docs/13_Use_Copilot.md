@@ -451,7 +451,6 @@ Edge cases to handle:
 - **Don't ignore test failures** — agent might have broken something subtle
 
 
-
 ---
 
 ## Practical Tips & Patterns
@@ -676,16 +675,6 @@ Best: "validate email using regex; handle common formats like name+tag@domain.co
 
 ---
 
-## Summary
-
-GitHub Copilot Agents are powerful for autonomous planning and implementation. Success depends on:
-
-1. **Clear planning** — specific requirements, acceptance criteria, edge cases
-2. **Rich context** — comprehensive custom instructions in `.github/copilot-instructions.md`
-3. **Good references** — point agents to similar patterns in your codebase
-4. **Review discipline** — always review and understand generated code
-5. **Iterative refinement** — break tasks into manageable pieces
-
-**Workflow**: Plan clearly → Set up instructions → Write clear request → Review PR → Iterate
-
-With proper guidance, agents can handle entire features end-to-end (planning, implementation, testing, documentation), dramatically reducing development time while maintaining code quality.
+## MCP Server and more advanced 
+extra: https://developer.microsoft.com/blog/announcing-awesome-copilot-mcp-server
+extra: https://github.com/github/awesome-copilot/tree/main?tab=readme-ov-file
