@@ -12,22 +12,21 @@ This document covers practical workflows for using **GitHub Copilot** as an AI a
 ### Part 2: Using Copilot for Agents
 4. [Why Use Copilot Agents?](#why-use-copilot-agents)
 5. [Repository Custom Instructions for Agents](#repository-custom-instructions-for-agents)
-6. [Agentic Workflow: Step-by-Step](#agentic-workflow-step-by-step)
-7. [Planning with Copilot Agents](#planning-with-copilot-agents)
+6. [Planning & Executing Agent Workflows](#planning--executing-agent-workflows)
 
 ### Part 3: Best Practices & Patterns
-8. [Practical Guide to Agent Development](#practical-guide-to-agent-development)
+7. [Practical Guide to Agent Development](#practical-guide-to-agent-development)
 
 ### Part 4: Quality & Safety
-9. [Security & Code Quality Considerations](#security--code-quality-considerations)
-10. [Anti-patterns & Pitfalls](#anti-patterns--pitfalls)
-11. [Integration with Development Workflow](#integration-with-development-workflow)
+8. [Security & Code Quality Considerations](#security--code-quality-considerations)
+9. [Anti-patterns & Pitfalls](#anti-patterns--pitfalls)
+10. [Integration with Development Workflow](#integration-with-development-workflow)
 
 ### Part 5: Reference
-12. [When to Use, When Not to Use](#when-to-use-when-not-to-use)
-13. [Troubleshooting & FAQ](#troubleshooting--faq)
-14. [Quick Command Reference](#quick-command-reference)
-15. [References & Further Reading](#references--further-reading)
+11. [When to Use, When Not to Use](#when-to-use-when-not-to-use)
+12. [Troubleshooting & FAQ](#troubleshooting--faq)
+13. [Quick Command Reference](#quick-command-reference)
+14. [References & Further Reading](#references--further-reading)
 
 ---
 
@@ -200,20 +199,20 @@ GitHub Copilot offers different models optimized for different tasks:
 
 ---
 
-## Planning with Copilot Agents
+## Planning & Executing Agent Workflows
 
-### Agent Planning Workflow
+### How Agents Plan & Execute
 
 Agents follow this internal process:
 
-1. **Understand the requirement** — parse user request and acceptance criteria
+1. **Understand the requirement** — parse your request and acceptance criteria
 2. **Explore codebase** — read relevant files, understand architecture and conventions
 3. **Plan the solution** — break into logical steps, identify all files to modify
 4. **Implement** — write code following discovered patterns
 5. **Test** — run tests, validate changes
-6. **Create PR** — submit with description and change summary
+6. **Deliver** — code is ready for integration (as branch or PR)
 
-Your job is to **provide good inputs** at step 1, and **custom instructions** to accelerate steps 2-3.
+Your job is to **provide clear inputs** at step 1, and **custom instructions** (in `.github/copilot-instructions.md`) to accelerate steps 2-3.
 
 ### Structuring Requests for Agents
 
@@ -246,9 +245,43 @@ Architecture notes:
 4. **File scope** — which areas should change
 5. **Testing** — what tests should pass
 
----
+### Step-by-Step Workflow
 
-## Repository Custom Instructions for Agents
+#### 1. Set Up Custom Instructions (Foundation)
+
+Ensure `.github/copilot-instructions.md` exists and is comprehensive. Agents use this as their knowledge base.
+
+#### 2. Open Copilot Agent
+
+Navigate to [github.com/copilot/agents](https://github.com/copilot/agents) to access Copilot Coding Agent.
+
+#### 3. Write a Clear Request
+
+```
+Task: Add a data validation module for training datasets
+
+Requirements:
+1. Create src/my_package/validation.py with functions to check data quality
+2. Validate that features have no NaN values (impute or drop if found)
+3. Check that labels are within expected ranges
+4. Log validation results with sample statistics
+5. Raise ValueError if validation fails with descriptive message
+6. Add comprehensive unit tests
+
+Success criteria:
+- Training script validates dataset before training starts
+- Validation output includes row counts, missing value rates, label distribution
+- All tests pass locally
+
+Reference pattern: See how preprocessing is done in preprocess_scripts/02_create_dataset.py
+```
+
+#### 4. Agent Implements & Tests
+
+- Agent explores your codebase using custom instructions
+- Agent creates a branch and implements changes
+- Agent runs tests and validates work
+- Agent is ready for review and integration
 
 Agents rely heavily on custom instructions to work efficiently. Without them, agents waste time exploring your codebase.
 
@@ -373,47 +406,6 @@ setup_scripts/
 ```
 
 ---
-
-## Agentic Workflow: Step-by-Step
-
-### 1. Set Up Custom Instructions (Foundation)
-
-Ensure `.github/copilot-instructions.md` exists and is comprehensive. Agents use this as their knowledge base.
-
-### 2. Open Copilot Agent
-
-Navigate to [github.com/copilot/agents](https://github.com/copilot/agents) to access Copilot Coding Agent.
-
-### 3. Write a Clear Request
-
-```
-Task: Add a data validation module for training datasets
-
-Requirements:
-1. Create src/my_package/validation.py with functions to check data quality
-2. Validate that features have no NaN values (impute or drop if found)
-3. Check that labels are within expected ranges
-4. Log validation results with sample statistics
-5. Raise ValueError if validation fails with descriptive message
-6. Add comprehensive unit tests
-
-Success criteria:
-- Training script validates dataset before training starts
-- Validation output includes row counts, missing value rates, label distribution
-- All tests pass locally
-
-Reference pattern: See how preprocessing is done in preprocess_scripts/02_create_dataset.py
-```
-
-### 4. Agent Implements & Tests
-
-- Agent explores your codebase
-- Agent creates a branch and implements changes
-- Agent runs tests and validates work
-- Agent is ready for review and integration
-
----
-
 
 # Part 3: Best Practices & Patterns
 
