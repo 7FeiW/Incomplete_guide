@@ -420,6 +420,95 @@ setup_scripts/
 - Run full test suite and validate on validation set before submitting PR
 ```
 
+### Advanced: Nested & Model-Specific Instructions
+
+For larger projects, complement `.github/copilot-instructions.md` with specialized instruction files:
+
+#### Nested Instructions (Folder-Specific)
+
+**Feature**: Supports nested `copilot-instructions.md` files for folder-specific guidance (experimental in VS Code via `chat.useNestedAgentsMdFiles`).
+
+**Example structure**:
+```
+.github/
+  └── copilot-instructions.md        # Project-wide instructions
+
+src/
+  └── copilot-instructions.md        # Specific to src/ package
+      └── models/
+          └── copilot-instructions.md # Specific to model implementations
+
+tests/
+  └── copilot-instructions.md        # Testing-specific conventions
+
+scripts/
+  └── copilot-instructions.md        # Script and automation patterns
+```
+
+**Use cases**:
+- **Model implementations** (`src/models/copilot-instructions.md`): Define PyTorch module patterns, layer types, validation requirements
+- **Testing** (`tests/copilot-instructions.md`): Specify pytest fixtures, mocking strategies, edge cases to always test
+- **Scripts** (`scripts/copilot-instructions.md`): Document CLI argument patterns, error handling, SLURM submission conventions
+- **Data pipelines** (`preprocess_scripts/copilot-instructions.md`): Specify data format validation, logging levels, output schemas
+
+#### Model-Specific Instructions
+
+**Feature**: Define agent personas and tool access using model-specific files like `CLAUDE.md` or `GEMINI.md`.
+
+**Example structure**:
+```
+.github/
+  ├── copilot-instructions.md    # Universal guidelines
+  ├── CLAUDE.md                  # Claude-specific (agentic reasoning, planning)
+  ├── GEMINI.md                  # Gemini-specific (multimodal, vision tasks)
+  └── GPT4.md                    # GPT-4 specific (code complexity, edge cases)
+```
+
+**CLAUDE.md example**:
+```markdown
+# Instructions for Claude Models
+
+Claude excels at reasoning through complex refactoring and architecture decisions.
+
+## Agent Personas for Claude
+- **Architect**: Design multi-file refactorings with full dependency understanding
+- **Reviewer**: Critique code for logical correctness and edge cases
+- **Researcher**: Propose novel algorithmic improvements with mathematical rigor
+
+## Tool Boundaries
+- ✓ Full access to plan and execute multi-step features
+- ✓ Can propose significant architectural changes with reasoning
+- ⚠️ Always request safety review for model inference changes
+
+## Specialized Tasks
+- Large refactors: Use Claude for design planning phase
+- Code review: Claude is excellent at catching logical flaws
+- Documentation: Claude writes clear mathematical explanations
+```
+
+**GEMINI.md example**:
+```markdown
+# Instructions for Gemini Models
+
+Gemini excels at visual analysis and data-heavy tasks.
+
+## Tool Boundaries
+- ✓ Full access to analyze dataset structure and statistics
+- ✓ Can review notebook visualizations and plots
+- ⚠️ Defer complex numerical algorithm design to other models
+
+## Specialized Tasks
+- Data exploration: Use Gemini for EDA and visualization generation
+- Notebook analysis: Gemini understands notebook structure well
+- Performance profiling: Gemini can identify bottleneck patterns
+```
+
+**Why use model-specific files?**
+- **Optimize for strengths**: Route tasks to models that excel at them
+- **Define boundaries**: Set clear expectations for each model's access level
+- **Agent personas**: Give agents specialized roles (architect, reviewer, researcher)
+- **Safety & trust**: Declare which models handle sensitive code (auth, ML pipeline validation)
+
 ---
 
 # Part 3: Best Practices & Patterns
