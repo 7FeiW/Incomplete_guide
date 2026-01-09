@@ -2,7 +2,36 @@
 
 This document covers practical workflows for using **GitHub Copilot** as an AI agent for software development. It focuses on planning strategies, agentic workflows, and how to guide agents to understand your codebase and complete complex tasks autonomously.
 
+## Table of Contents
+
+### Part 1: Understanding Copilot
+1. [What is Copilot?](#what-is-copilot)
+2. [Copilot Models & Modes](#copilot-models--modes)
+3. [Choosing the Right Mode](#choosing-the-right-mode)
+
+### Part 2: Using Copilot for Agents
+4. [Why Use Copilot Agents?](#why-use-copilot-agents)
+5. [Repository Custom Instructions for Agents](#repository-custom-instructions-for-agents)
+6. [Agentic Workflow: Step-by-Step](#agentic-workflow-step-by-step)
+7. [Planning with Copilot Agents](#planning-with-copilot-agents)
+
+### Part 3: Best Practices & Patterns
+8. [Practical Guide to Agent Development](#practical-guide-to-agent-development)
+
+### Part 4: Quality & Safety
+9. [Security & Code Quality Considerations](#security--code-quality-considerations)
+10. [Anti-patterns & Pitfalls](#anti-patterns--pitfalls)
+11. [Integration with Development Workflow](#integration-with-development-workflow)
+
+### Part 5: Reference
+12. [When to Use, When Not to Use](#when-to-use-when-not-to-use)
+13. [Troubleshooting & FAQ](#troubleshooting--faq)
+14. [Quick Command Reference](#quick-command-reference)
+15. [References & Further Reading](#references--further-reading)
+
 ---
+
+# Part 1: Understanding Copilot
 
 ## What is Copilot?
 
@@ -156,6 +185,8 @@ GitHub Copilot offers different models optimized for different tasks:
 ---
 
 ---
+
+# Part 2: Using Copilot for Agents
 
 ## Why Use Copilot Agents?
 
@@ -393,9 +424,15 @@ Once satisfied, merge the PR.
 
 ---
 
-## Practical Tips for Agent Success
+# Part 3: Best Practices & Patterns
 
-### Tip 1: Leverage Reference Patterns
+# Part 3: Best Practices & Patterns
+
+## Practical Guide to Agent Development
+
+### Tips for Effective Agent Requests
+
+#### Tip 1: Leverage Reference Patterns
 
 Guide agents to existing similar code:
 
@@ -409,7 +446,7 @@ ImageDataset in src/my_package/data.py. Follow the same pattern including
 docstrings, type hints, and error handling."
 ```
 
-### Tip 2: Break Large Tasks Into Steps
+#### Tip 2: Break Large Tasks Into Steps
 
 Agents work better with decomposed tasks:
 
@@ -426,7 +463,7 @@ Agents work better with decomposed tasks:
 Success: agents should apply augmentations during training without breaking existing code"
 ```
 
-### Tip 3: Specify Test Expectations
+#### Tip 3: Specify Test Expectations
 
 Agents test their work; tell them what to verify:
 
@@ -438,7 +475,7 @@ Verification:
 - Load test: 1000 training batches on GPU should complete without memory errors
 ```
 
-### Tip 4: Point Out Edge Cases
+#### Tip 4: Point Out Edge Cases
 
 ```
 Edge cases to handle:
@@ -448,11 +485,9 @@ Edge cases to handle:
 - Preprocessing should support both CSV and Parquet file formats
 ```
 
----
+### Best Practices & Do's/Don'ts
 
-## Best Practices for Agentic Development
-
-### ✓ Do
+#### ✓ Do
 
 - **Be explicit about requirements** — agents are literal; they follow specs precisely
 - **Provide multiple reference patterns** — agents learn from examples
@@ -461,7 +496,7 @@ Edge cases to handle:
 - **Review generated code** — understand what the agent built
 - **Update instructions** — as codebase evolves, update custom instructions
 
-### ❌ Don't
+#### ❌ Don't
 
 - **Don't be vague** — "improve performance" is useless; specify the bottleneck
 - **Don't mix concerns** — one task per agent request
@@ -470,12 +505,9 @@ Edge cases to handle:
 - **Don't assume agent knows undocumented patterns** — if it's not in instructions or code, it won't be followed
 - **Don't ignore test failures** — agent might have broken something subtle
 
+### Practical Development Patterns
 
----
-
-## Practical Tips & Patterns
-
-### Pattern 1: Comment-Driven Development
+#### Pattern 1: Comment-Driven Development
 
 ```python
 # Parse JSON input and validate against schema
@@ -486,49 +518,13 @@ def validate_request(data, schema):
 
 **Tip**: Be specific about the "what" (intent) and let AI fill in the "how".
 
-### Pattern 2: Iterative Refinement
-
-1. Generate initial code (Copilot or Antigravity)
-2. Ask for improvements: "add error handling", "optimize for performance"
-3. Repeat until satisfied
-
-### Pattern 3: Context Injection
-
-If AI suggestions miss your coding style:
-
-```
-# Our codebase uses dataclasses, dependency injection, and async/await
-# Please follow this pattern for the following function:
-def process_data(data):
-    pass
-```
-
-### Pattern 4: Testing-First with AI
-
-1. **Write test with AI help** (test describes intent)
-2. **Generate implementation** to pass tests
-3. **Refactor** with AI suggestions---
-
-## Practical Tips & Patterns
-
-### Pattern 1: Comment-Driven Development
-
-```python
-# Parse JSON input and validate against schema
-def validate_request(data, schema):
-    # Copilot often generates correct implementation from intent
-    pass
-```
-
-**Tip**: Be specific about the "what" (intent) and let AI fill in the "how".
-
-### Pattern 2: Iterative Refinement
+#### Pattern 2: Iterative Refinement
 
 1. Generate initial code
 2. Ask for improvements: "add error handling", "optimize for performance"
 3. Repeat until satisfied
 
-### Pattern 3: Context Injection
+#### Pattern 3: Context Injection
 
 If agent misses your coding style:
 
@@ -537,11 +533,15 @@ If agent misses your coding style:
 # Add a new User model following this pattern
 ```
 
-### Pattern 4: Testing-First with AI
+#### Pattern 4: Testing-First with AI
 
 1. **Write test with AI help** (test describes intent)
 2. **Generate implementation** to pass tests
 3. **Refactor** with AI suggestions
+
+---
+
+# Part 4: Quality & Safety
 
 ## Security & Code Quality Considerations
 
@@ -613,6 +613,8 @@ If agent misses your coding style:
 - Store AI-generated templates for common tasks
 
 ---
+
+# Part 5: Reference
 
 ## When to Use, When Not to Use
 
