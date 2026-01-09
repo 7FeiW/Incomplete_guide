@@ -247,15 +247,17 @@ Architecture notes:
 
 ### Step-by-Step Workflow
 
-#### 1. Set Up Custom Instructions (Foundation)
+#### Step 0: Set Up Custom Instructions (One-Time Setup)
 
-Ensure `.github/copilot-instructions.md` exists and is comprehensive. Agents use this as their knowledge base.
+Ensure `.github/copilot-instructions.md` exists and is comprehensive. Agents use this as their knowledge base. This is a **one-time setup** for your repository—once created, agents will reference it for all future requests.
 
-#### 2. Open Copilot Agent
+See [Repository Custom Instructions for Agents](#repository-custom-instructions-for-agents) section below for detailed guidance on what to include.
+
+#### Step 1: Open Copilot Agent
 
 Navigate to [github.com/copilot/agents](https://github.com/copilot/agents) to access Copilot Coding Agent.
 
-#### 3. Write a Clear Request
+#### Step 2: Write a Clear Request
 
 ```
 Task: Add a data validation module for training datasets
@@ -276,7 +278,7 @@ Success criteria:
 Reference pattern: See how preprocessing is done in preprocess_scripts/02_create_dataset.py
 ```
 
-#### 4. Agent Implements & Tests
+#### Step 3: Agent Implements & Tests
 
 - Agent explores your codebase using custom instructions
 - Agent creates a branch and implements changes
