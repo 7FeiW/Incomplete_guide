@@ -405,26 +405,15 @@ Success criteria:
 Reference pattern: See how preprocessing is done in preprocess_scripts/02_create_dataset.py
 ```
 
-### 4. Agent Creates a Draft PR
+### 4. Agent Implements & Tests
 
 - Agent explores your codebase
 - Agent creates a branch and implements changes
-- Agent runs tests and validates
-- Agent opens a PR with a detailed description
-
-### 5. Review & Iterate
-
-- Review the PR (understand the logic)
-- Request changes if needed: "add rate limiting to /auth/verify-email"
-- Agent implements, pushes updates, and updates PR
-
-### 6. Merge
-
-Once satisfied, merge the PR.
+- Agent runs tests and validates work
+- Agent is ready for review and integration
 
 ---
 
-# Part 3: Best Practices & Patterns
 
 # Part 3: Best Practices & Patterns
 
@@ -590,6 +579,42 @@ If agent misses your coding style:
 ---
 
 ## Integration with Development Workflow
+
+### Pull Request Workflows (Team Environments)
+
+For collaborative codebases with pull request reviews:
+
+#### Step 5: Review & Iterate
+
+- Review agent-generated PR (understand the logic)
+- Request changes if needed: "add rate limiting", "improve error messages"
+- Agent implements changes, pushes updates, and updates PR
+
+#### Step 6: Merge
+
+Once satisfied with the implementation and tests pass, merge the PR to main branch.
+
+### Solo & Research Workflows (No PR Review)
+
+For individual researchers or solo development:
+
+Instead of creating a PR, agent can:
+- Commit changes directly to a branch
+- Generate a summary of changes (similar to PR description)
+- Provide before/after comparison for your review
+- You validate locally and merge when ready
+
+**Approach**:
+```
+After step 3 (Clear Request), agent implements directly:
+1. Agent creates a feature branch
+2. Agent implements and tests changes
+3. Agent generates change summary with diffs
+4. You review summary locally
+5. You merge branch to main
+```
+
+This skips the PR infrastructure overhead while maintaining code review discipline.
 
 ### In a Team
 
