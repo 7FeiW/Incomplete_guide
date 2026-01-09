@@ -266,8 +266,6 @@ This is a machine learning research project for model training and inference pip
 **3. Project Layout** (agents must know where to put files)
 ```markdown
 ## Project Structure
-
-```
 src/
   └── my_package/         # Main Python package
       ├── __init__.py
