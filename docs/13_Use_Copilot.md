@@ -227,12 +227,13 @@ Agents rely heavily on custom instructions to work efficiently. Without them, ag
 ```markdown
 ## Project Overview
 
-This is a Python REST API for ecommerce order management.
+This is a machine learning research project for model training and inference pipelines.
 - **Language**: Python 3.11
-- **Framework**: Flask 2.x with SQLAlchemy ORM
-- **Database**: PostgreSQL 15
-- **Testing**: pytest with factories
-- **Key patterns**: Blueprint routing, dependency injection with Flask extensions
+- **Core libraries**: PyTorch, NumPy, scikit-learn
+- **Data processing**: Pandas, Polars
+- **Testing**: pytest with fixtures
+- **Execution**: SLURM on HPC clusters or local GPU training
+- **Key patterns**: Modular src/ package, numbered preprocessing scripts, experiment config tracking
 ```
 
 **2. Exact Build & Test Commands** (agents must validate their work)
@@ -243,20 +244,23 @@ This is a Python REST API for ecommerce order management.
 1. `python -m venv venv`
 2. `source venv/bin/activate`  (Unix) or `venv\Scripts\activate.ps1` (Windows)
 3. `pip install -r requirements.txt`
-4. `pip install -r requirements-dev.txt`
+4. `pip install -r requirements-dev.txt` (for testing/development)
 
 ### Test
 - **Run all tests**: `pytest tests/ -v`
-- **Run specific test file**: `pytest tests/test_auth.py -v`
+- **Run specific test file**: `pytest tests/test_models.py -v`
 - **Run with coverage**: `pytest --cov=src tests/`
 
-### Lint
-- `flake8 src/ tests/`
-- `mypy src/ --strict`
+### Data Processing
+- `python preprocess_scripts/01_extract_data.py --config configs/preprocess.yaml`
+- `python preprocess_scripts/02_create_dataset.py --config configs/dataset.yaml`
 
-### Start Dev Server
-- `python -m src.app`
-- Server runs on http://localhost:5000
+### Training
+- **Local GPU**: `python scripts/fine_tuning.py --config configs/model_config.yaml`
+- **SLURM cluster**: `sbatch slurm_scripts/train_job.sh`
+
+### Inference
+- `python scripts/inference.py --model weights/model.pt --input data/test.csv`
 ```
 
 **3. Project Layout** (agents must know where to put files)
@@ -265,30 +269,45 @@ This is a Python REST API for ecommerce order management.
 
 ```
 src/
-  ├── app.py              # Flask app factory
-  ├── models/             # SQLAlchemy models
-  │   ├── user.py
-  │   ├── order.py
-  │   └── __init__.py
-  ├── routes/             # Flask Blueprints
-  │   ├── auth.py         # Authentication endpoints
-  │   ├── orders.py       # Order CRUD
-  │   └── __init__.py
-  ├── schemas/            # Pydantic validation
-  │   ├── auth.py
-  │   └── order.py
-  └── utils/              # Shared helpers
-      ├── jwt.py          # JWT token utilities
-      ├── decorators.py   # Auth decorators
-      └── db.py           # DB helpers
+  └── my_package/         # Main Python package
+      ├── __init__.py
+      ├── models.py       # Model definitions (PyTorch modules)
+      ├── utils.py        # Shared utilities (preprocessing, metrics)
+      ├── config.py       # Config loading and validation
+      └── data.py         # Dataset classes
 
 tests/
-  ├── conftest.py         # pytest fixtures (database, factories)
-  ├── test_auth.py
-  ├── test_orders.py
-  └── factories/          # Factory Boy fixtures
-      ├── user_factory.py
-      └── order_factory.py
+  ├── conftest.py         # pytest fixtures (sample data, mock models)
+  ├── test_models.py      # Model unit tests
+  ├── test_utils.py
+  └── fixtures/           # Test data and pre-trained models
+      ├── sample_data.csv
+      └── test_weights.pt
+
+preprocess_scripts/
+  ├── 01_extract_data.py         # Download/extract raw data
+  └── 02_create_dataset.py       # Clean and prepare dataset
+
+scripts/
+  ├── fine_tuning.py     # Model training script
+  └── inference.py       # Inference/prediction script
+
+notebooks/
+  ├── data_exploration.ipynb
+  └── results_analysis.ipynb
+
+configs/
+  ├── model_config.yaml   # Model hyperparameters
+  ├── dataset.yaml        # Dataset configuration
+  └── preprocess.yaml     # Preprocessing settings
+
+slurm_scripts/
+  ├── train_job.sh        # SLURM job submission script
+  └── inference_job.sh
+
+setup_scripts/
+  ├── env_local.sh        # Local environment setup
+  └── env_hpc_cpu.sh      # HPC environment setup
 
 .github/
   └── copilot-instructions.md
@@ -298,12 +317,13 @@ tests/
 ```markdown
 ## Coding Standards
 
-- **Type hints**: All functions must have type hints (strict mypy)
+- **Type hints**: All functions must have type hints where applicable
 - **Naming**: Snake case for functions/vars, PascalCase for classes
-- **Error handling**: Use custom exceptions from `src.exceptions`
-- **Database**: Always use ORM; never raw SQL
-- **Tests**: 1 test per behavior; use factories for setup
-- **Async**: Never used; code is synchronous throughout
+- **Device handling**: Always check for CUDA availability; support CPU fallback
+- **Random seeds**: Set seeds (torch, numpy, random) for reproducibility
+- **Logging**: Use Python logging module, not print statements
+- **Tests**: Write unit tests for models and utilities; use pytest fixtures
+- **Configs**: Use YAML for all experiment configs; never hardcode hyperparameters
 ```
 
 **5. Critical Constraints** (prevents agents from making breaking changes)
@@ -311,15 +331,16 @@ tests/
 ## Important Constraints
 
 ⚠️ **Never modify**:
-- The database schema without running `alembic revision`
-- The response format of existing endpoints (backward compatibility)
-- The JWT token structure (mobile apps depend on it)
+- Model input/output shapes without updating all downstream code
+- The config schema without deprecation warnings
+- The preprocessing steps (breaks reproducibility of past experiments)
 
 ✓ **Always do**:
-- Add migrations when touching models
-- Add tests for new endpoints
-- Update API documentation in docs/api.md
-- Run full test suite before submitting PR
+- Save model checkpoints with seed and config info
+- Add tests for new model architectures
+- Update configs/ when adding new hyperparameters
+- Include docstrings explaining mathematical operations
+- Run full test suite and validate on validation set before submitting PR
 ```
 
 ---
@@ -337,22 +358,22 @@ Navigate to [github.com/copilot/agents](https://github.com/copilot/agents) to ac
 ### 3. Write a Clear Request
 
 ```
-Task: Add email verification for new user signups
+Task: Add a data validation module for training datasets
 
 Requirements:
-1. Generate a 6-digit OTP when user signs up
-2. Send OTP via email using SendGrid
-3. Create a /auth/verify-email endpoint that validates OTP
-4. Mark user.email_verified = true after successful verification
-5. Expire OTP after 15 minutes or 3 failed attempts
+1. Create src/my_package/validation.py with functions to check data quality
+2. Validate that features have no NaN values (impute or drop if found)
+3. Check that labels are within expected ranges
+4. Log validation results with sample statistics
+5. Raise ValueError if validation fails with descriptive message
 6. Add comprehensive unit tests
 
 Success criteria:
-- New user cannot call authenticated endpoints until email verified
-- Resend OTP endpoint exists at /auth/resend-otp
+- Training script validates dataset before training starts
+- Validation output includes row counts, missing value rates, label distribution
 - All tests pass locally
 
-Reference pattern: See how password reset works in routes/auth.py
+Reference pattern: See how preprocessing is done in preprocess_scripts/02_create_dataset.py
 ```
 
 ### 4. Agent Creates a Draft PR
@@ -385,8 +406,9 @@ Guide agents to existing similar code:
 "Add a new API endpoint"
 
 ✓ Specific:
-"Add a /users/{id}/preferences endpoint similar to /users/{id}/settings 
-but with different fields. Follow the same pattern used in routes/settings.py"
+"Add a new model class for image preprocessing similar to the existing 
+ImageDataset in src/my_package/data.py. Follow the same pattern including 
+docstrings, type hints, and error handling."
 ```
 
 ### Tip 2: Break Large Tasks Into Steps
@@ -398,12 +420,12 @@ Agents work better with decomposed tasks:
 "Refactor the payment system to support Stripe and PayPal"
 
 ✓ Better:
-"Add PayPal support to the payment system:
-1. Create new models/paypal_transaction.py
-2. Add PayPal credential validation in services/paypal_service.py
-3. Update /payments/create to accept paypal_method parameter
-4. Add tests in tests/test_paypal_integration.py
-Success: agent can process PayPal webhooks and store transactions"
+"Add a new preprocessing pipeline for image augmentation:
+1. Create new models class models/augmentation.py with RandomCrop, RandomFlip
+2. Integrate augmentation into dataset loading in src/my_package/data.py
+3. Add augmentation config parameters to configs/dataset.yaml
+4. Add unit tests in tests/test_augmentation.py
+Success: agents should apply augmentations during training without breaking existing code"
 ```
 
 ### Tip 3: Specify Test Expectations
@@ -412,20 +434,20 @@ Agents test their work; tell them what to verify:
 
 ```
 Verification:
-- Test that existing users cannot be created twice with same email
-- Test that JWT middleware rejects invalid tokens
-- Test that admin endpoints return 403 for non-admin users
-- Load test: 1000 concurrent requests to /health should not crash
+- Test that model loads correctly from checkpoint with all hyperparameters
+- Test that preprocessing pipeline handles missing values (NaN) correctly
+- Test that inference script outputs predictions in expected format
+- Load test: 1000 training batches on GPU should complete without memory errors
 ```
 
 ### Tip 4: Point Out Edge Cases
 
 ```
 Edge cases to handle:
-- Empty strings should be treated as null
-- Concurrent requests to /order/checkout should not double-charge
-- If Redis is down, fall back to in-memory cache
-- Unicode usernames should be supported
+- Empty or zero values in training data should be skipped or imputed
+- Model should handle variable input sequence lengths
+- Inference script should gracefully fail if GPU memory is exhausted
+- Preprocessing should support both CSV and Parquet file formats
 ```
 
 ---
