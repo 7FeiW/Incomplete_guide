@@ -108,6 +108,64 @@ This requires packaging metadata (in `pyproject.toml`, `setup.cfg`, or `setup.py
 
 ---
 
+## `pyproject.toml` vs `requirements.txt`
+
+Quick guidance:
+
+- Prefer `pyproject.toml` for new projects: modern standard (PEP 518/621), keeps project metadata and dependencies together, works with tools like uv/Poetry/PDM/Hatch.
+- Keep `requirements.txt` for legacy flows, simple Docker base installs, or when ops expects a flat list.
+- Use a lock file from your chosen tool (`uv.lock`, `poetry.lock`, `pdm.lock`) for reproducible builds; export to `requirements.txt` only when needed for deployment images.
+
+Minimal `pyproject.toml` (setuptools backend):
+
+```toml
+[project]
+name = "myapp"
+version = "0.1.0"
+description = "Example app"
+requires-python = ">=3.10"
+dependencies = [
+	"requests>=2.32",
+	"pydantic>=2.8",
+]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+```
+
+Common workflows:
+
+- Install from `pyproject.toml` with plain pip (no lock):
+
+```bash
+python -m pip install .
+```
+
+- Add deps and sync with uv (creates `uv.lock`):
+
+```bash
+uv add requests
+uv sync
+```
+
+- Export to `requirements.txt` for environments that only consume pip requirement files:
+
+```bash
+uv export --format requirements-txt > requirements.txt
+# or with Poetry: poetry export -f requirements.txt --output requirements.txt --without-hashes
+```
+
+- Editable install with extras (works for both setups):
+
+```bash
+pip install -e '.[dev]'
+```
+
+Rule of thumb: author and lock dependencies in `pyproject.toml` + tool-specific lock; generate `requirements.txt` only when an external system requires it.
+
+---
+
 ## Using `conda` and `environment.yml`
 
 Create an environment with a specific Python version:
