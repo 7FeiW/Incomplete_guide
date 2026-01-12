@@ -164,6 +164,50 @@ pip install -e '.[dev]'
 
 Rule of thumb: author and lock dependencies in `pyproject.toml` + tool-specific lock; generate `requirements.txt` only when an external system requires it.
 
+### Why `pyproject.toml` (using this project as a dependency)
+
+- Declares package metadata: name, version, Python requirement, dependencies, optional extras, and entry points. This makes the project installable and discoverable by other projects via a simple dependency on its name.
+- Standard build isolation and backends (PEP 517/518) enable reproducible builds and `pip install .` without ad‑hoc setup scripts.
+- Easier reuse: once published (or referenced by VCS), other projects can depend on it by version instead of copying code or relying on a raw `requirements.txt`.
+- Supports optional groups (extras) and tooling-managed lock files, which `requirements.txt` alone does not model.
+
+Example: another project's `pyproject.toml` depending on this project when it is published as `myapp`:
+
+```toml
+[project]
+name = "otherapp"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+	"myapp>=0.1.0",
+]
+```
+
+Or reference via Git while you iterate:
+
+```toml
+[project]
+name = "otherapp"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+	"myapp @ git+https://github.com/yourorg/myapp.git@v0.1.0",
+]
+```
+
+Build and install this project for reuse:
+
+```bash
+python -m pip install build
+python -m build
+pip install dist/myapp-0.1.0-py3-none-any.whl
+```
+
+Why it’s harder with only `requirements.txt`:
+
+- No package metadata (name/version/extras/entry points), so consumers can't cleanly declare a dependency on “this project” — they only get a list of third-party packages.
+- No standardized build; you typically end up copying source, using editable installs, or pinning a Git URL without versioned releases, which complicates upgrades and reproducibility.
+
 ---
 
 ## Using `conda` and `environment.yml`
