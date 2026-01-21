@@ -1,0 +1,19 @@
+{
+  "servers": {
+    "perplexity-research": {
+      "type": "http",
+      "url": "https://api.perplexity.ai/mcp/v1",  // Or proxy/local MCP server URL
+      "env": {
+        "PERPLEXITY_API_KEY": "${input:perplexity-api-key}"
+      }
+    }
+  },
+  "inputs": [
+    {
+      "id": "perplexity-api-key",
+      "description": "Perplexity API key",
+      "type": "promptString",
+      "password": true
+    }
+  ]
+}
