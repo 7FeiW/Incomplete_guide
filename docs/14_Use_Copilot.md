@@ -46,6 +46,7 @@ This document covers practical workflows for using **GitHub Copilot** as an AI a
 1. [What is Copilot?](#what-is-copilot)
 2. [Copilot Models & Modes](#copilot-models--modes)
 3. [Choosing the Right Mode](#choosing-the-right-mode)
+4. [Copilot Agent Skills](#copilot-agent-skills)
 
 ### Part 2: Using Copilot for Agents
 4. [Why Use Copilot Agents?](#why-use-copilot-agents)
@@ -239,6 +240,235 @@ GitHub Copilot offers different models optimized for different tasks:
 | Review code | — | — | ✓✓ | — |
 | Debug/explain code | ✓✓ | — | — | — |
 | Generate tests | ✓ | ✓ | — | ✓ |
+
+---
+
+## Copilot Agent Skills
+
+**Agent skills** are built-in capabilities that extend GitHub Copilot's understanding of your development environment. Think of them as specialized tools that Copilot can invoke to access specific information or perform specific actions during conversations.
+
+### What Are Agent Skills?
+
+Agent skills allow Copilot to:
+- Access workspace files and code structure
+- Understand your VS Code environment and settings
+- Execute terminal commands (with your permission)
+- Query GitHub repositories, issues, and pull requests
+- Use web search for documentation and answers
+
+Skills are invoked using the `@` prefix in Copilot Chat (e.g., `@workspace`, `@terminal`).
+
+### Built-in Agent Skills
+
+#### `@workspace` - Codebase Understanding
+
+**What it does**: Provides Copilot with semantic understanding of your entire codebase, including code structure, symbols, relationships, and cross-file dependencies.
+
+**When to use**:
+- "Where is X implemented?"
+- "Find all uses of this function"
+- "How does feature Y work across these modules?"
+- Architecture and design questions
+
+**ML/AI Research Examples**:
+```
+@workspace Where are the training loops implemented in this codebase?
+
+@workspace How is distributed training currently configured? Show me all files involved.
+
+@workspace Find all model architectures that inherit from nn.Module
+
+@workspace Which scripts use the DataLoader and what batch size patterns are used?
+```
+
+**Why it's powerful**: Unlike simple text search, `@workspace` understands code semantics, relationships, and can reason about architectural patterns across your entire project.
+
+---
+
+#### `@vscode` - Editor and Settings
+
+**What it does**: Gives Copilot access to your VS Code configuration, installed extensions, settings, and editor state.
+
+**When to use**:
+- Troubleshooting editor issues
+- Configuring extensions or settings
+- Understanding keyboard shortcuts
+- Workspace-specific configurations
+
+**ML/AI Research Examples**:
+```
+@vscode How do I configure the Python extension to use my conda environment?
+
+@vscode What debugging configurations are available for PyTorch scripts?
+
+@vscode Set up a launch.json for distributed training with torchrun
+```
+
+---
+
+#### `@terminal` - Command Execution
+
+**What it does**: Allows Copilot to suggest and (with permission) execute terminal commands in your VS Code integrated terminal.
+
+**When to use**:
+- Running build scripts, tests, or deployment commands
+- Environment setup and package installation
+- Git operations
+- SLURM job submission on HPC clusters
+
+**ML/AI Research Examples**:
+```
+@terminal Install the dependencies for this project and create a conda environment
+
+@terminal Run the training script with distributed settings for 4 GPUs
+
+@terminal Submit this experiment to SLURM with 8 GPUs and 32GB memory per GPU
+
+@terminal Check GPU utilization and running processes
+```
+
+**Security note**: Always review commands before allowing Copilot to execute them. Copilot will ask for confirmation before running terminal commands.
+
+---
+
+#### `@github` - Repository and Issue Management
+
+**What it does**: Queries GitHub for information about repositories, pull requests, issues, commits, and discussions.
+
+**When to use**:
+- Understanding issue context
+- Finding related PRs or past discussions
+- Checking commit history
+- Exploring other repositories for patterns
+
+**ML/AI Research Examples**:
+```
+@github Find issues related to multi-GPU training failures in the past 6 months
+
+@github Show me recent PRs that modified the model architecture
+
+@github What discussions have we had about hyperparameter tuning strategies?
+
+@github Search the PyTorch repository for examples of custom data samplers
+```
+
+---
+
+### Using Skills in Agent Requests
+
+Skills become especially powerful when combined with **agent mode** (Copilot Coding Agent). When planning and implementing features, agents can:
+
+1. Use `@workspace` to understand existing code patterns
+2. Use `@github` to find related issues or past implementations
+3. Use `@terminal` to run tests and validate implementations
+4. Use `@vscode` to configure necessary settings
+
+**Example: Agent Request with Skills**
+
+```
+Task: Add experiment tracking with MLflow to our training pipeline
+
+Context (@workspace):
+- @workspace Show me how experiments are currently logged
+- @workspace Find all training scripts that would need MLflow integration
+
+Planning:
+- Review existing logging patterns
+- Identify all training entry points
+- Design MLflow integration that follows project conventions
+
+Implementation requirements:
+- Follow the logging style used in @workspace training/
+- Configure MLflow tracking URI in .env (reference @vscode settings)
+- Add experiment tracking to all scripts found by @workspace search
+- Create a test script that validates MLflow logging (@terminal to run tests)
+
+Validation:
+- @terminal Run pytest on new MLflow integration tests
+- @terminal Start a training run and verify metrics appear in MLflow UI
+```
+
+**How this helps**:
+- `@workspace` finds all relevant files automatically
+- Agent understands existing patterns rather than guessing
+- `@terminal` validates implementation immediately
+- Results in better-aligned code that matches your project
+
+---
+
+### Skills vs Manual Instructions
+
+| Without Skills | With Skills |
+|----------------|-------------|
+| "Look in `train.py` and `model.py`..." | `@workspace Find all training scripts` |
+| "The config format is X, Y, Z..." | `@workspace Show me existing config patterns` |
+| "Install packages with pip install..." | `@terminal pip install -r requirements.txt` |
+| "Check issue #123 for context..." | `@github Show me issue #123 and related PRs` |
+
+Skills reduce the need for manual context-gathering and make agent requests more autonomous and accurate.
+
+---
+
+### Best Practices for Using Skills
+
+1. **Start broad, then narrow**: Begin with `@workspace` to understand the big picture, then ask specific follow-up questions.
+
+2. **Combine skills**: Use multiple skills in a single request for comprehensive context.
+   ```
+   @workspace Find the model training code
+   @github Check if there are open issues about training performance
+   @terminal Run the profiler on the training script
+   ```
+
+3. **Use skills in custom instructions**: Reference skills in `.github/copilot-instructions.md` to guide agents automatically.
+   ```markdown
+   ## Development Workflow
+   - Always use @workspace to understand existing patterns before proposing changes
+   - Use @terminal to run pytest after implementing new features
+   - Check @github for related issues before implementing fixes
+   ```
+
+4. **Verify terminal commands**: Always review commands suggested by `@terminal` before execution, especially for:
+   - File deletion or modification
+   - Package installation
+   - Git operations
+   - System configuration changes
+
+5. **Scope workspace queries**: For large codebases, help `@workspace` by providing directory hints.
+   ```
+   @workspace Look in src/models/ for model architectures
+   ```
+   Better than:
+   ```
+   @workspace Find model architectures
+   ```
+
+---
+
+### Common Pitfalls
+
+**Pitfall 1: Not using `@workspace` for code understanding**
+- ❌ "The training code is in train.py and uses DataLoader from data.py"
+- ✅ `@workspace How is the data loading pipeline structured?`
+
+**Pitfall 2: Asking `@terminal` to run dangerous commands without review**
+- ❌ Blindly accepting `rm -rf` or `git push --force` suggestions
+- ✅ Always read and understand terminal commands before confirming
+
+**Pitfall 3: Overusing skills when simple questions suffice**
+- ❌ `@workspace What is the capital of France?`
+- ✅ Use skills for codebase/environment questions, not general knowledge
+
+**Pitfall 4: Not combining skills with agent mode**
+- ❌ Using skills only in chat, then manually implementing features
+- ✅ Include skill-based context gathering in agent requests for autonomous implementation
+
+---
+
+### Additional Resources
+
+- Official GitHub Copilot Skills Documentation: [https://docs.github.com/en/copilot/concepts/agents/about-agent-skills](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills)
+- GitHub Copilot extensibility: [https://docs.github.com/en/copilot/building-copilot-extensions](https://docs.github.com/en/copilot/building-copilot-extensions)
 
 ---
 
