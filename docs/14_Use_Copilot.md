@@ -2,6 +2,44 @@
 
 This document covers practical workflows for using **GitHub Copilot** as an AI agent for software development. It focuses on planning strategies, agentic workflows, and how to guide agents to understand your codebase and complete complex tasks autonomously.
 
+---
+
+## Important: AI Agents Are Tools, Not Replacements
+
+**AI agents are not magic.** While GitHub Copilot and other AI coding assistants are powerful tools, they are **force multipliers**, not replacements for software engineering expertise.
+
+**Why understanding software systems matters more than ever:**
+
+1. **AI agents follow your instructions** - Poor understanding leads to poor instructions, which leads to poor code. You need to know what to ask for and how to evaluate the results.
+
+2. **You must verify agent outputs** - AI-generated code can contain subtle bugs, security vulnerabilities, or architectural flaws that only domain expertise can catch. Blind trust in AI outputs is dangerous.
+
+3. **Complex systems require human judgment** - AI agents excel at implementing well-defined tasks, but system architecture, design trade-offs, and long-term maintainability decisions still require human expertise.
+
+4. **Debugging AI-generated code requires deeper knowledge** - When agent-generated code fails, you need strong fundamentals to diagnose whether the issue is in your requirements, the AI's interpretation, or the generated implementation.
+
+5. **AI agents augment, not replace** - Think of Copilot as a senior developer who can write code incredibly fast but needs your guidance on what to build and why. You remain the architect, code reviewer, and decision-maker.
+
+**What AI agents supercharge:**
+- Writing boilerplate and repetitive code
+- Implementing well-specified features quickly
+- Generating tests and documentation
+- Refactoring code following established patterns
+- Exploring multiple implementation approaches rapidly
+
+**What still requires human expertise:**
+- System architecture and design decisions
+- Understanding business requirements and edge cases
+- Security threat modeling and vulnerability assessment
+- Performance optimization trade-offs
+- Code review and quality assurance
+- Debugging complex issues
+- Making technical trade-off decisions
+
+**The bottom line**: AI agents make excellent software engineers even more productive. They do not make inexperienced developers into experts. If anything, using AI agents effectively requires **stronger fundamentals** because you need to rapidly evaluate, debug, and integrate AI-generated code into production systems.
+
+---
+
 ## Table of Contents
 
 ### Part 1: Understanding Copilot
