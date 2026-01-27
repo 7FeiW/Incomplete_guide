@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(chmod:*)",
+      "Bash(ls:*)",
+      "Bash(conda env list:*)",
+      "Bash(source:*)",
+      "Bash(conda activate:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)"
+    ]
+  }
+}
