@@ -156,19 +156,6 @@ Each task should have:
 - A log file
 - A way to detect whether it finished successfully
 
-For long workflows, use a checkpoint or resume strategy. After each round, merge completed results, update the remaining to-do list, and resubmit unfinished tasks.
-
-Example pattern:
-
-```text
-input list
-→ split into small chunks
-→ run each chunk as a short SLURM task
-→ write task-level output
-→ merge completed outputs
-→ update unfinished list
-→ resubmit remaining tasks
-
 ## 3. Environment & Packaging
 
 Large-scale runs must use reproducible software environments.
