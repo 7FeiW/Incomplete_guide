@@ -19,20 +19,18 @@ This should answer:
 - What compute budget or HPC allocation is available?
 
 This step ensures that the planned workflow matches the available compute, storage, time, and budget before launching large-scale runs.
----
 
-0. Parallelization
-Before scaling, design the workflow so that large jobs are broken into smaller independent unit tasks. Parallelization should be data-driven, meaning the structure of the dataset should determine how tasks are split.
 
-> Can the work be divided into independent tasks that can run at the same time?
+## 0. Parallelization
+Before scaling, design the workflow so that large jobs are broken into smaller independent unit tasks. Parallelization should be **data-driven**, meaning the structure of the dataset should determine how tasks are split. That is work will be divided into independent tasks that can run at the same time in parallel. Ideally, each task should use a similar amount of wall time for easy task schecudling. Common ways to parallelize include:
 
-Common ways to parallelize include:
-
-- By sample
-- By file
+- By sample/inputs
+- By file of inputs
 - By training experiment
 
-For example, in sequencing workflows, each sample can often be processed independently. In machine-learning workflows, each hyperparameter configuration or cross-validation fold can be run as a separate job.
+For example, when running ClassyFire [[https://bitbucket.org/wishartlab/classyfire-batch-runner/src/master/]], compound classification can often be parallelized by splitting the input dataset into smaller compound batches. Each batch can run as an independent unit task, producing a separate classification output. After processing, the batch-level results can be merged into one final annotated compound table. The batch size should be selected based on benchmark results, API or server limits, runtime, memory use, and failure rate. 
+
+For example, when running RADOR [[https://bitbucket.org/wishartlab/rador/src/main]], the disease input list can be divided into smaller independent tasks, where each task processes text inputs for a defined number of diseases. Each task is assigned a fixed wall time, such as 3 hours. After completion or timeout, a script merges finished results and updates the to-do list so that unfinished diseases can be submitted in the next round. This supports checkpoint-style parallelization and avoids rerunning completed work.
 
 Parallelization planning should define:
 
@@ -42,146 +40,66 @@ Parallelization planning should define:
 - How outputs will be merged after processing
 - How failed jobs will be detected and rerun
 
-Good parallelization improves speed, reduces bottlenecks, and makes large-scale processing more manageable.
-
----
 
 ## 1. Data Strategy
 
-A data strategy defines how data will be stored, moved, processed, and archived.
-
-This is critical because large-scale experiments often fail due to storage limitations, file organization problems, or inefficient data movement.
-
-### Identify data sources and sizes
-
-Document where the data come from and how large they are.
-
-This may include:
-
-- Public databases
-- Internal datasets
-- Sequencing repositories
-- Image repositories
-- Simulation outputs
-- Metadata files
-- Model checkpoint files
-- Training, validation, and test datasets
+Define how data will be stored, moved, processed, and archived before scaling.
 
 For each data source, record:
 
-- Dataset name
-- Source location
+- Source name and location
+- File type
 - Number of files
-- File format
 - Total size
-- Expected expansion after processing
+- Expected processed/intermediate size
 - Required metadata
+- Whether the data must stay on the compute system or can be archived locally
 
 Example:
 
-| Data type | Number of files | Estimated size |
-|---|---:|---:|
-| Raw input data | 5,000 files | 4 TB |
-| Processed dataset | 5,000 files | 6 TB |
-| Model checkpoints | 200 files | 2 TB |
-| Logs and metrics | 10,000 files | 100 GB |
-| Final outputs | 500 files | 200 GB |
+| Data category | Number of files | Estimated size | Storage decision |
+|---|---:|---:|---|
+| Raw input data | 5,000 | 4 TB | Archive after validation |
+| Processed data | 5,000 | 6 TB | Keep on compute system |
+| Reference database | 1–10 | 500 GB | Keep on compute system |
+| Model checkpoints | 200 | 2 TB | Keep recent, archive old |
+| Logs and metrics | 10,000 | 100 GB | Archive after run |
+| Final outputs | 500 | 200 GB | Keep and back up |
 
-This helps estimate storage and compute needs before the full run begins.
+**Data should also be organized to support parallelization.** For example, files can be separated by sample, accession, batch, model run, or task ID.
 
-### Include dataset size and model checkpoint size
+### Decide where each data type should be stored
 
-For machine-learning or deep-learning workflows, checkpoint files can become very large.
+Before running large-scale jobs, define where each type of data should live. Storage location should depend on how often the data are accessed, whether they are shared across tasks, and whether they are temporary or final outputs.
 
-You should estimate:
+| Data type | Recommended location | Reason |
+|---|---|---|
+| Raw input data | Local/archive storage after validation | Usually large and not repeatedly needed after processing |
+| Active input data | HPC/cloud scratch or working directory | Needed directly by running jobs |
+| Shared data between tasks | Shared project storage or read-only shared directory | Used by many tasks and should not be duplicated for every job |
+| Reference databases | Shared compute/project storage | Reused by many jobs, such as taxonomy, genome, chemistry, or model databases |
+| Metadata/config files | Shared project storage | Needed by all tasks for consistent sample labels, parameters, and run settings |
+| Processed data | Project storage | Needed for downstream analysis |
+| Temporary files | Scratch/tmp storage | Can be deleted after jobs finish |
+| Model checkpoints | Compute storage for recent checkpoints; archive older ones | Needed for recovery, but can grow quickly |
+| Logs and metrics | Project storage, then archive | Needed for debugging and reproducibility |
+| Final outputs | Project storage plus backup/local copy | Important results should be preserved |
 
-- Training dataset size
-- Validation dataset size
-- Test dataset size
-- Temporary training cache size
-- Model checkpoint size
-- Number of checkpoints per run
-- Total checkpoint storage across all experiments
+### Use file-based databases for portable task execution
 
-For example:
+For large-scale SLURM workflows, prefer a file-based database, such as SQLite, JSONL, Parquet, HDF5, or DuckDB, instead of a central MySQL database when possible. File-based databases are easier to move, copy, version, and reproduce across task directories.
 
-> If each checkpoint is 5 GB and the experiment saves 20 checkpoints per run across 30 runs, checkpoint storage alone may require 3 TB.
+This is useful when each task needs access to the same reference data, lookup table, compound list, disease list, or intermediate task state.
 
-This is important because checkpoint files can quickly consume more space than the original dataset.
+Recommended pattern:
 
-### Determine which data must stay on the compute system
+- Store the master file-based database in a shared project directory.
+- Treat the master copy as read-only during parallel runs.
+- For each SLURM task, copy the required database file into the task working directory if local access improves speed or avoids file-locking issues.
+- Let each task write its own output file or task-specific database.
+- Merge task outputs after the run finishes.
 
-Some files need to remain on the HPC or cloud system because they are actively used during computation.
-
-These may include:
-
-- Current input files
-- Reference databases
-- Training datasets
-- Validation datasets
-- Active model checkpoints
-- Software containers
-- Configuration files
-- Temporary working files
-- Intermediate outputs needed by later steps
-
-Keeping these files close to the compute system reduces data-transfer time and improves performance.
-
-### Determine which data can be offloaded to local storage
-
-Not all files need to remain on expensive or limited compute storage.
-
-Files that can often be moved off the compute system include:
-
-- Completed raw downloads
-- Old intermediate files
-- Failed temporary outputs
-- Archived checkpoints
-- Completed logs
-- Final figures
-- Final tables
-- Backup copies
-
-For example:
-
-> After successful processing and validation, raw input files can be moved to local storage or archival storage, while only processed files needed for modeling remain on the compute system.
-
-This reduces storage pressure and prevents jobs from failing due to full disks.
-
-### Separate data to support parallelization
-
-Data should be organized so that independent jobs can access only the files they need.
-
-Example project structure:
-
-```text
-project/
-├── data/
-│   ├── raw/
-│   ├── processed/
-│   ├── metadata/
-│   └── reference/
-├── checkpoints/
-├── configs/
-├── logs/
-├── outputs/
-├── scripts/
-└── containers/
-```
-
-For sample-level parallelization:
-
-```text
-data/processed/
-├── sample_001/
-├── sample_002/
-├── sample_003/
-└── sample_004/
-```
-
-This makes it easier to submit job arrays, rerun failed samples, and track output files.
-
----
+### Consider I/Os
 
 ## 2. Compute Resources
 
