@@ -103,141 +103,71 @@ Recommended pattern:
 
 ## 2. Compute Resources
 
-Compute planning defines where the analysis will run and what resources are required.
+Compute planning should start by benchmarking one representative unit task, then scaling that estimate to the full workflow.
 
-### Decide target compute resource
+### Determine resource usage for one unit task
 
-Choose the most appropriate platform:
+First define the unit task, such as one sample, one accession, one compound batch, one disease batch, one model run, or one cross-validation fold.
 
-| Platform | Best for |
-|---|---|
-| Local workstation | Small tests, debugging, development |
-| HPC cluster | Large academic workflows, job arrays, controlled cost |
-| Cloud | Flexible scaling, temporary large compute, managed storage |
-| Hybrid | Local storage plus HPC/cloud processing |
+For each unit task, measure:
 
-The choice depends on data size, budget, runtime, required software, security, and available expertise.
+- Runtime
+- CPU cores used efficiently
+- Peak memory usage
+- GPU usage, if needed
+- Temporary storage generated
+- Final output size
+- Disk I/O intensity
+- Failure rate or timeout risk
 
-### Decide node type or instance type
+This should be measured using small benchmark runs, not estimated only from software documentation.
 
-Different steps may need different types of compute.
+Example:
 
-| Workflow step | Main resource need |
-|---|---|
-| Data download | Network and storage |
-| File conversion | CPU and disk I/O |
-| Preprocessing | CPU and memory |
-| Model training | CPU or GPU |
-| Deep learning | GPU and memory |
-| Large matrix operations | CPU/GPU and RAM |
-| Visualization | Low/moderate CPU |
+```text
+Unit task: process one compound batch
+Input size: 10,000 compounds
+CPU request: 8 cores
+Effective CPU use: 4–6 cores
+Peak memory: 12 GB
+Runtime: 2 hours
+Temporary storage: 20 GB
+Output size: 2 GB
+```
+### Break tasks into shorter wall-time jobs
+
+When possible, design unit tasks so they can finish within a shorter wall-time limit. Shorter jobs are usually easier to schedule on HPC systems and may wait less time in the queue than very long jobs.
+
+Instead of submitting one large job that runs for many hours or days, split the work into smaller independent tasks.
 
 For example:
 
-- CPU nodes are usually enough for standard data processing.
-- GPU nodes are useful for deep learning or large neural-network training.
-- High-memory nodes are needed for large matrices, large reference databases, or memory-heavy preprocessing.
-- Storage-optimized nodes are useful when disk I/O is the bottleneck.
-
-### Reserve allocations or request quotas
-
-Before full-scale execution, make sure sufficient resources are available.
-
-For HPC, this may include:
-
-- CPU-hour allocation
-- GPU-hour allocation
-- Storage quota
-- Scratch-space quota
-- Job-array limit
-- Wall-time limit
-- Access to high-memory nodes
-
-For cloud, this may include:
-
-- Instance quota
-- GPU quota
-- Storage quota
-- Network transfer limits
-- Billing alerts
-- Budget caps
-
-This prevents the workflow from stopping halfway because of insufficient quota.
-
-### Test on small and medium nodes before full runs
-
-Do not start with the full dataset.
-
-Use staged testing:
-
-| Stage | Purpose |
+| Design | Issue |
 |---|---|
-| Small test | Confirm pipeline works |
-| Medium test | Estimate runtime, memory, storage, and failure rate |
-| Full run | Process the complete dataset |
+| One job for 1,000 inputs with 48-hour wall time | Harder to schedule; failure loses more progress |
+| 100 jobs with 10 inputs each and 2–3-hour wall time | Easier to queue; failed tasks are easier to rerun |
 
-Example:
+Each task should have:
 
-- Small test: 5 samples
-- Medium test: 50–100 samples
-- Full run: all samples
+- A clear input chunk
+- A defined wall-time limit
+- Its own working directory
+- Its own output file
+- A log file
+- A way to detect whether it finished successfully
 
-The medium test should be representative of the full dataset, including different file sizes, batches, groups, or conditions.
+For long workflows, use a checkpoint or resume strategy. After each round, merge completed results, update the remaining to-do list, and resubmit unfinished tasks.
 
-### Monitor resources used in test runs
-
-Every test run should collect resource usage.
-
-Important metrics include:
-
-- Runtime
-- CPU usage
-- GPU usage
-- RAM usage
-- Disk usage
-- Disk read/write speed
-- Network transfer speed
-- Temporary file size
-- Final output size
-- Failed jobs
-- Error messages
-
-For HPC, this can be monitored using tools such as scheduler logs, `sacct`, `seff`, `top`, `htop`, or job output files.
-
-For cloud, use platform monitoring dashboards and billing reports.
-
-### Estimate total expected resource usage
-
-After test runs, scale the observed resource usage to the full dataset.
-
-Example:
-
-If 10 samples require:
+Example pattern:
 
 ```text
-CPU time: 100 CPU-hours
-Temporary storage: 200 GB
-Final output: 20 GB
-Runtime: 5 hours
-```
-
-Then 1,000 samples may require approximately:
-
-```text
-CPU time: 10,000 CPU-hours
-Temporary storage: 20 TB
-Final output: 2 TB
-```
-
-This estimate should be used to decide:
-
-- How many jobs to run in parallel
-- How much storage to request
-- How much wall time to request
-- How much cloud budget is needed
-- Whether optimization is required before scaling
-
----
+input list
+→ split into small chunks
+→ run each chunk as a short SLURM task
+→ write task-level output
+→ merge completed outputs
+→ update unfinished list
+→ resubmit remaining tasks
 
 ## 3. Environment & Packaging
 
@@ -245,53 +175,7 @@ Large-scale runs must use reproducible software environments.
 
 ### Containerize the environment
 
-Use containers such as:
-
-- Apptainer/Singularity for HPC
-- Docker for cloud or local systems
-
-Containers help ensure that the same software versions, dependencies, and system libraries are used across machines.
-
-Recommended structure:
-
-```text
-containers/
-├── pipeline_v1.sif
-├── training_env_v1.sif
-└── preprocessing_v1.sif
-```
-
-For HPC, Apptainer is often preferred because it works better in shared cluster environments.
-
-### Provide locked environment files
-
-In addition to containers, keep environment definition files.
-
-Examples include:
-
-```text
-requirements.txt
-environment.yml
-pyproject.toml
-poetry.lock
-Dockerfile
-Singularity.def
-```
-
-These files should record exact package versions.
-
-For example:
-
-```text
-numpy==1.26.4
-pandas==2.2.2
-scikit-learn==1.5.1
-torch==2.4.0
-```
-
-This makes the experiment easier to reproduce later.
-
----
+Use containers such  Apptainer/Singularity for HPC.  Containers help ensure that the same software versions, dependencies, and system libraries are used across machines. [[./docs/13_Apptainer_Compute_Canada.md]]
 
 ## 4. Experiment Reproducibility
 
@@ -439,41 +323,9 @@ Useful alerts include:
 
 - Job failed
 - Runtime exceeded expected time
-- Disk nearly full
 - Memory exhausted
 - GPU out of memory
 - Output file missing
-- Too many failed jobs
-- Cloud budget exceeded
-
-Alerts can be sent through:
-
-- Email
-- Slack
-- Teams
-- Cluster notification system
-- Cloud monitoring service
-
-### Store training and validation metrics
-
-For modeling experiments, always save metrics.
-
-Examples:
-
-- Training loss
-- Validation loss
-- Accuracy
-- AUROC
-- AUPRC
-- F1 score
-- Precision
-- Recall
-- Confusion matrix
-- Calibration metrics
-
-These metrics should be linked to the exact experiment run and configuration.
-
----
 
 ## 6. Profiling & Optimization
 
