@@ -138,7 +138,7 @@ Output size: 2 GB
 
 When possible, design unit tasks so they can finish within a shorter wall-time limit. Shorter jobs are usually easier to schedule on HPC systems and may wait less time in the queue than very long jobs.
 
-Instead of submitting one large job that runs for many hours or days, split the work into smaller independent tasks.
+Instead of submitting one large job that runs for many hours or days, split the work into smaller independent tasks. However, the task should not be so small that most of the runtime is spent loading the environment, importing libraries, loading models, or initializing databases.
 
 For example:
 
@@ -155,6 +155,15 @@ Each task should have:
 - Its own output file
 - A log file
 - A way to detect whether it finished successfully
+
+```text
+Load model → process 1 input → exit
+Load model → process 1 input → exit
+Load model → process 1 input → exit
+
+Better design:
+Load model once → process 100 inputs → write output → exit
+```
 
 ## 3. Environment & Packaging
 
