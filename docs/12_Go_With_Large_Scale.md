@@ -36,8 +36,18 @@ flowchart LR
     B --> C2[Task 2]
     C1 --> D1[Result 1]
     C2 --> D2[Result 2]
-    D1 --> E[Results]
+    D1 --> E(Merge)
     D2 --> E
+    E --> F[Results]
+
+    classDef highlight fill:#f0f8ff,stroke:#4a90e2,stroke-width:2px;
+
+    class C1,D1 highlight
+    linkStyle 3 stroke:#4a90e2,stroke-width:4px,stroke-dasharray:0;
+
+    class C2,D2 highlight
+    linkStyle 4 stroke:#4a90e2,stroke-width:4px,stroke-dasharray:0;
+
 ```
 **Figure:** Illustration of a data‑driven parallel workflow. The pipeline starts from an initial `Data` node that is split into two independent branches (`Task 1` and `Task 2`), which can be executed concurrently (e.g., two model inferences or feature‑extraction pipelines). Each branch produces a separate result (`Result 1` and `Result 2`), which are then merged into a final `Results` node, representing aggregation, ensemble computation, or any downstream operation on the combined outputs.
 
