@@ -6,7 +6,7 @@ This document covers practical workflows for using **GitHub Copilot** as an AI a
 
 ## Important: AI Agents Are Tools, Not Replacements
 
-**AI agents are not magic.** While GitHub Copilot and other AI coding assistants are powerful tools, they are **force multipliers**, not replacements for software engineering expertise.
+**AI agents are not magic.** While GitHub Copilot and other AI coding assistants are powerful tools, they are **force multipliers**, not replacements for software engineering expertise. It is more important then ever to have understanding of how software should works.
 
 **Why understanding software systems matters more than ever:**
 
