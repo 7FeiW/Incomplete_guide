@@ -94,6 +94,7 @@ flowchart LR
 ### Case in RADOR  
 For example, when running RADOR [[https://bitbucket.org/wishartlab/rador/src/main]], the disease input list can be divided into smaller independent tasks, where each task processes text inputs for a defined number of diseases. Each task is assigned a fixed wall time, such as 3 hours. After completion or timeout, a script merges finished results and updates the to-do list so that unfinished diseases can be submitted in the next round. This supports checkpoint-style parallelization and avoids rerunning completed work.
 
+### Question to ask
 Parallelization planning should define:
 
 - The smallest independent unit of work
