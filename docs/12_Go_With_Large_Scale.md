@@ -32,13 +32,15 @@ Before scaling, design the workflow so that large jobs are broken into smaller i
 
 flowchart LR
     A[Data] --> B(Split)
-    B --> C1[Task 1]
-    B --> C2[Task 2]
-    C1 --> D1[Result 1]
-    C2 --> D2[Result 2]
-    D1 --> E(Merge)
-    D2 --> E
-    E --> F[Results]
+    B --> C1[Data for Task 1]
+    B --> C2[Data for Task 2]
+    C1 --> D1[Task Instance 1]
+    C2 --> D2[Task Instance 2]
+    D1 --> E1[Task 1 Results]
+    D2 --> E2[Task 2 Results]
+    E1 --> F(Merge)
+    E2 --> F
+    F --> G[Final Results]
 
     classDef highlight fill:#f0f8ff,stroke:#4a90e2,stroke-width:2px;
 
@@ -48,11 +50,46 @@ flowchart LR
     class C2,D2 highlight
     linkStyle 4 stroke:#4a90e2,stroke-width:4px,stroke-dasharray:0;
 
+    class D1,E1 highlight
+    linkStyle 3 stroke:#4a90e2,stroke-width:4px,stroke-dasharray:0;
+
+    class D2,E2 highlight
+    linkStyle 4 stroke:#4a90e2,stroke-width:4px,stroke-dasharray:0;
+
 ```
 **Figure:** Illustration of a data‑driven parallel workflow. The pipeline starts from an initial `Data` node that is split into two independent branches (`Task 1` and `Task 2`), which can be executed concurrently (e.g., two model inferences or feature‑extraction pipelines). Each branch produces a separate result (`Result 1` and `Result 2`), which are then merged into a final `Results` node, representing aggregation, ensemble computation, or any downstream operation on the combined outputs. Note that Task->Reults is a independent unit task, each of these unit task can be parallelizated.
 
 ### Case in Classyfire
 For example, when running ClassyFire [[https://bitbucket.org/wishartlab/classyfire-batch-runner/src/master/]], compound classification can often be parallelized by splitting the input dataset into smaller compound batches. Each batch can run as an independent unit task, producing a separate classification output. After processing, the batch-level results can be merged into one final annotated compound table. The batch size should be selected based on benchmark results, API or server limits, runtime, memory use, and failure rate. 
+
+```mermaid
+
+flowchart LR
+    A[List of Smiles] --> B(Split)
+    B --> C1[Smiles 1 to N  for Task 1]
+    B --> C2[Smiles N+1 to 2N for Task 2 ]
+    C1 --> D1[Classyfire Task Instance 1]
+    C2 --> D2[Classyfire Task Instance 2]
+    D1 --> E1[Classyfire Task 1 Results]
+    D2 --> E2[Classyfire Task 2 Results]
+    E1 --> F(Merge)
+    E2 --> F
+    F --> G[Final Results]
+
+    classDef highlight fill:#f0f8ff,stroke:#4a90e2,stroke-width:2px;
+
+    class C1,D1 highlight
+    linkStyle 3 stroke:#4a90e2,stroke-width:4px,stroke-dasharray:0;
+
+    class C2,D2 highlight
+    linkStyle 4 stroke:#4a90e2,stroke-width:4px,stroke-dasharray:0;
+
+    class D1,E1 highlight
+    linkStyle 3 stroke:#4a90e2,stroke-width:4px,stroke-dasharray:0;
+
+    class D2,E2 highlight
+    linkStyle 4 stroke:#4a90e2,stroke-width:4px,stroke-dasharray:0;
+```
 
 ### Case in RADOR  
 For example, when running RADOR [[https://bitbucket.org/wishartlab/rador/src/main]], the disease input list can be divided into smaller independent tasks, where each task processes text inputs for a defined number of diseases. Each task is assigned a fixed wall time, such as 3 hours. After completion or timeout, a script merges finished results and updates the to-do list so that unfinished diseases can be submitted in the next round. This supports checkpoint-style parallelization and avoids rerunning completed work.
