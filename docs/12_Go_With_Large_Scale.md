@@ -59,7 +59,7 @@ flowchart LR
 ```
 **Figure:** Illustration of a data‑driven parallel workflow. The pipeline starts from an initial `Data` node that is split into two independent branches (`Task 1` and `Task 2`), which can be executed concurrently (e.g., two model inferences or feature‑extraction pipelines). Each branch produces a separate result (`Result 1` and `Result 2`), which are then merged into a final `Results` node, representing aggregation, ensemble computation, or any downstream operation on the combined outputs. Note that Task->Reults is a independent unit task, each of these unit task can be parallelizated.
 
-### Case in Classyfire
+### Classyfire Example
 For example, when running ClassyFire [[https://bitbucket.org/wishartlab/classyfire-batch-runner/src/master/]], compound classification can often be parallelized by splitting the input dataset into smaller compound batches. Each batch can run as an independent unit task, producing a separate classification output. After processing, the batch-level results can be merged into one final annotated compound table. The batch size should be selected based on benchmark results, API or server limits, runtime, memory use, and failure rate. 
 
 ```mermaid
@@ -91,8 +91,133 @@ flowchart LR
     linkStyle 4 stroke:#4a90e2,stroke-width:4px,stroke-dasharray:0;
 ```
 
-### Case in RADOR  
+### RADOR Setup  
 For example, when running RADOR [[https://bitbucket.org/wishartlab/rador/src/main]], the disease input list can be divided into smaller independent tasks, where each task processes text inputs for a defined number of diseases. Each task is assigned a fixed wall time, such as 3 hours. After completion or timeout, a script merges finished results and updates the to-do list so that unfinished diseases can be submitted in the next round. This supports checkpoint-style parallelization and avoids rerunning completed work.
+
+RADOR does not use PyTorch DDP (gradient-synchronised multi-GPU training). All models are frozen at inference time — there are no gradients to synchronise. Instead, the pipeline scales horizontally via **SLURM job arrays**: each independent job owns one H100 GPU and processes a fixed slice of diseases sequentially. Tasks share no state and never communicate with each other.
+
+#### 1. SLURM Job-Array Architecture
+
+Each SLURM array task (`--array=1-1800:12%30`) receives 12 consecutive disease names from `need_compute_disease.csv` (line 35 of `slurm_scripts/slurm_fir_apptainer_arr_dw.sh`). Up to 30 tasks run concurrently, giving a theoretical peak of 30 H100 GPUs working in parallel.
+
+```mermaid
+flowchart TD
+    CSV[("need_compute_disease.csv\n5094 disease names")]
+    SLURM["SLURM Master\n--array=1-1800:12 %%30\n(max 30 concurrent tasks)"]
+
+    CSV --> SLURM
+
+    SLURM --> T1["Task 1\nrows 1-12\nH100 GPU"]
+    SLURM --> T2["Task 13\nrows 13-24\nH100 GPU"]
+    SLURM --> T3["Task 25\nrows 25-36\nH100 GPU"]
+    SLURM --> TN["Task N\n…\nH100 GPU"]
+
+    T1 --> R1[("data/disease_1…12/\ntriples_*.csv")]
+    T2 --> R2[("data/disease_13…24/\ntriples_*.csv")]
+    T3 --> R3[("data/disease_25…36/\ntriples_*.csv")]
+    TN --> RN[("data/disease_N…/\ntriples_*.csv")]
+
+    style SLURM fill:#4a90d9,color:#fff
+    style CSV fill:#f5a623,color:#fff
+```
+
+> No inter-task communication exists. Each task writes its results to a dedicated subdirectory under `data/` and exits independently.
+
+#### 2. Single-Task Execution Flow
+
+Inside one SLURM task, the shell script iterates over its 12 diseases sequentially, launching a fresh Apptainer container for each call to `paper_processor.py` (lines 76-84 of the SLURM script).
+
+```mermaid
+sequenceDiagram
+    participant SH as SLURM shell script
+    participant CTR as Apptainer container
+    participant PP as paper_processor.py
+    participant GPU as H100 GPU
+
+    SH->>SH: Read 12 diseases from need_compute_disease.csv
+    loop for each of the 12 diseases
+        SH->>CTR: apptainer exec --nv python paper_processor.py -d <disease>
+        CTR->>PP: launch process
+        PP->>GPU: load vLLM (Gemma-3-27B, 4-bit, 90% VRAM)
+        PP->>GPU: batch inference — simple sentences
+        PP->>GPU: sentence-transformer deduplication
+        PP->>GPU: batch inference — triples
+        PP-->>CTR: write CSVs to data/<disease>/
+        CTR-->>SH: exit 0
+    end
+    SH->>SH: log elapsed time
+```
+
+#### 3. Per-Disease Pipeline (paper_processor.py)
+
+Each call to `paper_processor.py` runs ten sequential steps on a single GPU. There are two vLLM inference passes and one embedding pass.
+
+```mermaid
+flowchart LR
+    A["Step 1\nParse args\n& load config"]
+    B["Step 2\nLoad input chunks\nfrom CSV"]
+    C["Step 3\nKeyword filter\nchunks"]
+    D["Step 4\nLoad vLLM model\nGemma-3-27B 4-bit"]
+    E["Step 5\nvLLM inference\n→ simple sentences\nbatch_size=128"]
+    F["Step 6\nSentence-transformer\ndeduplication\nthreshold=0.95"]
+    G["Step 7\nSave simple\nsentences CSV"]
+    H["Step 8\nvLLM inference\n→ triples"]
+    I["Step 9\nFormat &\nclean triples"]
+    J["Step 10\nSave triples CSV\n& log stats"]
+
+    A --> B --> C --> D --> E --> F --> G --> H --> I --> J
+
+    style D fill:#e74c3c,color:#fff
+    style E fill:#e74c3c,color:#fff
+    style F fill:#8e44ad,color:#fff
+    style H fill:#e74c3c,color:#fff
+```
+
+#### 4. Data Flow
+
+```mermaid
+flowchart TD
+    subgraph Static["Static inputs (shared across all tasks)"]
+        KW["static_data/overall_keywords.csv"]
+        MODEL["models/\nGemma-3-27B 4-bit\nparaphrase-MiniLM-L6-v2"]
+        CFG["model_config.json"]
+    end
+
+    subgraph PerDisease["Per-disease inputs (data/<disease_name>/)"]
+        IC["{disease}_input_chunks_and_metadata.csv"]
+    end
+
+    KW --> PP
+    MODEL --> PP
+    CFG --> PP
+    IC --> PP
+
+    PP["paper_processor.py"]
+
+    PP --> SS["generated_simple_sentences\n_{disease}.csv"]
+    PP --> TR["triples_{disease}.csv"]
+
+    SS --> CR["collect_result.py\n(aggregation & status tracking)"]
+    TR --> CR
+    CR --> FIN["finished_disease.csv"]
+    CR --> NEED["need_compute_disease.csv"]
+    CR --> OUT["collected_results/\n(all triples merged)"]
+```
+
+#### 5. GPU Resource Layout (single task)
+
+One SLURM task maps to exactly one H100 GPU. vLLM consumes 90 % of VRAM for the LLM; the sentence-transformer occupies the remaining headroom.
+
+| Component                  | Value                                       | Source                               |
+| -------------------------- | ------------------------------------------- | ------------------------------------ |
+| LLM                        | `unsloth/gemma-3-27b-it-unsloth-bnb-4bit` | `model_config.json`                |
+| Quantisation               | BitsAndBytes 4-bit                          | `model_config.json`                |
+| `gpu_memory_utilization` | 0.90                                        | `model_config.json`                |
+| `tensor_parallel_size`   | 1 (single GPU)                              | `model_config.json`                |
+| Inference batch size       | 128                                         | `model_config.json`                |
+| Dedup similarity threshold | 0.95 cosine                                 | `model_config.json`                |
+| Diseases per SLURM task    | 12                                          | `slurm_fir_apptainer_arr_dw.sh:33` |
+| Max concurrent SLURM tasks | 30                                          | `slurm_fir_apptainer_arr_dw.sh:16` |
 
 ### Question to ask
 Parallelization planning should define:
