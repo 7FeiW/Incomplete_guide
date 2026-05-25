@@ -398,30 +398,6 @@ output_dir: outputs/experiment_001
 
 This prevents confusion when comparing different runs.
 
-### Fix random seeds
-
-Random seeds should be fixed where possible.
-
-This applies to:
-
-- Train/test splitting
-- Cross-validation
-- Model initialization
-- Data shuffling
-- Random sampling
-- Deep-learning training
-
-Example:
-
-```python
-import random
-import numpy as np
-
-random.seed(42)
-np.random.seed(42)
-```
-
-For GPU-based deep learning, complete reproducibility may still be difficult, but setting seeds reduces variability.
 
 ### Log environment metadata
 
