@@ -354,6 +354,114 @@ Better design:
 Load model once → process 100 inputs → write output → exit
 ```
 
+### Choosing the right time slot (Compute Canada / SLURM)
+
+Compute Canada partitions jobs into standard time buckets. Understanding how these slots interact is important for both queue wait time and compute efficiency.
+
+| Time slot | Wall time | Notes |
+|-----------|-----------|-------|
+| `1:00:00` | 1 hour | Highest priority, shortest queue |
+| `3:00:00` | 3 hours | Most versatile; often shorter queue than expected |
+| `12:00:00` | 12 hours | Medium jobs |
+| `24:00:00` | 24 hours | Long jobs |
+| `72:00:00` | 72 hours | Longest, lowest priority |
+
+**Key rule**: A shorter job can backfill into a slot reserved for a longer job (e.g., a 1-hour job may run in the 3-hour queue), but a longer job cannot run in a shorter slot. This means **3-hour slots often have shorter wait times than 1-hour slots during peak usage**.
+
+#### Step 1 — Measure startup overhead before designing jobs
+
+Run the initialization phase interactively before deciding on job size:
+
+```bash
+salloc --account=def-advisor --gres=gpu:1 --cpus-per-task=4 --mem=32G --time=0:30:00
+
+time apptainer exec --nv $CONTAINER python -c "
+from transformers import AutoModelForCausalLM
+model = AutoModelForCausalLM.from_pretrained('/scratch/models/llama3-8b')
+print('Model loaded')
+"
+# e.g. real 0m10m35s → startup overhead is ~10 min
+```
+
+Use the result to choose a minimum job size:
+
+| Startup overhead | Minimum recommended job time |
+|-----------------|-------------------------------|
+| < 1 min | 1-hour slot is fine |
+| 1–10 min | Use 3-hour slot |
+| > 10 min | Use 12-hour or longer slot |
+
+#### Step 2 — Calculate compute efficiency
+
+```
+efficiency = actual_compute_time / total_wall_time
+           = (wall_time - startup_overhead) / wall_time
+```
+
+**Bad design** — many tiny jobs with heavy startup:
+- 1,000 jobs × 15 min each, startup = 10 min per job
+- Actual compute per job: 5 min → **efficiency: 33 %**
+- Minimum billing is 1 h per job → 1,000 × 60 min = 60,000 min billed
+
+**Better design** — batched jobs:
+- 10 jobs × 3 hours each, startup = 10 min per job
+- Each job processes 100 items × 5 min = 500 min compute → **efficiency: ~93 %**
+- Billed: 10 × 180 min = 1,800 min
+
+#### Step 3 — Calculate items per job
+
+```
+items_per_job = (slot_time_min - startup_min) / time_per_item_min
+
+# Example: 3-hour slot, 10 min startup, 5 min per item
+items_per_job = (180 - 10) / 5 = 34 items
+total_jobs    = total_items / 34
+```
+
+Then use a SLURM array to dispatch:
+
+```bash
+#!/bin/bash
+#SBATCH --account=def-advisor
+#SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=64G
+#SBATCH --time=3:00:00
+#SBATCH --array=0-9                  # 10 jobs processing 34 items each
+#SBATCH --output=logs/job_%A_%a.out
+
+module load apptainer/1.1.8
+
+apptainer exec --nv \
+    --bind $SCRATCH:/scratch,$PROJECT:/project \
+    $CONTAINER \
+    python batch_process.py \
+        --input-list $HOME/projects/inputs.txt \
+        --job-idx    $SLURM_ARRAY_TASK_ID \
+        --total-jobs $SLURM_ARRAY_TASK_COUNT \
+        --output     /scratch/results
+```
+
+#### Step 4 — Pre-submission checklist
+
+- [ ] Startup overhead measured interactively (not estimated)
+- [ ] Actual compute time is at least **5× the startup overhead**; if not, increase items per job
+- [ ] Correct time slot chosen based on expected runtime
+- [ ] Job array used instead of thousands of individual `sbatch` calls
+- [ ] Each job checkpoints progress (for jobs > 3 h, checkpoint every epoch or fixed interval)
+- [ ] Large datasets are on `$SCRATCH`, not `$PROJECT`
+- [ ] `--mem` matches measured peak usage, not a large round number
+
+#### Rule-of-thumb summary
+
+| Scenario | Recommended approach |
+|----------|---------------------|
+| Many short tasks (< 5 min), model loads in < 1 min | 1-hour array jobs |
+| Model/data loads in 5–15 min, task runs 30–90 min | 3-hour slot, batch multiple items per job |
+| Large model fine-tuning (hours per epoch) | 12 or 24-hour slot with epoch checkpointing |
+| Exploratory / debugging | 1-hour interactive `salloc` |
+| Production sweep (hundreds of configs) | 3-hour array, 30–50 items per job |
+
 ## 3. Environment & Packaging
 
 Large-scale runs must use reproducible software environments.
