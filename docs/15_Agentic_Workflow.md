@@ -62,7 +62,8 @@ The human defines the goal. The agent reads the record, performs bounded work,
 and writes back verified state. The human reviews the result.
 
 ```mermaid
-flowchart LR
+%%{init: {"themeVariables": {"fontSize": "20px"}, "flowchart": {"nodeSpacing": 35, "rankSpacing": 55}}}%%
+flowchart TB
     H[Human task and acceptance criteria] --> A
     G[Agent guidance] --> A
     C[Local context] --> A
@@ -81,13 +82,13 @@ flowchart LR
     D -->|record state and provisional conclusions| R
     Q -->|approve or revise conclusions| R
 
-    classDef standard fill:#f8fafc,stroke:#64748b,color:#0f172a,stroke-width:1.5px
-    classDef agent fill:#e2e8f0,stroke:#334155,color:#0f172a,stroke-width:2px
-    classDef record fill:#dbeafe,stroke:#3b82f6,color:#172554,stroke-width:2px
+    classDef standard fill:#f8fafc,stroke:#64748b,color:#0f172a,stroke-width:1.5px,font-size:20px
+    classDef agent fill:#e2e8f0,stroke:#334155,color:#0f172a,stroke-width:2px,font-size:20px
+    classDef record fill:#dbeafe,stroke:#3b82f6,color:#172554,stroke-width:2px,font-size:20px
     class H,G,C,W,V,Q standard
     class A,D agent
     class R record
-    style LLM fill:#f8fafc,stroke:#94a3b8,color:#0f172a,stroke-width:1px
+    style LLM fill:#f8fafc,stroke:#94a3b8,color:#0f172a,stroke-width:1px,font-size:20px
 ```
 
 **Figure 1.** The agent receives the task, project record, guidance, and local

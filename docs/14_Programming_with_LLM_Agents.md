@@ -1,44 +1,47 @@
 # Programming with LLM Agents
 
-Large language model (LLM) coding tools can help explain a codebase, plan
-changes, edit files, run tools, and review code. This makes them more like
-software agents rather than autocomplete: they can investigate and act, but they
-still need a bounded task, relevant context, appropriate access, and review.
+Large language model (LLM) coding tools can explain a codebase, plan a change,
+edit files, run commands, and review the result. That makes them more capable
+than autocomplete, but it does not make them independent developers. They still
+need a clear task, the right context, sensible access, and human review.
 
-This chapter presents the day-to-day interaction loop for tools such as Codex,
-Claude Code, and GitHub Copilot. GitHub Copilot provides some concrete interface
-and configuration examples, but the core practices are tool-neutral. Features,
-availability, and interfaces change frequently; consult the selected tool's
-official documentation for current product details.
+This chapter covers the day-to-day working loop for tools such as Codex, Claude
+Code, and GitHub Copilot. Some examples use GitHub Copilot, but the underlying
+practices apply to other agents too. Product details change quickly, so check the
+official documentation when an interface or feature matters.
 
-The next chapter, [Agentic Research Workflow](15_Agentic_Workflow.md), explains
-the complementary repository architecture for carrying knowledge, rules, and
-work state across tools and sessions.
+This chapter follows one bounded task from delegation through validation. The
+next chapter, [Agentic Research Workflow](15_Agentic_Workflow.md), explains the
+complementary repository architecture for carrying knowledge, rules, and work
+state across tools and sessions.
 
-**LLM agents excel at narrow, well-defined coding tasks but struggle with complex software design.** While they can quickly write functions, debug syntax errors, or generate boilerplate code, they often falter when asked to architect a large-scale project from scratch.
+Agents are easiest to trust on focused tasks with results you can check. Let
+them investigate and implement bounded changes; do not hand them responsibility
+for the project's architecture or scientific decisions.
 
 ## Table of Contents
 
-1. [Choose the Appropriate Level of Delegation](#choose-the-appropriate-level-of-delegation)
-2. [Understand Strengths and Limitations](#understand-strengths-and-limitations)
-3. [Give the Agent Project Context](#give-the-agent-project-context)
-4. [Write Effective Requests](#write-effective-requests)
-5. [Work with an LLM Agent](#work-with-an-llm-agent)
-6. [Use Common Slash Commands](#use-common-slash-commands)
-7. [Validate Agent Changes](#validate-agent-changes)
-8. [Protect Data and Credentials](#protect-data-and-credentials)
-9. [Use Agent Skills and Custom Agents](#use-agent-skills-and-custom-agents)
-10. [Consider Community Add-ons](#consider-community-add-ons)
-11. [Connect External Tools with MCP](#connect-external-tools-with-mcp)
-12. [Common Failure Modes](#common-failure-modes)
-13. [Relationship to the Next Chapter](#relationship-to-the-next-chapter)
-14. [Further Reading](#further-reading)
+1. [Delegation](#delegation)
+2. [Preparation](#preparation)
+3. [Work Cycle](#work-cycle)
+4. [Tool Controls](#tool-controls)
+5. [Review and Validation](#review-and-validation)
+6. [Safety Boundaries](#safety-boundaries)
+7. [Workflow Extensions](#workflow-extensions)
+8. [Common Failure Modes](#common-failure-modes)
+9. [Chapter 15](#chapter-15)
+10. [Further Reading](#further-reading)
 
-## Choose the Appropriate Level of Delegation
+## Delegation
 
-Coding tools use different names for their interfaces, but the work usually
-falls into a few levels of delegation. Choose the least autonomous level that
-can efficiently produce the evidence or change you need.
+Start by asking how uncertain the task is, what could go wrong, and how you will
+check the result. Those answers determine how much work to hand over.
+
+### Delegation Levels
+
+Products use different names for their modes, but most work falls into the same
+few levels. Choose the lowest level of autonomy that can produce the evidence or
+change you need without unnecessary overhead.
 
 | Workflow           | Use it for                                                          | Expected result                                      |
 | ------------------ | ------------------------------------------------------------------- | ---------------------------------------------------- |
@@ -55,16 +58,16 @@ behavior. Delegate implementation only after the intended outcome, constraints,
 and validation are concrete. Product modes are conveniences, not a substitute
 for stating the desired level of access and output.
 
-Regardless of the workflow, inspect generated commands before approving them.
-Autonomous execution changes who performs the steps, not who is responsible for
-the result.
+Whatever mode you use, read generated commands before approving them. The agent
+may perform the steps, but responsibility for the result still rests with you.
 
-## Understand Strengths and Limitations
+### Strengths and Limits
 
-LLM performance depends on the model, tool access, supplied context, language,
-repository, and task. Use these lists as a practical guide.
+What an agent can do well depends on the model, its tools, the context it can
+see, and the codebase itself. The following lists are a starting point, not a
+guarantee.
 
-### LLM agents are often good at
+#### Strengths
 
 - Explaining code and error messages.
 - Finding relevant files, symbols, tests, and configuration.
@@ -78,7 +81,7 @@ repository, and task. Use these lists as a practical guide.
 They work best when success can be checked with a diff, test, linter, or small
 example.
 
-### LLM agents are not reliably good at
+#### Limits
 
 - Knowing facts missing from the provided context.
 - Distinguishing truth from plausible-sounding text; they may invent facts,
@@ -95,14 +98,19 @@ example.
 Delegate work with clear inputs, boundaries, and checks. Keep human control when
 the task depends on domain judgment or has serious consequences.
 
-## Give the Agent Project Context
+## Preparation
 
-An LLM sees only the context supplied by its tool. It may not know the complete
-repository, uncommitted work, external data, cluster configuration, or decisions
-made in another conversation. Store reusable repository-specific facts with the
-project, and state what the agent should inspect for the current task.
+A useful request combines two kinds of context: repository guidance that applies
+again and again, and details about the task in front of you.
 
-### Repository-wide instructions: a Copilot example
+### Project Context
+
+An agent only sees what its tool makes available. It may miss uncommitted work,
+external data, cluster settings, or decisions from another conversation. Put
+reusable facts in the repository, then tell the agent what to inspect for this
+task.
+
+#### Copilot Example
 
 GitHub Copilot uses `.github/copilot-instructions.md` for general repository
 instructions. Other tools use different entry points; chapter 15 compares them.
@@ -143,10 +151,10 @@ Keep these files short and consistent. They should identify the environment,
 routine checks, important boundaries, and where detailed project knowledge
 lives. Chapter 15 explains how to organize them without duplication.
 
-## Write Effective Requests
+### Task Requests
 
-A good request describes the outcome and its constraints without dictating
-unnecessary implementation details. Include:
+A good request says what success looks like and where the boundaries are. It
+usually includes:
 
 1. the problem and intended result;
 2. relevant files or an existing implementation pattern;
@@ -184,12 +192,16 @@ which measurements are needed before making a recommendation.
 Do not embed invented repository paths, test commands, or scientific thresholds
 in a prompt. Ask the agent to inspect the repository or supply the missing facts.
 
-## Work with an LLM Agent
+## Work Cycle
 
-### Understand existing behavior
+Work from investigation to planning and then implementation. If the code
+contradicts the plan, stop and revise the plan; do not build more work on top of
+a doubtful assumption.
 
-First, ask the LLM agent to trace inputs, transformations, and outputs through the
-relevant files. Verify its explanation against the code. Semantic search can
+### Inspect Existing Behavior
+
+First, ask the agent to trace inputs, transformations, and outputs through the
+relevant files. Check its explanation against the code. Semantic search can
 miss dynamically imported modules, generated files, notebooks, external jobs,
 or configuration supplied outside the repository.
 
@@ -206,7 +218,7 @@ Find every entry point that writes evaluation metrics. Report the output format,
 destination, and handling of interrupted writes. Do not change files.
 ```
 
-### Plan the change
+### Plan
 
 For a multi-file change, use Plan mode or request a written plan. The plan
 should identify affected files, data or schema migrations, compatibility risks,
@@ -217,7 +229,7 @@ Do not treat a generated plan as evidence that the proposed method is
 scientifically appropriate. Decisions about labels, data leakage, metrics,
 baselines, statistical tests, and inclusion criteria require domain review.
 
-### Implement a bounded increment
+### Implement
 
 Prefer an increment that can be tested independently. For example, add input
 validation before changing the training loop, or add checkpoint metadata before
@@ -227,7 +239,7 @@ change affected an experimental result.
 Ask the agent to follow existing interfaces unless the task explicitly includes
 a migration. Require it to report assumptions and deviations from the plan.
 
-### Record reproducibility information
+### Record Reproducibility
 
 Where applicable, record:
 
@@ -243,18 +255,7 @@ A random seed does not guarantee identical results across hardware, dependency
 versions, or nondeterministic operations. Documentation should state the actual
 reproducibility boundary.
 
-### Keep humans at consequential boundaries
-
-Require explicit review before an agent:
-
-- changes the scientific question, cohort, labels, splits, or evaluation metric;
-- downloads, uploads, deletes, or transforms valuable data;
-- submits a large or expensive compute job;
-- changes access controls, credentials, or deployment settings;
-- force-pushes, rewrites history, or merges a pull request; or
-- publishes results or communicates externally.
-
-## Use Common Slash Commands
+## Tool Controls
 
 Slash commands are shortcuts for common agent actions. Names and availability
 vary by product, version, plan, and interface. Type `/` to inspect the commands
@@ -279,12 +280,12 @@ Do not assume that commands with the same name behave identically. Check the
 [Copilot CLI reference](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference)
 when a command can edit files, run tools, or change permissions.
 
-## Validate Agent Changes
+## Review and Validation
 
-Review agent output as if it came from a new collaborator who understands
-software patterns but may not understand the experiment.
+Review the result as you would work from a new collaborator: assume useful
+programming knowledge, but do not assume a full understanding of the experiment.
 
-### Review the diff
+### Diff Review
 
 Check for:
 
@@ -296,7 +297,7 @@ Check for:
 - fabricated citations, APIs, outputs, or benchmark results; and
 - tests that merely reproduce the implementation instead of checking behavior.
 
-### Run focused and broad checks
+### Run Checks
 
 Start with the smallest relevant check, then run the broader repository suite.
 For example:
@@ -310,7 +311,7 @@ ruff check .
 These commands are illustrative. Use the commands documented by the target
 repository and do not claim a check passed unless its output was observed.
 
-### Validate scientific behavior
+### Scientific Validation
 
 Unit tests cannot establish that a research method answers the intended
 question. Depending on the change, also verify:
@@ -325,7 +326,20 @@ question. Depending on the change, also verify:
 Run a small or synthetic experiment before a full-scale job. Profile the actual
 bottleneck before accepting a performance optimization.
 
-## Protect Data and Credentials
+## Safety Boundaries
+
+### Human Review
+
+Require explicit review before an agent:
+
+- changes the scientific question, cohort, labels, splits, or evaluation metric;
+- downloads, uploads, deletes, or transforms valuable data;
+- submits a large or expensive compute job;
+- changes access controls, credentials, or deployment settings;
+- force-pushes, rewrites history, or merges a pull request; or
+- publishes results or communicates externally.
+
+### Sensitive Access
 
 Do not place secrets directly in prompts, committed files, screenshots, logs, or
 MCP configuration. Use the platform's supported secret or input mechanism and
@@ -338,9 +352,16 @@ de-identified fixtures when possible.
 
 Treat generated dependency changes as supply-chain changes. Review package
 names, sources, versions, install scripts, and lock-file changes before running
-installation commands.
+installation commands. Access to a tool does not imply permission to use it for
+a consequential action.
 
-## Use Agent Skills and Custom Agents
+## Workflow Extensions
+
+Skills, custom agents, community add-ons, and external integrations can save
+time on repeated work. Each one also brings more instructions, code,
+permissions, or data access into the project, so review it before relying on it.
+
+### Skills and Custom Agents
 
 Use a **skill** for a repeatable procedure, such as validating a dataset release.
 Keep its inputs, steps, outputs, permissions, and checks explicit.
@@ -349,7 +370,7 @@ Use a **custom agent** when a recurring role needs specialized instructions or
 a limited tool set. Discovery and configuration differ by product; chapter 15
 covers the cross-agent structure in more detail.
 
-## Consider Community Add-ons
+### Community Add-ons
 
 Community projects can extend an agent or improve a supporting workflow. Before
 adopting one, check its maintenance status, license, dependencies, permissions,
@@ -364,7 +385,7 @@ source can be stated clearly. Pin a reviewed version when reproducibility
 matters, and do not give a new tool access to secrets or research data by
 default.
 
-## Connect External Tools with MCP
+### MCP Connections
 
 The **Model Context Protocol (MCP)** lets an agent use external tools and data,
 such as documentation, issue trackers, or databases. This also expands the data
@@ -393,7 +414,7 @@ Before relying on a server:
 - **Untrusted external content:** Treat MCP results, issues, and web pages as
   data, not instructions or authorization.
 
-## Relationship to the Next Chapter
+## Chapter 15
 
 This chapter covers one task at a time: choosing a level of delegation, framing
 the request, inspecting the proposed work, and validating the result. Chapter
@@ -401,9 +422,9 @@ the request, inspecting the proposed work, and validating the result. Chapter
 those tasks: durable project knowledge, instruction files, permissions, task and
 experiment state, reusable skills, and handoffs between sessions or tools.
 
-Use this chapter when deciding how to collaborate on the next programming task.
-Use chapter 15 when deciding what the repository must preserve so a future human
-or LLM agent can continue safely.
+Come back to this chapter when you are working through a specific programming
+task. Use chapter 15 when you are deciding what the repository must preserve so
+someone else—or another agent session—can pick up the work safely.
 
 ## Further Reading
 
