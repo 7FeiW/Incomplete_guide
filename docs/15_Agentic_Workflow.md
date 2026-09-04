@@ -1,16 +1,11 @@
 # Agentic Research Workflow: Knowledge, Rules, and State
 
-The goal of this workflow is to keep a human in the loop while allowing
-**large language model (LLM) agents** to make useful progress across sessions.
-Humans and LLM agents share persistent project memory through version-controlled
-documentation: humans record decisions, constraints, and corrections, while LLM
-agents read and update the same record as work progresses. The human remains
-responsible for approving scientific decisions, consequential actions, and final
-results.
+This workflow lets **large language model (LLM) agents** continue work across
+sessions while keeping a human in control. Version-controlled documentation
+holds shared project memory. Humans remain responsible for scientific decisions,
+consequential actions, and final results.
 
-LLM agents are most useful in a research project when they are provided with
-three kinds of information for every query, either directly in the query or
-through the project context loaded by the LLM agent:
+An agent needs three kinds of information:
 
 1. **Knowledge:** facts about the project and its scientific context.
 2. **Rules:** instructions for how work must be performed and which actions are
@@ -18,31 +13,21 @@ through the project context loaded by the LLM agent:
 3. **State:** what has already happened, what is currently in progress, and what
    remains to be verified.
 
-These concerns need different storage. Putting everything into a tool-specific
-instruction file creates a long prompt that becomes difficult to maintain,
-while keeping everything in chat makes knowledge disappear between sessions.
-This chapter defines an agent-independent workflow for deciding where each kind
-of information belongs.
+These concerns need different storage. Tool-specific instruction files become
+unwieldy when they contain everything, while chat history is not a durable
+project record.
 
-The durable knowledge and state of a research project should remain
-**tool-neutral**. Store architecture, decisions, findings, plans, and task state
-in ordinary files under `docs/` so that collaborators, Claude Code, GitHub
-Copilot, Codex, and future tools can use the same record. Tool-specific files
-should tell an LLM agent how to find and apply that shared record; they should
-not become the only place where the record exists.
+Keep durable knowledge and state **tool-neutral**. Store architecture, decisions,
+findings, plans, and task state in ordinary project files. Tool-specific files
+should point to that shared record, not replace it.
 
-Shared persistent memory also reduces the need to reconstruct project context
-in every prompt. This can reduce token usage and leave more of the context window
-available for the current task. Concise, relevant, and current documentation can
-also improve agent reliability by giving the model stable facts and an explicit
-work state. These benefits are not automatic: duplicated, stale, or excessively
-long documents consume context and can reduce performance.
+This reduces repeated prompting and gives agents stable facts. Keep the record
+concise and current; duplicated or stale documents create conflicting context.
 
-The workflow applies to Claude Code, Codex, GitHub Copilot, and other LLM
-agents. The accompanying
-[Claude example](../examples/ai_coding_examples/claude/) provides one concrete
-implementation from a Python mass-spectrometry project. Its project names,
-paths, environments, and scientific heuristics are not portable defaults.
+The workflow applies across LLM agents. The accompanying
+[Claude example](../examples/ai_coding_examples/claude/) comes from a Python
+mass-spectrometry project; its paths and scientific rules are examples, not
+portable defaults.
 
 LLM-agent products change frequently. Verify tool-specific feature details in the
 official documentation for the agent being configured.
@@ -63,27 +48,24 @@ official documentation for the agent being configured.
 
 Use three layers:
 
-| Layer                        | Purpose                                                   | Examples                                           |
-| ---------------------------- | --------------------------------------------------------- | -------------------------------------------------- |
-| **Project record**     | Shared knowledge and durable state                        | `docs/`, Git, experiment records                 |
-| **LLM-agent guidance** | How an LLM agent should find information and perform work | `AGENTS.md`, `CLAUDE.md`, scoped rules, skills |
-| **Local context**      | Temporary information for the current LLM agent or task   | Chat history, local memory, working notes          |
+| Layer | Purpose | Examples |
+| --- | --- | --- |
+| **Project record** | Shared knowledge and durable state | `docs/`, Git, experiment records |
+| **Agent guidance** | How an agent finds information and works | `AGENTS.md`, `CLAUDE.md`, scoped rules, skills |
+| **Local context** | Temporary task context | Chat history, local memory, working notes |
 
 The project record is the source of truth. LLM-agent guidance should point to that
 record rather than duplicate it. Local context can help an agent continue, but
 it is not a durable or shared record.
 
-This creates a human-in-the-loop cycle: the human defines goals and reviews
-consequential decisions; the agent reads the shared record, performs bounded
-work, and writes back verified state; the human then reviews the result and
-decides what becomes accepted project knowledge.
+The human defines the goal. The agent reads the record, performs bounded work,
+and writes back verified state. The human reviews the result.
 
 A simple test is whether another LLM agent can continue by reading the repository.
 If not, the necessary knowledge or state should be written to `docs/` or another
 documented project store.
 
-The rest of this chapter provides Claude Code and Codex examples where their
-implementations differ. The workflow itself applies to any LLM agent.
+Tool-specific examples appear only where implementations differ.
 
 ## Keep Project Knowledge
 
@@ -254,10 +236,8 @@ sandbox and should not be used as substitutes for project knowledge.
 
 ### Use agent-local memory as a cache, not a record
 
-Some agents provide local memory across sessions. Claude Code auto-memory and
-Codex local memories can retain useful context from earlier work, including
-debugging hints and workflow habits. These memories may be machine-local, differ
-between collaborators, and are not reproducible project records.
+Local memory can retain debugging hints and personal workflow preferences, but
+it may be machine-specific and is not a reproducible project record.
 
 Use auto-memory for facts such as:
 
@@ -265,18 +245,12 @@ Use auto-memory for facts such as:
 - a local debugging observation that has not yet been confirmed; or
 - a personal preference about how results are displayed.
 
-Promote a memory entry into tool-neutral repository documentation when it
-becomes team knowledge, an architectural decision, a required workaround, task
-state, or evidence used to interpret a result. This makes it available to other
-LLM agents rather than only to one tool on one machine. In Claude Code, inspect
-loaded project context and auto-memory through `/memory`. In Codex clients that
-support local memories, use `/memories` to control and review their use.
+Move team knowledge, decisions, workarounds, and task state into the repository.
+Use `/memory` in Claude Code or `/memories` in supporting Codex clients to review
+local memory.
 
-Do not instruct a shared workflow to write to a specific user's absolute memory
-path. Agent runtimes own their local memory formats and locations, which are not
-portable across users, machines, or products. Both Anthropic and OpenAI advise
-keeping required team guidance in checked-in instructions or documentation
-rather than relying on local memory alone.
+Do not write shared workflows to a user's absolute memory path. The agent owns
+that non-portable storage.
 
 ## Define and Enforce Rules
 
@@ -318,16 +292,11 @@ restrictions. Verify current behavior in the
 [Claude Code permission documentation](https://code.claude.com/docs/en/permissions)
 or [Codex rules documentation](https://learn.chatgpt.com/docs/agent-configuration/rules).
 
-Use a hook or deterministic automation when an action must run at a particular
-lifecycle event. Examples include validating a configuration after it changes,
-running a fast formatter after an edit, or loading a current task summary when a
-session starts. Hooks
-are deterministic triggers, while skills and instruction files require model
-interpretation. Keep hooks fast, idempotent, and safe with untrusted input.
-Where an LLM-agent tool does not provide a suitable hook, enforce the check in
-the repository's scripts, pre-commit configuration, or CI. See the
-[Claude Code hooks guide](https://code.claude.com/docs/en/hooks-guide) for one
-implementation.
+Use a hook when an action must run at a lifecycle event, such as formatting
+after an edit. Unlike instructions, hooks are deterministic. Keep them fast,
+idempotent, and safe with untrusted input. If the agent has no suitable hook,
+use a repository script, pre-commit check, or CI. See the
+[Claude Code hooks guide](https://code.claude.com/docs/en/hooks-guide).
 
 ### Keep rules consistent
 
@@ -447,12 +416,8 @@ agent.
 
 ### Use agent sessions for continuity, not truth
 
-LLM-agent transcripts can help continue an interrupted task, but their storage
-and availability depend on the tool. For example, Claude Code provides
-`claude --continue` and `claude --resume`; Codex clients may provide conversation
-history and local memories. Use the selected tool's supported continuation
-mechanism when the conversation remains useful, but begin resumed work by
-checking:
+Transcripts help continue interrupted work but may be stale. Start resumed work
+by checking:
 
 ```text
 1. Read the current task-state document.
@@ -461,15 +426,11 @@ checking:
 4. Report any mismatch before making changes.
 ```
 
-This prevents an old transcript from overriding changes made by a collaborator
-or another LLM agent. Claude's
-[session guide](https://code.claude.com/docs/en/sessions) and Codex's
-[memory guide](https://learn.chatgpt.com/docs/customization/memories) describe
-their respective continuity mechanisms.
+See the Claude [session guide](https://code.claude.com/docs/en/sessions) and
+Codex [memory guide](https://learn.chatgpt.com/docs/customization/memories) for
+tool-specific continuation features.
 
-For concurrent tasks, use separate Git worktrees so sessions do not modify the
-same working tree. Do not use parallel sessions merely to increase activity;
-split work only when file ownership and integration boundaries are clear.
+For concurrent tasks, use separate Git worktrees and clear file ownership.
 
 ## Use a Repeatable Session Workflow
 
@@ -572,32 +533,24 @@ State:
 
 ## Package Recurring Research Workflows
 
-Use a reusable, version-controlled workflow when a task repeats and needs
-detailed knowledge or a procedure. Prefer the cross-agent `SKILL.md` convention
-when the participating agents support it; otherwise keep a tool-neutral runbook
-and add a thin tool-specific wrapper. This keeps the scientific procedure
-available to humans and agents that do not load the same skill directory.
+For repeated tasks, keep a version-controlled runbook and add a `SKILL.md`
+wrapper for each supporting agent. The runbook remains readable by humans and
+tools that do not load the skill.
 
 | Agent       | Project skill location             | Explicit invocation                 |
 | ----------- | ---------------------------------- | ----------------------------------- |
 | Claude Code | `.claude/skills/<name>/SKILL.md` | `/<name>`                         |
 | Codex       | `.agents/skills/<name>/SKILL.md` | `$<name>` or the `/skills` menu |
 
-Both implementations use a `SKILL.md` file and can keep supporting scripts,
-references, and assets beside it. Discovery, invocation, metadata, and
-permission behavior remain tool-specific, so consult the current documentation
-before sharing one package unchanged between agents.
+Skill discovery, invocation, and permissions remain tool-specific.
 
 A research skill should specify:
 
-- when it applies and required inputs;
+- trigger conditions and inputs;
 - authoritative project files and data sources;
-- preconditions and environment checks;
-- ordered analysis steps;
+- preconditions and steps;
 - evidence required for each classification or conclusion;
-- safe tool permissions;
-- output schema and destination;
-- state that must be updated; and
+- permissions, outputs, and state updates; and
 - validation and stopping conditions.
 
 For example:
@@ -618,25 +571,17 @@ description: Analyze fragmentation-DAG misses for one chemical subclass.
 6. Update the task-state file only after validation succeeds.
 ```
 
-Keep permissions and invocation controls in the agent-specific wrapper or
-configuration. For example, Claude Code supports skill metadata such as
-`disable-model-invocation` and `allowed-tools`; Codex applies its sandbox,
-approval policy, and command rules independently of the skill instructions.
-See [Claude Code skills](https://code.claude.com/docs/en/slash-commands) and
+Keep permissions and invocation controls in the tool-specific wrapper. See
+[Claude Code skills](https://code.claude.com/docs/en/slash-commands) and
 [Codex skills](https://learn.chatgpt.com/docs/build-skills).
 
-The example uses legacy single-file commands under
-[`commands/`](../examples/ai_coding_examples/claude/commands/). These still
-work when placed under `.claude/commands/`, but new multi-step workflows are
-better represented as skills with supporting scripts and reference files. A
-Codex version should use `.agents/skills/` and refer to the same canonical
-runbook and repository helpers.
+The example's legacy [`commands/`](../examples/ai_coding_examples/claude/commands/)
+can be converted into thin skills that share the same runbook and scripts.
 
 ## Apply the Pattern Across Agents
 
-The included Claude example contains the right categories, but its durable
-knowledge should be moved into shared locations. A repository that supports
-both Claude Code and Codex can use this structure:
+Keep shared records outside tool-owned directories. A repository used with
+Claude Code and Codex might use:
 
 ```text
 project-root/
@@ -646,63 +591,22 @@ project-root/
 │   ├── architecture.md
 │   ├── project-state.md
 │   ├── workflows/
-│   │   ├── analyze-subclass.md
-│   │   └── add-smarts-rule.md
 │   └── findings/
-├── scripts/
-│   └── research-analysis/
 ├── .claude/
-    ├── settings.json
-    ├── rules/
-    │   ├── code-style.md
-    │   ├── environment.md
-    │   ├── formatting.md
-    │   ├── git-workflow.md
-    │   ├── import-conventions.md
-    │   └── testing.md
-    └── skills/
-        ├── analyze-subclass/
-        │   └── SKILL.md
-        ├── analyze-subclass-mh/
-        │   └── SKILL.md
-        └── add-smarts-rule/
-            └── SKILL.md
+│   ├── rules/
+│   └── skills/
 └── .agents/
     └── skills/
-        ├── analyze-subclass/
-        │   └── SKILL.md
-        ├── analyze-subclass-mh/
-        │   └── SKILL.md
-        └── add-smarts-rule/
-            └── SKILL.md
 ```
 
-Apply these changes when turning the example into a real configuration:
+When adapting the included example:
 
-1. Put shared behavior and links to canonical architecture, data, experiment,
-   workflow, and state documents in the root `AGENTS.md`.
-2. Keep `CLAUDE.md` as a concise Claude Code entry point to the same shared
-   documents. Put Claude-specific rules under `.claude/rules/`, with path scopes
-   where appropriate.
-3. Keep architecture as human-readable repository documentation rather than
-   duplicating the full tree in several prompts.
-4. Convert the subclass commands into Claude Code and Codex skill wrappers that
-   refer to a shared workflow and distinguish measurements from chemical
-   interpretation.
-5. Split the 509-line SMARTS command into a concise workflow, reference pages,
-   and shared executable helpers with tests.
-6. Remove `/home/feiw/.../memory` paths. Durable findings belong in the
-   repository; agent-local memory is optional and managed by each tool.
-7. Replace `FRAGNNET-GPU`, package paths, dataset paths, and test names only with
-   values verified in the target repository.
-8. Verify scientific constants and heuristics before treating them as rules.
-9. Add narrow permissions for secrets, Git mutations, dependency installation,
-   data modification, and SLURM submission.
-10. Add a task-state template and require each long-running workflow to update
-    it at meaningful checkpoints.
-11. Keep scientific knowledge, decisions, findings, and task state outside
-    `.claude/`, `.agents/`, and other tool-owned directories so humans and all
-    LLM agents can discover and use them.
+1. Move durable knowledge, findings, workflows, and state into shared files.
+2. Keep `AGENTS.md` and `CLAUDE.md` as short entry points to those files.
+3. Put tool-specific rules, permissions, and skill wrappers in tool directories.
+4. Remove personal paths and replace example commands only with verified ones.
+5. Verify scientific constants and heuristics before treating them as rules.
+6. Give long-running work a task-state record and narrow permissions.
 
 ## Audit the System
 

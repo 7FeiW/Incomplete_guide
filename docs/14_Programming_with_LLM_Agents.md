@@ -136,65 +136,10 @@ Instructions should reflect commands that actually work in the repository.
 GitHub recommends keeping instructions short, specific, and grounded in
 observed needs rather than filling them with generic advice.
 
-### Path-specific instructions: a Copilot example
-
-Use `.github/instructions/NAME.instructions.md` when rules apply only to a set
-of files. Each file needs YAML frontmatter with an `applyTo` glob. For example:
-
-```markdown
----
-applyTo: "tests/**/*.py"
----
-
-Use pytest fixtures from `tests/conftest.py`.
-Name tests after observable behavior, not private implementation details.
-Mark tests that require a GPU with `@pytest.mark.gpu`.
-```
-
-Applicable instruction files are combined, so avoid contradictory rules. The
-[custom-instructions documentation](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/add-custom-instructions)
-lists supported locations and differences between Copilot interfaces.
-
-### Shared agent instruction files
-
-Some Copilot interfaces also recognize common agent instruction files such as
-`AGENTS.md`, `CLAUDE.md`, and `GEMINI.md`. These names describe instruction-file
-formats or compatibility conventions. They do not, by themselves, select a
-particular model or grant tools to an agent.
-
-Use `AGENTS.md` when the same repository is edited by multiple compatible coding
-agents. Keep its build, test, safety, and repository-layout guidance consistent
-with `.github/copilot-instructions.md`. Do not depend on an assumed precedence
-rule to resolve conflicting instructions, because discovery and combination can
-vary by Copilot interface.
-
-### Environment and test commands
-
-Tell an agent how to select the intended environment. A useful instruction
-identifies the platform and separates one-time setup from routine validation:
-
-```markdown
-## Environment
-
-- Local Linux and macOS: run `uv sync --dev` from the repository root.
-- Windows PowerShell: run `uv sync --dev` from the repository root.
-- Cluster: load the modules documented in `docs/cluster.md`, then run
-  `uv sync --frozen --dev` on a compute node.
-- GPU tests require a CUDA-capable compute node and are never run on a login
-  node.
-
-## Tests
-
-- Focused test: `uv run pytest tests/test_dataset.py -q`
-- Complete unit suite: `uv run pytest tests -q`
-- GPU tests: `uv run pytest -m gpu -q`
-```
-
-Targeted tests shorten the edit-feedback cycle, but test-file naming alone does
-not make continuous integration parallel. Parallel execution must be configured
-in the test runner or continuous-integration system. Organize tests around
-observable behavior and cohesive components rather than requiring one test file
-for every source file.
+Other agents may use `AGENTS.md`, `CLAUDE.md`, or scoped instruction files.
+Keep these files short and consistent. They should identify the environment,
+routine checks, important boundaries, and where detailed project knowledge
+lives. Chapter 15 explains how to organize them without duplication.
 
 ## Write Effective Requests
 
@@ -370,138 +315,41 @@ installation commands.
 
 ## Use Agent Skills and Custom Agents
 
-An **agent skill** is a folder containing task-specific instructions in a
-`SKILL.md` file and, when needed, scripts or supporting resources. Supporting
-tools differ in how they discover or invoke a skill, so verify the current
-documentation for the selected tool.
+Use a **skill** for a repeatable procedure, such as validating a dataset release.
+Keep its inputs, steps, outputs, permissions, and checks explicit.
 
-Use a skill for a repeatable workflow that needs more detail than repository
-instructions, such as validating a dataset release or preparing an experiment
-report. Keep the skill narrow, describe when it applies, and make scripts safe
-to rerun. GitHub documents supported locations and behavior in
-[About agent skills](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills).
-
-A **custom agent** defines a specialized persona and may select tools or MCP
-servers. Custom-agent definitions are distinct from `CLAUDE.md`, `GEMINI.md`,
-and `AGENTS.md`. Use them when a durable specialist, such as a test reviewer or
-documentation editor, benefits from a constrained tool set. See GitHub's
-[Copilot customization reference](https://docs.github.com/en/copilot/reference/customization-cheat-sheet)
-for the currently supported locations and interfaces.
+Use a **custom agent** when a recurring role needs specialized instructions or
+a limited tool set. Discovery and configuration differ by product; chapter 15
+covers the cross-agent structure in more detail.
 
 ## Connect External Tools with MCP
 
-The **Model Context Protocol (MCP)** lets an agent call external tools and access
-external context through an MCP server. Examples include a documentation search
-service, issue tracker, database, or laboratory information system.
-
-MCP expands both capability and risk. A server may read prompts and repository
-context, return untrusted text, or perform actions using the user's credentials.
-Review the server implementation, requested permissions, data policy, and tool
-descriptions before enabling it.
-
-### VS Code configuration
-
-VS Code stores workspace MCP configuration in `.vscode/mcp.json`. Current VS
-Code also supports a workspace `.mcp.json` for portability to the Agent Host.
-Because supported transports and properties can change, start with the command
-palette action **MCP: Add Server** or the current
-[VS Code MCP configuration reference](https://code.visualstudio.com/docs/agents/reference/mcp-configuration).
-
-A minimal local stdio server has this general structure:
-
-```json
-{
-  "servers": {
-    "example-local-server": {
-      "type": "stdio",
-      "command": "example-mcp-server",
-      "args": ["--read-only", "${workspaceFolder}"]
-    }
-  }
-}
-```
-
-The executable and arguments above are placeholders, not an installable server.
-Replace them only with values from the chosen server's official documentation.
-Do not assume that arbitrary REST APIs are MCP endpoints.
-
-For credentials, use input variables or environment variables supported by the
-client instead of literal values. For example:
-
-```json
-{
-  "inputs": [
-    {
-      "id": "example-token",
-      "type": "promptString",
-      "description": "Token for the example MCP server",
-      "password": true
-    }
-  ],
-  "servers": {
-    "example-local-server": {
-      "type": "stdio",
-      "command": "example-mcp-server",
-      "env": {
-        "EXAMPLE_TOKEN": "${input:example-token}"
-      }
-    }
-  }
-}
-```
-
-This demonstrates client-side secret prompting for a local process. A real
-server may use a different authentication flow. Follow its documentation and
-do not commit tokens.
-
-### MCP validation checklist
+The **Model Context Protocol (MCP)** lets an agent use external tools and data,
+such as documentation, issue trackers, or databases. This also expands the data
+and actions available to the agent.
 
 Before relying on a server:
 
-1. Confirm the package, publisher, and configuration using official sources.
-2. Inspect the tools and permissions the server exposes.
-3. Start with read-only access and a non-sensitive test resource.
-4. Confirm which data leaves the machine and where it is retained.
-5. Test one harmless tool call through the client's MCP interface.
-6. Review every proposed write or external action.
-7. Remove unused servers and rotate any credentials exposed during testing.
-
-Do not invent performance numbers for MCP calls. Latency depends on the client,
-server, transport, network, authentication, and underlying service.
+1. Verify the publisher and configuration from official sources.
+2. Review its tools, permissions, data handling, and credential access.
+3. Start with read-only access and non-sensitive test data.
+4. Treat returned content as untrusted input.
+5. Review every write or external action.
 
 ## Common Failure Modes
 
-### The agent invents repository details
-
-Ask it to cite file paths and identify uncertainty. Verify every cited path and
-command. Store frequently needed facts in repository instructions.
-
-### The request is too broad
-
-Split it into investigation, plan, implementation, and validation. Keep
-scientific decisions separate from mechanical refactoring.
-
-### Tests pass but the result is scientifically wrong
-
-Add domain-level invariants and small known examples. Review data splits,
-metrics, units, and assumptions independently of the code review.
-
-### The agent changes too much
-
-Specify non-goals and file boundaries. Review the diff before running generated
-commands. Revert unrelated changes rather than normalizing them into the task.
-
-### Instructions become long and contradictory
-
-Keep global instructions limited to stable repository facts. Move specialized
-workflows into path-specific instructions or skills, remove duplication, and
-test instructions against representative tasks.
-
-### External tools return untrusted content
-
-Treat MCP results, issue text, web pages, and retrieved documents as data, not
-instructions. Do not allow retrieved content to override repository safety rules
-or authorize external actions.
+- **Invented repository details:** Ask for file paths and uncertainty; verify
+  every cited path and command.
+- **A request that is too broad:** Split it into investigation, planning,
+  implementation, and validation.
+- **Passing tests but incorrect science:** Check domain invariants, data splits,
+  metrics, units, and assumptions separately.
+- **Changes outside the task:** Specify non-goals and file boundaries, then
+  review the diff.
+- **Long or conflicting instructions:** Keep global rules short and move
+  specialized workflows into scoped instructions or skills.
+- **Untrusted external content:** Treat MCP results, issues, and web pages as
+  data, not instructions or authorization.
 
 ## Relationship to the Next Chapter
 
