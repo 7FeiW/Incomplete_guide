@@ -9,7 +9,8 @@ An agent needs three kinds of information:
 
 1. **Knowledge:** facts about the project and its scientific context.
 2. **Rules:** instructions for how work must be performed and which actions are
-   prohibited. **Note** that some rules and engineering choice are made to better handle LLM hallucinations.
+   prohibited. Some rules and engineering choices exist specifically to reduce
+   the impact of LLM errors and fabricated claims.
 3. **State:** what has already happened, what is currently in progress, and what
    remains to be verified.
 
@@ -34,25 +35,24 @@ official documentation for the agent being configured.
 
 ## Table of Contents
 
-1. [Core Setup](#core-setup)
-2. [Keep Project Knowledge](#keep-project-knowledge)
-3. [Define and Enforce Rules](#define-and-enforce-rules)
-4. [Keep Work State](#keep-work-state)
-5. [Use a Repeatable Session Workflow](#use-a-repeatable-session-workflow)
-6. [Package Recurring Research Workflows](#package-recurring-research-workflows)
-7. [Apply the Pattern Across Agents](#apply-the-pattern-across-agents)
-8. [Audit the System](#audit-the-system)
-9. [Further Reading](#further-reading)
+1. [Three-Layer Model](#three-layer-model)
+2. [Project Record](#project-record)
+3. [Agent Guidance](#agent-guidance)
+4. [Local Context](#local-context)
+5. [Session Workflow](#session-workflow)
+6. [Reusable Workflows](#reusable-workflows)
+7. [System Audit](#system-audit)
+8. [Further Reading](#further-reading)
 
-## Core Setup
+## Three-Layer Model
 
-Use three layers:
+Organize agent context into three layers:
 
-| Layer | Purpose | Examples |
-| --- | --- | --- |
-| **Project record** | Shared knowledge and durable state | `docs/`, Git, experiment records |
+| Layer                    | Purpose                                  | Examples                                           |
+| ------------------------ | ---------------------------------------- | -------------------------------------------------- |
+| **Project record** | Shared knowledge and durable state       | `docs/`, Git, experiment records                 |
 | **Agent guidance** | How an agent finds information and works | `AGENTS.md`, `CLAUDE.md`, scoped rules, skills |
-| **Local context** | Temporary task context | Chat history, local memory, working notes |
+| **Local context**  | Temporary task context                   | Chat history, local memory, working notes          |
 
 The project record is the source of truth. LLM-agent guidance should point to that
 record rather than duplicate it. Local context can help an agent continue, but
@@ -61,29 +61,114 @@ it is not a durable or shared record.
 The human defines the goal. The agent reads the record, performs bounded work,
 and writes back verified state. The human reviews the result.
 
+```mermaid
+flowchart LR
+    H[Human task and acceptance criteria] --> A
+    G[Agent guidance] --> A
+    C[Local context] --> A
+    R[(Project record)] -->|knowledge and current state| A
+
+    subgraph LLM[LLM agent]
+        direction LR
+        A[Orient and implement]
+        D[Validate and report]
+    end
+
+    A -->|creates or changes| W[Code, data, and experiments]
+    W -->|produces| V[Validation evidence]
+    V --> D
+    D -->|result and evidence| Q[Human review]
+    D -->|record state and provisional conclusions| R
+    Q -->|approve or revise conclusions| R
+
+    classDef standard fill:#f8fafc,stroke:#64748b,color:#0f172a,stroke-width:1.5px
+    classDef agent fill:#e2e8f0,stroke:#334155,color:#0f172a,stroke-width:2px
+    classDef record fill:#dbeafe,stroke:#3b82f6,color:#172554,stroke-width:2px
+    class H,G,C,W,V,Q standard
+    class A,D agent
+    class R record
+    style LLM fill:#f8fafc,stroke:#94a3b8,color:#0f172a,stroke-width:1px
+```
+
+**Figure 1.** The agent receives the task, project record, guidance, and local
+context as inputs. After doing and validating the work, it reports the result
+and records the observed state. Conclusions remain provisional until a human
+reviews and approves or revises them.
+
 A simple test is whether another LLM agent can continue by reading the repository.
 If not, the necessary knowledge or state should be written to `docs/` or another
 documented project store.
 
 Tool-specific examples appear only where implementations differ.
 
-## Keep Project Knowledge
+### Cross-Agent Layout
+
+Keep shared records outside tool-owned directories. A repository used with
+Claude Code and Codex might use:
+
+```text
+project-root/
+├── AGENTS.md
+├── CLAUDE.md
+├── docs/
+│   ├── architecture.md
+│   ├── project-state.md
+│   ├── workflow/
+│   ├── findings/
+│   ├── plans/
+│   └── rules/
+├── .claude/
+│   └── skills/
+└── .agents/
+    └── skills/
+```
+
+When adapting the included example:
+
+1. Move durable knowledge, findings, workflows, and state into shared files.
+2. Keep `AGENTS.md` and `CLAUDE.md` as short entry points to those files.
+3. Put tool-specific rules, permissions, and skill wrappers in tool directories.
+4. Remove personal paths and replace example commands only with verified ones.
+5. Verify scientific constants and heuristics before treating them as rules.
+6. Give long-running work a task-state record and narrow permissions.
+
+The rest of this chapter builds these layers in that order. First, create the
+tool-neutral project record. Next, configure each agent to find and follow that
+record. Finally, treat session context as a convenience rather than evidence.
+
+## Project Record
+
+The `docs/` directory is the tool-neutral project record. Its files separate
+stable project knowledge from changing plans, state, and findings:
+
+| Path                      | Contents                                                               |
+| ------------------------- | ---------------------------------------------------------------------- |
+| `docs/architecture.md`  | Components, entry points, interfaces, and data flow                    |
+| `docs/project-state.md` | Current priorities, active work, blockers, and links to detailed plans |
+| `docs/workflow/`        | Reusable procedures for development, experiments, and operations       |
+| `docs/findings/`        | Verified observations, measurements, negative results, and conclusions |
+| `docs/plans/`           | Plans and state records for bounded tasks or investigations            |
+| `docs/rules/`           | Shared scientific, data-handling, and engineering constraints          |
+
+These documents change at different rates. Architecture and shared rules may
+remain stable for months, while project state or an active plan may change
+several times in one day. Keep each fact in one canonical location and link to
+it from the other documents.
+
+### Shared Knowledge
 
 Project knowledge includes architecture, terminology, data contracts,
-experimental assumptions, and commands that are already known to work. Divide
-it by how broadly and frequently LLM agents need it.
+experimental assumptions, verified findings, reusable procedures, and rules.
+Place it according to its purpose instead of the agent that will read it.
 
-### Use docs as the shared knowledge layer
+#### Project Documentation
 
-Detailed knowledge should live in ordinary project documents, close to the work
-it explains. Typical examples include:
-
-- `docs/architecture.md` for components, entry points, and data flow;
-- `docs/data.md` for schemas, provenance, units, and split definitions;
-- `docs/experiments.md` for metrics, baselines, and evaluation protocols;
-- `docs/decisions/` for decisions and their alternatives;
-- `docs/findings/` for measurements and supported conclusions; and
-- `README.md` for setup and navigation.
+Use `docs/architecture.md` for the stable map of the codebase. Put repeatable
+procedures in `docs/workflow/`, supported conclusions in `docs/findings/`, and
+shared constraints in `docs/rules/`. A rule should cite the architecture,
+finding, policy, or decision that justifies it when that evidence is not obvious.
+Use `README.md` for setup and navigation rather than duplicating detailed
+project knowledge there.
 
 These files are the shared interface between humans and LLM agents. They do
 not depend on one vendor's memory format, installation, or session history.
@@ -91,27 +176,117 @@ Update them when the underlying fact changes, and link to the canonical document
 instead of copying the same explanation into `CLAUDE.md`, `AGENTS.md`, Copilot
 instructions, and several agent memories.
 
-Tool-specific entry points should point to the same documents:
-
-```text
-docs/architecture.md              <- shared project knowledge
-docs/experiments.md               <- shared scientific protocol
-docs/project-state.md             <- shared work state
-CLAUDE.md                         <- Claude Code routing and behavior
-AGENTS.md                         <- Codex routing and cross-agent instructions
-.github/copilot-instructions.md   <- Copilot-specific routing and behavior
-```
-
-This arrangement allows each tool to keep concise operating rules while using
-the same definitions, decisions, and current state.
-
 The example's
 [architecture.md](../examples/ai_coding_examples/claude/architecture.md)
 illustrates an architecture inventory. In a real project, verify it against the
 repository and update it when files move. A stale inventory is worse than a
 shorter document that identifies only stable boundaries and entry points.
 
-### Use a thin LLM-agent-specific entry point
+### Task and Experiment State
+
+State records where the work stands. Research projects need more than chat
+history because code, data, experiments, and interpretations evolve at different
+rates.
+
+#### Types of State
+
+1. **Repository state** is the current Git revision, branch, working-tree diff,
+   and staged changes.
+2. **Task state** records the objective, the plan, completed work, open
+   questions, and next checks.
+3. **Experiment state** records configurations, input identity, environment,
+   execution status, logs, checkpoints, metrics, and failures.
+4. **Conversation state** is the agent session transcript and loaded context.
+
+Repository, task, and experiment state are ground truth that every agent should
+read fresh rather than recall from private memory. Store durable records in
+tool-neutral formats and documented locations so another LLM agent can take over.
+Only committed, versioned parts are durable, while an uncommitted diff or a
+running experiment is current but still provisional.
+
+#### Task State
+
+Use `docs/project-state.md` as a concise index of current work rather than a
+complete history. For work that spans sessions, create a version-controlled
+record under `docs/plans/` and link it from `docs/project-state.md`. A useful
+plan format is:
+
+```markdown
+# Dataset validation state
+
+> **Status:** ACTIVE
+> **Updated:** 2026-09-03
+
+## Objective
+
+Reject duplicate sample IDs before dataset construction without changing the
+manifest schema.
+
+## Established facts
+
+- Validation begins in `src/project/dataset.py`.
+- Existing callers expect one `ValueError` for an invalid manifest.
+
+## Plan
+
+- Report all duplicate IDs in one error.
+- Do not read sample contents during manifest validation.
+
+## Completed
+
+- Added a failing regression test for duplicate IDs.
+
+## Current state
+
+- Implementation is written but the full test suite has not run.
+
+## Next checks
+
+1. Run `pytest tests/test_dataset.py -q`.
+2. Run `pytest tests -q`.
+3. Review the diff for changes to dataset splitting.
+
+## Open questions
+
+- Should IDs be compared before or after Unicode normalization?
+```
+
+Write facts as facts and unresolved ideas as questions or hypotheses. Update the
+plan at meaningful checkpoints, not after every small tool call. When work ends,
+record the final validation result, link any durable conclusion under
+`docs/findings/`, and remove the plan from the active list in
+`docs/project-state.md`. Keep the plan when its history remains useful.
+
+#### Experiment State
+
+An experiment record should contain enough information to reproduce or explain
+the run:
+
+- code revision and dirty-working-tree status;
+- environment or lock-file identity;
+- dataset version, manifest, and provenance;
+- complete configuration and command-line arguments;
+- random seeds and determinism settings;
+- hardware, accelerator, and scheduler allocation;
+- start time, completion status, and exit reason;
+- log, checkpoint, and result locations; and
+- metrics with their definitions and aggregation method.
+
+Do not ask an LLM agent to infer missing provenance after the run. Capture it
+when the experiment starts. Link active runs from `docs/project-state.md` when
+they affect current work, and write supported conclusions or negative results
+to `docs/findings/`. Keep raw logs, checkpoints, and large outputs in their
+documented data locations rather than committing them to `docs/`. An agent hook
+may load current task context, while experiment wrappers should record execution
+metadata independently of any LLM agent.
+
+## Agent Guidance
+
+Agent guidance tells a particular tool where to find the project record and how
+to operate. Keep this layer concise and separate advisory instructions from
+controls enforced by the runtime or operating system.
+
+### Tool-Specific Entry Points
 
 Each LLM-agent tool may have a preferred instruction file. Use that file as a
 thin entry point containing information the LLM agent needs in nearly every
@@ -153,9 +328,11 @@ This project trains graph neural networks from versioned molecular datasets.
 ## Canonical knowledge
 
 - Architecture and entry points: [docs/architecture.md](docs/architecture.md)
-- Dataset schema and provenance: [docs/data.md](docs/data.md)
-- Evaluation protocol: [docs/experiments.md](docs/experiments.md)
 - Active work and plans: [docs/project-state.md](docs/project-state.md)
+- Reusable procedures: [docs/workflow/](docs/workflow/)
+- Verified findings: [docs/findings/](docs/findings/)
+- Detailed plans: [docs/plans/](docs/plans/)
+- Shared constraints: [docs/rules/](docs/rules/)
 
 ## Environment and validation
 
@@ -184,7 +361,7 @@ specific instructions are easier to maintain than a long handbook. See the
 [Claude memory guide](https://code.claude.com/docs/en/memory) and
 [Codex `AGENTS.md` guide](https://learn.chatgpt.com/docs/agent-configuration/agents-md).
 
-### Use scoped instructions for specialized knowledge
+### Scoped Instructions
 
 Use the agent's scoped-instruction mechanism for language-, directory-, or
 task-specific knowledge. In Claude Code, place topic files under
@@ -234,30 +411,12 @@ more specific file appears later in its instruction chain. Codex `.rules` files
 serve a different purpose: they control which commands may run outside the
 sandbox and should not be used as substitutes for project knowledge.
 
-### Use agent-local memory as a cache, not a record
+### Advisory and Enforced Rules
 
-Local memory can retain debugging hints and personal workflow preferences, but
-it may be machine-specific and is not a reproducible project record.
+Rules answer how an LLM agent should work. Separate guidance that requires
+judgment from controls that must apply regardless of the model's interpretation.
 
-Use auto-memory for facts such as:
-
-- a command that is repeatedly useful on one workstation;
-- a local debugging observation that has not yet been confirmed; or
-- a personal preference about how results are displayed.
-
-Move team knowledge, decisions, workarounds, and task state into the repository.
-Use `/memory` in Claude Code or `/memories` in supporting Codex clients to review
-local memory.
-
-Do not write shared workflows to a user's absolute memory path. The agent owns
-that non-portable storage.
-
-## Define and Enforce Rules
-
-Rules answer how an LLM agent should work. Separate guidance that requires judgment
-from controls that must apply regardless of the model's interpretation.
-
-### Behavioral rules belong in instructions
+#### Behavioral Rules
 
 Use the tool-specific instruction entry point and scoped instruction files for
 rules such as:
@@ -274,7 +433,7 @@ The example's
 uses this approach to keep commits under human control. This is particularly
 useful when Git revisions are used as experiment provenance.
 
-### Enforced rules belong in settings or hooks
+#### Enforced Rules
 
 An instruction such as "never read `.env`" is a request to the model. If the
 action must be blocked, use the LLM-agent runtime, operating system, sandbox, or
@@ -298,7 +457,7 @@ idempotent, and safe with untrusted input. If the agent has no suitable hook,
 use a repository script, pre-commit check, or CI. See the
 [Claude Code hooks guide](https://code.claude.com/docs/en/hooks-guide).
 
-### Keep rules consistent
+#### Rule Consistency
 
 Conflicting rules make agent behavior unpredictable. Maintain one canonical
 rule for each concern:
@@ -316,105 +475,24 @@ Rules should describe the target repository's actual configuration. For example,
 do not state that Black, isort, and Ruff are all required unless their settings
 and validation commands agree in the repository.
 
-## Keep Work State
+## Local Context
 
-State records where the work stands. Research projects need more than chat
-history because code, data, experiments, and interpretations evolve at different
-rates.
+Chat history and agent-local memory can make a session convenient to resume, but
+they may be stale, incomplete, or machine-specific. They are caches, not a
+reproducible project record.
 
-### Distinguish four kinds of state
+Local memory is appropriate for:
 
-1. **Repository state** is the current Git revision, branch, working-tree diff,
-   and staged changes.
-2. **Task state** records the objective, the plan, completed work, open
-   questions, and next checks.
-3. **Experiment state** records configurations, input identity, environment,
-   execution status, logs, checkpoints, metrics, and failures.
-4. **Conversation state** is the agent session transcript and loaded context.
+- a command that is repeatedly useful on one workstation;
+- a local debugging observation that has not yet been confirmed; or
+- a personal preference about how results are displayed.
 
-Repository, task, and experiment state are ground truth that every agent should
-read fresh rather than recall from private memory. Store durable records in
-tool-neutral formats and documented locations so another LLM agent can take over.
-Only committed, versioned parts are durable, while an uncommitted diff or a
-running experiment is current but still provisional. A resumed conversation is
-convenient, but it can contain outdated assumptions and does not substitute for
-inspecting the current files.
+Move team knowledge, decisions, workarounds, and task state into the repository.
+Use `/memory` in Claude Code or `/memories` in supporting Codex clients to review
+local memory. Do not write shared workflows to a user's absolute memory path;
+that storage is non-portable and owned by the individual agent installation.
 
-### Record task state in the repository
-
-For work that spans sessions, maintain a short version-controlled state file,
-issue, or plan. A useful format is:
-
-```markdown
-# Dataset validation state
-
-> **Status:** ACTIVE
-> **Updated:** 2026-09-03
-
-## Objective
-
-Reject duplicate sample IDs before dataset construction without changing the
-manifest schema.
-
-## Established facts
-
-- Validation begins in `src/project/dataset.py`.
-- Existing callers expect one `ValueError` for an invalid manifest.
-
-## Plan
-
-- Report all duplicate IDs in one error.
-- Do not read sample contents during manifest validation.
-
-## Completed
-
-- Added a failing regression test for duplicate IDs.
-
-## Current state
-
-- Implementation is written but the full test suite has not run.
-
-## Next checks
-
-1. Run `pytest tests/test_dataset.py -q`.
-2. Run `pytest tests -q`.
-3. Review the diff for changes to dataset splitting.
-
-## Open questions
-
-- Should IDs be compared before or after Unicode normalization?
-```
-
-Write facts as facts and unresolved ideas as questions or hypotheses. Update the
-file at meaningful checkpoints, not after every small tool call. Close the state
-record with the final validation result and link to the resulting commit,
-issue, experiment, or finding.
-
-Do not write this state only to Claude auto-memory. A tool-neutral state document
-lets a new Claude session, another LLM agent, or a human collaborator resume
-from the same evidence.
-
-### Record experiment state separately
-
-An experiment record should contain enough information to reproduce or explain
-the run:
-
-- code revision and dirty-working-tree status;
-- environment or lock-file identity;
-- dataset version, manifest, and provenance;
-- complete configuration and command-line arguments;
-- random seeds and determinism settings;
-- hardware, accelerator, and scheduler allocation;
-- start time, completion status, and exit reason;
-- log, checkpoint, and result locations; and
-- metrics with their definitions and aggregation method.
-
-Do not ask an LLM agent to infer missing provenance after the run. Capture it
-when the experiment starts. An agent hook may load current task context, while
-experiment wrappers should record execution metadata independently of any LLM
-agent.
-
-### Use agent sessions for continuity, not truth
+### Evidence-Based Resumption
 
 Transcripts help continue interrupted work but may be stale. Start resumed work
 by checking:
@@ -432,7 +510,7 @@ tool-specific continuation features.
 
 For concurrent tasks, use separate Git worktrees and clear file ownership.
 
-## Use a Repeatable Session Workflow
+## Session Workflow
 
 The following lifecycle keeps knowledge, rules, and state synchronized.
 
@@ -450,7 +528,7 @@ identify conflicts with the state document, and do not edit files yet.
 The user verifies that the LLM agent found the correct environment, files, and
 task.
 
-### 2. Define the outcome
+### 2. Define
 
 Convert the request into observable success criteria:
 
@@ -478,7 +556,7 @@ for a read-only plan. The plan should name files, risks, expected state changes,
 and checks. Store the accepted plan when the work will span sessions or involve
 other collaborators.
 
-### 4. Implement a bounded increment
+### 4. Implement
 
 Make the smallest change that produces a testable result. After each meaningful
 increment, inspect the diff and run the narrowest relevant check. Do not combine
@@ -495,7 +573,7 @@ The LLM agent must report observed command results rather than claiming a
 command was run. Generated scientific explanations and chemical assignments remain
 hypotheses until supported by repository evidence or an authoritative source.
 
-### 6. Update durable state
+### 6. Update State
 
 Before ending the session, update the relevant task or experiment record with:
 
@@ -509,7 +587,7 @@ Before ending the session, update the relevant task or experiment record with:
 Do not store ephemeral narration or the entire chat transcript. Preserve only
 information another person or fresh session needs to continue correctly.
 
-### 7. Hand off
+### 7. Hand Off
 
 A useful handoff is short and evidence-based:
 
@@ -531,7 +609,7 @@ State:
 - docs/project-state.md records the open question for the next session.
 ```
 
-## Package Recurring Research Workflows
+## Reusable Workflows
 
 For repeated tasks, keep a version-controlled runbook and add a `SKILL.md`
 wrapper for each supporting agent. The runbook remains readable by humans and
@@ -578,37 +656,7 @@ Keep permissions and invocation controls in the tool-specific wrapper. See
 The example's legacy [`commands/`](../examples/ai_coding_examples/claude/commands/)
 can be converted into thin skills that share the same runbook and scripts.
 
-## Apply the Pattern Across Agents
-
-Keep shared records outside tool-owned directories. A repository used with
-Claude Code and Codex might use:
-
-```text
-project-root/
-├── AGENTS.md
-├── CLAUDE.md
-├── docs/
-│   ├── architecture.md
-│   ├── project-state.md
-│   ├── workflows/
-│   └── findings/
-├── .claude/
-│   ├── rules/
-│   └── skills/
-└── .agents/
-    └── skills/
-```
-
-When adapting the included example:
-
-1. Move durable knowledge, findings, workflows, and state into shared files.
-2. Keep `AGENTS.md` and `CLAUDE.md` as short entry points to those files.
-3. Put tool-specific rules, permissions, and skill wrappers in tool directories.
-4. Remove personal paths and replace example commands only with verified ones.
-5. Verify scientific constants and heuristics before treating them as rules.
-6. Give long-running work a task-state record and narrow permissions.
-
-## Audit the System
+## System Audit
 
 Audit the same layers regardless of which LLM agent is used:
 
