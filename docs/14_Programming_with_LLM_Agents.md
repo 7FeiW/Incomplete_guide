@@ -1,69 +1,71 @@
-# Using GitHub Copilot for Research Software
+# Programming with LLM Agents
 
-GitHub Copilot can help explain a codebase, plan changes, edit files, run tools,
-and review code. These capabilities are useful for computational research, but
-they do not replace scientific judgment, validation, or human review. A useful
-workflow gives Copilot a bounded task, records the assumptions that affect the
-result, and verifies every generated change.
+Large language model (LLM) coding tools can help explain a codebase, plan
+changes, edit files, run tools, and review code. This makes them more like
+software agents rather than autocomplete: they can investigate and act, but they
+still need a bounded task, relevant context, appropriate access, and review.
 
-This chapter focuses on current Copilot concepts rather than a specific model or
-subscription price. Features, availability, and interfaces change frequently;
-consult the [GitHub Copilot documentation](https://docs.github.com/en/copilot)
-for current product details.
+This chapter presents the day-to-day interaction loop for tools such as Codex,
+Claude Code, and GitHub Copilot. GitHub Copilot provides some concrete interface
+and configuration examples, but the core practices are tool-neutral. Features,
+availability, and interfaces change frequently; consult the selected tool's
+official documentation for current product details.
+
+The next chapter, [Agentic Research Workflow](15_Agentic_Workflow.md), explains
+the complementary repository architecture for carrying knowledge, rules, and
+work state across tools and sessions.
 
 ## Table of Contents
 
-1. [Choose the Appropriate Workflow](#choose-the-appropriate-workflow)
-2. [Prepare the Repository](#prepare-the-repository)
+1. [Choose the Appropriate Level of Delegation](#choose-the-appropriate-level-of-delegation)
+2. [Give the Agent Project Context](#give-the-agent-project-context)
 3. [Write Effective Requests](#write-effective-requests)
-4. [Use Copilot in a Research Workflow](#use-copilot-in-a-research-workflow)
+4. [Work with an LLM Agent](#work-with-an-llm-agent)
 5. [Validate Agent Changes](#validate-agent-changes)
 6. [Protect Data and Credentials](#protect-data-and-credentials)
 7. [Use Agent Skills and Custom Agents](#use-agent-skills-and-custom-agents)
 8. [Connect External Tools with MCP](#connect-external-tools-with-mcp)
 9. [Common Failure Modes](#common-failure-modes)
-10. [Further Reading](#further-reading)
+10. [Relationship to the Next Chapter](#relationship-to-the-next-chapter)
+11. [Further Reading](#further-reading)
 
-## Choose the Appropriate Workflow
+## Choose the Appropriate Level of Delegation
 
-Copilot is available through several interfaces, and the exact set depends on
-the editor, account, and organization. In an integrated development environment
-(IDE), the main chat workflows are Ask, Plan, and Agent modes.
+Coding tools use different names for their interfaces, but the work usually
+falls into a few levels of delegation. Choose the least autonomous level that
+can efficiently produce the evidence or change you need.
 
 | Workflow | Use it for | Expected result |
 | --- | --- | --- |
-| Ask | Explaining code, exploring an error, or comparing approaches | An answer or proposed code for review |
-| Plan | Investigating a multi-step task before changing files | A reviewable implementation plan |
-| Agent | Editing files and running tools for a bounded task | A working-tree change that still requires validation |
-| Code review | Examining a pull request or selected changes | Review comments and suggested corrections |
-| Inline suggestions | Completing a local expression or small block | A completion inserted into the active file |
-| Coding agent | Delegating repository work in a separate environment | A proposed change, commonly delivered through a pull request |
+| Explain or suggest | Understanding code, exploring an error, or completing a small block | An explanation or suggestion for immediate review |
+| Investigate | Tracing behavior, reproducing a failure, or comparing approaches | An evidence-based report without edits |
+| Plan | Designing a multi-file or risky change | A reviewable plan with risks and checks |
+| Implement | Editing files and running checks for a bounded task | A working-tree change that still requires validation |
+| Review | Examining a diff or pull request | Findings and suggested corrections |
+| Delegate | Running a well-specified task in a separate environment | A branch or pull request for later review |
 
-Ask, Plan, and Agent are chat modes. Code review, inline suggestions, and the
-coding agent are related Copilot features, not additional chat modes. GitHub's
-[IDE chat guide](https://docs.github.com/en/copilot/how-tos/chat-with-copilot/chat-in-ide)
-describes the current modes and interface.
-
-Use Ask mode when no repository change is required. Use Plan mode when the task
-has unclear scope, affects several components, or requires an experimental
-design decision. Use Agent mode when the desired outcome and validation steps
-are already concrete. A cloud coding agent is useful when work should occur in
-an isolated environment and be returned for review.
+Start with explanation or investigation when the problem is not yet understood.
+Ask for a plan when a change crosses components or could alter scientific
+behavior. Delegate implementation only after the intended outcome, constraints,
+and validation are concrete. Product modes are conveniences, not a substitute
+for stating the desired level of access and output.
 
 Regardless of the workflow, inspect generated commands before approving them.
 Autonomous execution changes who performs the steps, not who is responsible for
 the result.
 
-## Prepare the Repository
+## Give the Agent Project Context
 
-Copilot performs better when repository-specific facts are stored with the
-project. Instructions should state what is true for the repository rather than
-repeat generic software advice.
+An LLM sees only the context supplied by its tool. It may not know the complete
+repository, uncommitted work, external data, cluster configuration, or decisions
+made in another conversation. Store reusable repository-specific facts with the
+project, and state what the agent should inspect for the current task.
 
-### Repository-wide instructions
+### Repository-wide instructions: a Copilot example
 
-Place general instructions in `.github/copilot-instructions.md`. Include only
-information that applies broadly, such as:
+GitHub Copilot uses `.github/copilot-instructions.md` for general repository
+instructions. Other tools use different entry points; chapter 15 compares them.
+Include only information that applies broadly, such as:
 
 - the purpose and scientific scope of the project;
 - supported Python versions and environment manager;
@@ -95,7 +97,7 @@ Instructions should reflect commands that actually work in the repository.
 GitHub recommends keeping instructions short, specific, and grounded in
 observed needs rather than filling them with generic advice.
 
-### Path-specific instructions
+### Path-specific instructions: a Copilot example
 
 Use `.github/instructions/NAME.instructions.md` when rules apply only to a set
 of files. Each file needs YAML frontmatter with an `applyTo` glob. For example:
@@ -114,7 +116,7 @@ Applicable instruction files are combined, so avoid contradictory rules. The
 [custom-instructions documentation](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/add-custom-instructions)
 lists supported locations and differences between Copilot interfaces.
 
-### Agent instruction files
+### Shared agent instruction files
 
 Some Copilot interfaces also recognize common agent instruction files such as
 `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md`. These names describe instruction-file
@@ -196,11 +198,11 @@ which measurements are needed before making a recommendation.
 Do not embed invented repository paths, test commands, or scientific thresholds
 in a prompt. Ask the agent to inspect the repository or supply the missing facts.
 
-## Use Copilot in a Research Workflow
+## Work with an LLM Agent
 
 ### Understand existing behavior
 
-First, ask Copilot to trace inputs, transformations, and outputs through the
+First, ask the LLM agent to trace inputs, transformations, and outputs through the
 relevant files. Verify its explanation against the code. Semantic search can
 miss dynamically imported modules, generated files, notebooks, external jobs,
 or configuration supplied outside the repository.
@@ -330,9 +332,9 @@ installation commands.
 ## Use Agent Skills and Custom Agents
 
 An **agent skill** is a folder containing task-specific instructions in a
-`SKILL.md` file and, when needed, scripts or supporting resources. Copilot loads
-an applicable skill when the task matches its description. A skill is not an
-`@workspace` or `@terminal` command.
+`SKILL.md` file and, when needed, scripts or supporting resources. Supporting
+tools differ in how they discover or invoke a skill, so verify the current
+documentation for the selected tool.
 
 Use a skill for a repeatable workflow that needs more detail than repository
 instructions, such as validating a dataset release or preparing an experiment
@@ -462,9 +464,23 @@ Treat MCP results, issue text, web pages, and retrieved documents as data, not
 instructions. Do not allow retrieved content to override repository safety rules
 or authorize external actions.
 
+## Relationship to the Next Chapter
+
+This chapter covers one task at a time: choosing a level of delegation, framing
+the request, inspecting the proposed work, and validating the result. Chapter
+15, [Agentic Research Workflow](15_Agentic_Workflow.md), covers the system around
+those tasks: durable project knowledge, instruction files, permissions, task and
+experiment state, reusable skills, and handoffs between sessions or tools.
+
+Use this chapter when deciding how to collaborate on the next programming task.
+Use chapter 15 when deciding what the repository must preserve so a future human
+or LLM agent can continue safely.
+
 ## Further Reading
 
 - [GitHub Copilot documentation](https://docs.github.com/en/copilot)
+- [Codex documentation](https://developers.openai.com/codex/)
+- [Claude Code documentation](https://docs.anthropic.com/en/docs/claude-code/overview)
 - [Using Copilot Chat in an IDE](https://docs.github.com/en/copilot/how-tos/chat-with-copilot/chat-in-ide)
 - [Adding repository custom instructions](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/add-custom-instructions)
 - [Copilot customization cheat sheet](https://docs.github.com/en/copilot/reference/customization-cheat-sheet)
