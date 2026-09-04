@@ -647,7 +647,8 @@ description: Analyze fragmentation-DAG misses for one chemical subclass.
 3. Separate absent fragments from underpredicted fragments.
 4. Check assignments against measured exact masses.
 5. Draft a finding that separates evidence, interpretation, and uncertainty.
-6. Update the task-state file only after validation succeeds.
+6. Update task state after the attempt, including failed validation. Promote a
+   conclusion to `docs/findings/` only after the relevant validation succeeds.
 ```
 
 Keep permissions and invocation controls in the tool-specific wrapper. See
