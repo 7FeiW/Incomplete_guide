@@ -17,16 +17,16 @@ Projects vary in goals, lifecycles, and complexity. Choose a structure that alig
 
 Use this structure when the project contains a small number of related experiments or preprocessing/training tasks. It keeps data, configurations, and scripts organized per task while remaining lightweight.
 
-### Use this when:
+### Use This Structure When
 
 1. The project has only a few tasks.
 
-### Limitations:
+### Limitations
 
 1. Tasks do not share many custom-built common functions.
 2. There is no intention to distribute the project as an installable package (e.g., wheel).
 
-```
+```text
 my_project/
 ├── data/                 # Data directory for this project
 │   ├── task_1_data
@@ -61,17 +61,17 @@ my_project/
 
 Use this structure when the project contains multiple tasks that share a meaningful amount of custom code. Shared modules live in a `common/` directory.
 
-### Use this when:
+### Use This Structure When
 
 1. There are several tasks.
 2. Tasks share substantial custom code.
 
-### Limitations:
+### Limitations
 
 1. Not suitable for distributing as a Python package.
 2. Importing shared code can be slightly cumbersome.
 
-```
+```text
 my_project/
 ├── README.md
 ├── requirements.txt
@@ -99,14 +99,14 @@ my_project/
 
 Use a `src/`-based structure when the project must scale, be maintained long-term, support collaboration, or be distributed (e.g., uploaded to PyPI). This layout supports modern development practices such as CI, structured testing, and modular design.
 
-### Use this when:
+### Use This Structure When
 
 1. The codebase is large, complex, or collaborative.
 2. You plan to distribute or deploy your package.
 3. The project involves many scripts, datasets, or models.
 4. You are developing a sophisticated computational tool or ML model.
 
-```
+```text
 my_project/
 ├── src/
 │   └── my_package/       # Main Python package
@@ -196,7 +196,7 @@ Add these directories when developing on HPC systems using SLURM.
 * **slurm_working_dir/** — working directory for active SLURM jobs (excluded via `.gitignore`).
 * **jobs/** — outputs and logs from job runs (also ignored by Git).
 
-```
+```text
 ├── slurm_scripts/
 │   ├── script_1.sh
 │   └── script_2.sh
@@ -212,7 +212,7 @@ Add these directories when developing on HPC systems using SLURM.
 
 ## Working with Apptainer
 
-```
+```text
 ├── apptainer/
 │   ├── script_1.sh
 │   └── script_2.sh

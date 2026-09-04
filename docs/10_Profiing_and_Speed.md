@@ -1,4 +1,4 @@
-## On Topics of Code Performance
+# Profiling and Performance
 
 > *I feel the need—the need* for *speed*!
 
@@ -10,7 +10,7 @@
 * Many computational resources are charged by usage time. Speeding up code reduces runtime, which can cut costs and free up funding or resources for other research needs.
 * Speedier, efficient code can make it easier for others to replicate your work without needing access to high-end resources, thus fostering collaboration and openness.
 
-### Things About Python Performance
+## Python Performance
 
 > Life is short, I use Python.
 
@@ -20,15 +20,15 @@ Here is a speed comparison between various programming languages (<https://githu
 
 In addition to raw Python speed, Python's **Global Interpreter Lock (GIL)** could also have a huge negative effect on code performance. GIL is a lock (a mutex in CS terms) that allows only one thread to take control of the Python interpreter. This is a solution to ensure memory safety. However, GIL can create a bottleneck in CPU-bound and multi-threaded code. Use multi-processing (<https://docs.python.org/3/library/multiprocessing.html>) instead of multi-threading in Python implementation to bypass this limitation. However, keep in mind that multi-processing needs more resources and is harder to share data between each process.
 
-#### Other Things About Code Performance
+## Profile Before Optimizing
 
 > There is no silver bullet.
 
 First and foremost, there is no silver bullet to solve all performance issues. Understand tasks and find bottlenecks first, then find solutions for specific tasks.
 
-#### Algorithmic Efficiency
+## Algorithmic Efficiency
 
-#### Hardware Efficiency
+## Hardware Efficiency
 
 It is very important to keep in mind that your program will always be bounded or bottlenecked by some hardware limitation. Fully using all the hardware does not necessarily mean your method is optimal.
 
@@ -68,7 +68,7 @@ To assess whether your code is CPU-bound, GPU-bound, or memory-bound, you can us
 - **GPU Profiling:** For GPU-related tasks, use `nvidia-smi`, `nvprof`, or TensorFlow/PyTorch profiling tools.
 - **Memory Profiling:** Use `memory_profiler`, `objgraph`, or `psutil` to analyze memory consumption.
 
-### Extra Things for Machine Learning Projects
+## Machine Learning Performance
 
 1. **Hardware Usage**: Fast hardware is only useful if programs can fully use it. Using a fancy GPU does not directly translate to performance boosts. Always check your GPU and CPU usage during training and evaluation if needed.
 2. **Dataloader**: One of the more common bottlenecks in GPU-accelerated machine learning tasks is in fact the dataloader, the part of the program that reads data from hard drives and loads them into system memory and GPU memory. A slow dataloader often results in lower GPU usage, since the GPU is waiting for data to be transferred from hard drive/system RAM to VRAM.

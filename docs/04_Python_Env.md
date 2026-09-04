@@ -4,7 +4,7 @@
 
 This document explains practical, beginner-friendly ways to manage Python environments and install your project while developing. It separates the common choices (`pip` vs `conda`) and environment tools (`venv` vs `virtualenv`), shows how to use `requirements.txt` and `environment.yml`, points out cross-platform pitfalls, and gives notes for working on HPC systems.
 
-## What is a Python environment?
+## What Is a Python Environment?
 
 - A Python environment is an isolated runtime that contains a specific Python interpreter, installed libraries, and environment-specific settings (PATH, environment variables). It determines which Python executable and which package versions your code uses.
 - Why use one: isolation — different projects can use different package versions without conflict; it makes testing, development, and deployment reproducible and safer.
@@ -18,7 +18,7 @@ Common environment types:
 
 ---
 
-## Pip and Conda
+## `pip` and Conda
 
 `pip` and `conda` are two commonly used Python package managers. `pip` is the Python packaging installer (standard tool). It installs packages from PyPI and other sources. `conda` is an environment manager + package manager (from Anaconda/Miniconda) that installs prebuilt binary packages and manages environments. It is commonly used in data-science stacks.
 
@@ -30,7 +30,7 @@ Common environment types:
 
 ---
 
-## Venv and Virtualenv
+## `venv` and `virtualenv`
 
 ### `venv` (built into Python)
 
@@ -233,6 +233,7 @@ conda env create -f environment.yml
 ```
 
 ### Editable installs (during development)
+
 Since `conda develop` not longer avabiale, use `pip` within conda
 ```bash
 pip install -e .
@@ -251,8 +252,10 @@ Mixing `conda` and `pip`:
 - Exported `environment.yml` may include pip-installed packages under a `pip:` section.
 
 ---
-## UV
-[https://docs.astral.sh/uv/]
+
+## uv
+
+See the [official uv documentation](https://docs.astral.sh/uv/).
 
 ## Cross-platform issues (pip and conda)
 
@@ -269,7 +272,7 @@ Some things to watch for when supporting Windows, macOS, and Linux:
 
 ---
 
-## Working on HPC / Clusters
+## Working on HPC Systems
 
 High-performance computing (HPC) environments often have site-specific setups (module systems, restricted network, shared filesystems). Important points:
 
@@ -298,7 +301,7 @@ Always consult the cluster's user guide — site-specific instructions override 
 
 ---
 
-## Quick command cheatsheet (copy-paste examples)
+## Quick Command Reference
 
 venv (macOS / Linux):
 
@@ -340,7 +343,7 @@ pip freeze > requirements.txt
 
 ---
 
-## Further resources
+## Further Resources
 
 - pip documentation: [https://pip.pypa.io/](https://pip.pypa.io/)
 - virtualenv project: [https://virtualenv.pypa.io/](https://virtualenv.pypa.io/)

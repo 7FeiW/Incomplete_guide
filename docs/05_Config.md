@@ -1,8 +1,11 @@
-# Use Configurations
+# Configuration Files
+
 Configuration files are an effective way to track parameter setups and experiment configurations in your code base, ensuring reproducibility, clarity, and modularity. This practice allows you to separate code logic from experiment parameters, making it easier to modify, share, and understand experiments without directly altering source code.
 
-## What could/should in the configureations file
-In gernal, all mutable paremeters should stored in configuation files. Here is a list of item could/should keep in configureation files.
+## What Belongs in a Configuration File
+
+In general, store mutable experiment parameters in configuration files. Common
+examples include:
 
 - **Paths to Input and Output Files:** Specify locations for datasets, model checkpoints, logs, and output results so that file management is consistent and easily adjustable between environments.
 - **Experiment Metadata:** Information like experiment name, description, random seed for reproducibility, and version info for code or data.
@@ -19,9 +22,12 @@ In gernal, all mutable paremeters should stored in configuation files. Here is a
 - **Version and Dependency Information:** Details on code versions, dataset versions, or library dependencies to support experiment reproducibility.
 - **Flags for Feature Toggles or Optional Modules:** To switch on/off certain parts of the code or models easily.
 
-## Configureation File Format
-Two popular text formats used for configuration files are json and yaml. 
-### A Json Example
+## Configuration File Formats
+
+Two popular text formats for configuration files are JSON and YAML.
+
+### JSON Example
+
 ```json
 {
   "experiment": {
@@ -46,9 +52,12 @@ Two popular text formats used for configuration files are json and yaml.
 }
 
 ```
-JSON is a widely used format, with built-in support in python. It is compact and uses explicit syntax with braces {}, brackets [], commas, and quotes. It does NOT support comments, which reduces readability for manual editing but makes it simpler and more predictable to parse programmatically.
+JSON is a widely used format with built-in support in Python. It does not
+support comments, which can reduce readability for manual editing but makes the
+syntax predictable to parse.
 
-### A Yaml example
+### YAML Example
+
 ```yaml
 experiment:
   name: baseline_model_test
@@ -71,9 +80,10 @@ training:
 ```
 YAML is designed primarily for human readability and uses indentation to structure data, which makes it easier to read and write by hand, especially for configuration files. It supports comments (using #), which is useful for documenting configurations directly.
 
-## Load and Validate Configuratiuons
+## Load and Validate Configurations
 
-### Loading JSON and YAML config files
+### Load JSON and YAML Files
+
 ```python
 import json
 import yaml
@@ -97,16 +107,16 @@ print("JSON Config:", json_config)
 print("YAML Config:", yaml_config)
 ```
 
-### Validating JSON and YAML config files
-TODO
-```python
-```
+### Validate JSON and YAML Files
 
-### Using a template configurtation for defualt values
+<!-- TODO: Add a complete, runnable schema-validation example. -->
+
+### Use a Base Configuration for Default Values
+
 Using a template configuration file for default values is a practice to standardize experiment setups, provide sensible defaults, and reduce duplication. This template can be a "base" config that your experiments start from, and you then override or extend it for specific runs or environments.
 
-1. Create a Template Config File
-Example YAML template, e.g., config-defaults.yaml:
+1. Create a base configuration file, such as `config-defaults.yaml`.
+
 ```yaml
 experiment:
   name: default_experiment
@@ -132,8 +142,8 @@ logging:
   save_checkpoints: true
   checkpoint_dir: checkpoints/
 ```
-2. Create Experiment-Specific Override Config
-Example config-exp-1.yaml:
+2. Create an experiment-specific override, such as `config-exp-1.yaml`.
+
 ```yaml
 experiment:
   name: experiment1
@@ -143,7 +153,8 @@ training:
   learning_rate: 0.0005
 ```
 
-3. Loading and Merging Template + Overrides in Python
+3. Load and merge the base configuration and overrides in Python.
+
 You can use libraries like PyYAML and deepmerge or tools like OmegaConf or Hydra that support config composition and overrides.
 ```python
 import yaml

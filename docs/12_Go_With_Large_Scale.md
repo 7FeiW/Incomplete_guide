@@ -1,10 +1,10 @@
-# Go With Large Scale
+# Scaling Research Workflows
 
 Use this checklist when planning and running experiments at scale on HPC clusters, cloud platforms, or distributed systems. The goal is to reduce failure risk, improve reproducibility, control cost, and ensure that results from small-scale tests can be reliably expanded to full-scale production runs.
 
 ---
 
-## Project Plan & Requirements
+## Project Plan and Requirements
 
 Before scaling, clearly define the project goal, expected outputs, data volume, performance targets, and available budget or compute allocation.
 
@@ -21,7 +21,8 @@ This should answer:
 This step ensures that the planned workflow matches the available compute, storage, time, and budget before launching large-scale runs.
 
 
-## 0. Parallelization
+## Parallelization
+
 Before scaling, design the workflow so that large jobs are broken into smaller independent unit tasks. Parallelization should be **data-driven**, meaning the structure of the dataset should determine how tasks are split. That is work will be divided into independent tasks that can run at the same time in parallel. Ideally, each task should use a similar amount of wall time for easy task schecudling. Common ways to parallelize include:
 
 - By sample/inputs
@@ -60,7 +61,8 @@ flowchart LR
 **Figure:** Illustration of a data‑driven parallel workflow. The pipeline starts from an initial `Data` node that is split into two independent branches (`Task 1` and `Task 2`), which can be executed concurrently (e.g., two model inferences or feature‑extraction pipelines). Each branch produces a separate result (`Result 1` and `Result 2`), which are then merged into a final `Results` node, representing aggregation, ensemble computation, or any downstream operation on the combined outputs. Note that Task->Reults is a independent unit task, each of these unit task can be parallelizated.
 
 ### Classyfire Example
-For example, when running ClassyFire [[https://bitbucket.org/wishartlab/classyfire-batch-runner/src/master/]], compound classification can often be parallelized by splitting the input dataset into smaller compound batches. Each batch can run as an independent unit task, producing a separate classification output. After processing, the batch-level results can be merged into one final annotated compound table. The batch size should be selected based on benchmark results, API or server limits, runtime, memory use, and failure rate. 
+
+For example, when running [ClassyFire](https://bitbucket.org/wishartlab/classyfire-batch-runner/src/master/), compound classification can often be parallelized by splitting the input dataset into smaller compound batches. Each batch can run as an independent unit task, producing a separate classification output. After processing, the batch-level results can be merged into one final annotated compound table. The batch size should be selected based on benchmark results, API or server limits, runtime, memory use, and failure rate.
 
 ```mermaid
 
@@ -92,7 +94,8 @@ flowchart LR
 ```
 
 ### RADOR Setup  
-For example, when running RADOR [[https://bitbucket.org/wishartlab/rador/src/main]], the disease input list can be divided into smaller independent tasks, where each task processes text inputs for a defined number of diseases. Each task is assigned a fixed wall time, such as 3 hours. After completion or timeout, a script merges finished results and updates the to-do list so that unfinished diseases can be submitted in the next round. This supports checkpoint-style parallelization and avoids rerunning completed work.
+
+For example, when running [RADOR](https://bitbucket.org/wishartlab/rador/src/main), the disease input list can be divided into smaller independent tasks, where each task processes text inputs for a defined number of diseases. Each task is assigned a fixed wall time, such as 3 hours. After completion or timeout, a script merges finished results and updates the to-do list so that unfinished diseases can be submitted in the next round. This supports checkpoint-style parallelization and avoids rerunning completed work.
 
 RADOR does not use PyTorch DDP (gradient-synchronised multi-GPU training). All models are frozen at inference time — there are no gradients to synchronise. Instead, the pipeline scales horizontally via **SLURM job arrays**: each independent job owns one H100 GPU and processes a fixed slice of diseases sequentially. Tasks share no state and never communicate with each other.
 
@@ -219,7 +222,8 @@ One SLURM task maps to exactly one H100 GPU. vLLM consumes 90 % of VRAM for the 
 | Diseases per SLURM task    | 12                                          | `slurm_fir_apptainer_arr_dw.sh:33` |
 | Max concurrent SLURM tasks | 30                                          | `slurm_fir_apptainer_arr_dw.sh:16` |
 
-### Question to ask
+### Questions to Ask
+
 Parallelization planning should define:
 
 - The smallest independent unit of work
@@ -230,7 +234,7 @@ Parallelization planning should define:
 
 
 
-## 1. Data Strategy
+## Data Strategy
 
 Define how data will be stored, moved, processed, and archived before scaling.
 
@@ -288,9 +292,9 @@ Recommended pattern:
 - Let each task write its own output file or task-specific database.
 - Merge task outputs after the run finishes.
 
-### Consider I/Os
+### Consider Input and Output Performance
 
-## 2. Compute Resources
+## Compute Resources
 
 Compute planning should start by benchmarking one representative unit task, then scaling that estimate to the full workflow.
 
@@ -323,6 +327,7 @@ Runtime: 2 hours
 Temporary storage: 20 GB
 Output size: 2 GB
 ```
+
 ### Break tasks into shorter wall-time jobs
 
 When possible, design unit tasks so they can finish within a shorter wall-time limit. Shorter jobs are usually easier to schedule on HPC systems and may wait less time in the queue than very long jobs.
@@ -393,7 +398,7 @@ Use the result to choose a minimum job size:
 
 #### Step 2 — Calculate compute efficiency
 
-```
+```text
 efficiency = actual_compute_time / total_wall_time
            = (wall_time - startup_overhead) / wall_time
 ```
@@ -410,7 +415,7 @@ efficiency = actual_compute_time / total_wall_time
 
 #### Step 3 — Calculate items per job
 
-```
+```text
 items_per_job = (slot_time_min - startup_min) / time_per_item_min
 
 # Example: 3-hour slot, 10 min startup, 5 min per item
@@ -462,15 +467,18 @@ apptainer exec --nv \
 | Exploratory / debugging | 1-hour interactive `salloc` |
 | Production sweep (hundreds of configs) | 3-hour array, 30–50 items per job |
 
-## 3. Environment & Packaging
+## Environment and Packaging
 
 Large-scale runs must use reproducible software environments.
 
 ### Containerize the environment
 
-Use containers such  Apptainer/Singularity for HPC.  Containers help ensure that the same software versions, dependencies, and system libraries are used across machines. [[./docs/13_Apptainer_Compute_Canada.md]]
+Use containers such as Apptainer for HPC. Containers help ensure that the same
+software versions, dependencies, and system libraries are used across machines.
+See [Using Apptainer on Compute Canada](13_Apptainer_Compute_Canada.md) for a
+practical example.
 
-## 4. Experiment Reproducibility
+## Experiment Reproducibility
 
 Reproducibility means that the same experiment can be rerun and produce the same or comparable results.
 
@@ -553,7 +561,7 @@ This is especially important when running many experiments in parallel.
 
 ---
 
-## 5. Monitoring, Logging & Alerts
+## Monitoring, Logging, and Alerts
 
 Large-scale experiments need active monitoring.
 
@@ -596,7 +604,7 @@ Useful alerts include:
 - GPU out of memory
 - Output file missing
 
-## 6. Profiling & Optimization
+## Profiling and Optimization
 
 Profiling identifies bottlenecks before scaling.
 
@@ -664,7 +672,7 @@ Optimization should be based on profiling results, not assumptions.
 
 ---
 
-## 7. Documentation & Runbooks
+## Documentation and Runbooks
 
 Documentation ensures that the workflow can be repeated and debugged by other people.
 
@@ -714,7 +722,7 @@ Runbooks are especially useful when multiple people are running the workflow.
 
 ---
 
-## Final Clean Checklist
+## Final Checklist
 
 Use this checklist before moving from small-scale experiments to large-scale production runs.
 

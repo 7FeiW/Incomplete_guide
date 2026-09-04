@@ -1,3 +1,8 @@
+# Remote Computing
+
+Remote research systems require careful handling of access credentials,
+environment-specific commands, storage, and scheduled workloads. The examples
+below target Linux-based high-performance computing (HPC) systems.
 
 ## Deploy and Run on Remote Compute
 
@@ -23,51 +28,51 @@
      IdentitiesOnly yes
      ```
 
-# AllianceCan / Compute Canada / DRAC
+## Digital Research Alliance of Canada
 
 This document gives a short, practical overview of the national research-computing organizations and common workflows you will encounter on Canadian HPC resources, plus quick examples for finding software and using containers with Apptainer.
 
-## What is Alliance (AllianceCan / DRAC)
+### What Is the Alliance?
 
 The Digital Research Alliance of Canada (often shortened to the Alliance or AllianceCan) is the national organization that provides advanced research computing (HPC), cloud, storage, and support services for academic research across Canada. 
 
-## Find Software/Library
+### Find Software and Libraries
 
 On this HPC systems you typically do not install system-wide packages yourself. Instead, software is provided through a module system (Environment Modules or Lmod).
 
 - List available modules:
 
-```
+```bash
 module avail
 ```
 
 - Search for a module or package (Lmod/spider):
 
-```
+```bash
 module spider python
 ```
 
 - Load a module into your session:
 
-```
+```bash
 module load python/3.12
 ```
 
 - standard enveriment, this is the one loaded by default 
-```
+```bash
 module load StdEnv/2023
 ```
 
 - cuda module - which is NOT required with pytorch as pytorch use pip installed cuda package
-```
+```bash
 module load cuda/12.9
 ```
 
-## Find Python Package
+### Find Python Packages
 
-For details refer to this [[https://docs.alliancecan.ca/wiki/Python]]
+For details, see the [Alliance Python documentation](https://docs.alliancecan.ca/wiki/Python).
 
-## Apptainer
+### Apptainer
 
 Apptainer (formerly Singularity) is the container runtime commonly used on HPC systems because it runs containers without requiring root privileges and integrates with shared filesystems and batch schedulers.
 
@@ -79,25 +84,25 @@ Examples:
 
 - Run a command inside an image:
 
-```
+```bash
 apptainer exec image.sif python script.py
 ```
 
 - Start an interactive shell inside the container:
 
-```
+```bash
 apptainer shell image.sif
 ```
 
 - Bind host directories into the container (common on HPC):
 
-```
+```bash
 apptainer exec --bind /home/youruser/data:/data image.sif python /data/script.py
 ```
 
 - Pull an image from a registry (Docker Hub or Singularity Library):
 
-```
+```bash
 apptainer pull docker://python:3.9
 ```
 
@@ -107,7 +112,7 @@ Notes on building images:
 
 Using Apptainer in batch jobs (example Slurm script snippet):
 
-```
+```bash
 #SBATCH --job-name=python-job
 module load apptainer
 apptainer exec --bind $HOME/data:/data image.sif python /data/script.py

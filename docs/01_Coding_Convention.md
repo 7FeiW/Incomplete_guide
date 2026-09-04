@@ -1,41 +1,59 @@
-# Coding Convention
+# Coding Conventions
 
-PEP8 is the *official* naming standard for Python code (<https://peps.python.org/pep-0008/>). Follow the guideline, but tweak it for your specific needs.
+Consistent names and documentation make research code easier to review, reuse,
+and maintain. Use the conventions below as defaults, then document any
+project-specific exceptions.
 
-Function and variable names should follow **snake_case** and clearly describe what the function does
-   * Use lowercase with words separated by underscores: use `do_something()`, not `dosomething()`, use `training_data` not `trainingdata`
-   * Use longer, more descriptive names over abbreviations, e.g., `get_data()` instead of `data()` or `gd()`, `training_split()` instead of `tsplit`
-   * The name should NOT be ambiguous: do not use `val()`, `data()`, `process()`, `data`
-   * Function names should describe what the function does: use `calculate_tax()` instead of `tax()`
+## Naming Python Code
 
-Class names should follow **PascalCase**
-   * Use `MyClass` not `my_class` or `myClass`
-   * If class names contain an acronym, use capitalized letters for acronyms, e.g., `CUDAError`
+[PEP 8](https://peps.python.org/pep-0008/) is the Python style guide. Follow its
+naming guidance unless the project has a documented reason to differ.
 
-Constants
-   * Use all uppercase letters and separate words with underscores, e.g., `MAX_RETRIES`
+Function and variable names should use **snake_case** and describe their purpose.
 
-Modules and Packages
-   * Use short, all-lowercase names, e.g., `util` or `math`
+- Separate lowercase words with underscores: use `do_something()`, not
+  `dosomething()`, and `training_data`, not `trainingdata`.
+- Prefer descriptive names over unclear abbreviations: use `training_split`
+  instead of `tsplit`.
+- Avoid ambiguous names such as `val`, `data`, or `process` when a more specific
+  name is available.
+- Name functions for what they do: use `calculate_tax()` instead of `tax()`.
 
-Special Names - These are something you should be aware of at least; use leading or trailing `_` with caution
-   * Names with a single leading underscore `_variable` indicate "internal use" or "protected" members. If you don't know what private methods are, check out [this guide](https://www.datacamp.com/tutorial/python-private-methods-explained)
-   * Names with double leading underscores `__variable` trigger name mangling in classes - Python will rename this to `Class__variable`
-   * Names with double leading and trailing underscores `__init__`, `__str__` are reserved for special methods
+Class names should use **PascalCase**.
+
+- Use `MyClass`, not `my_class` or `myClass`.
+- Preserve familiar capitalized acronyms where they improve clarity, such as
+  `CUDAError`.
+
+Constants should use uppercase words separated by underscores, such as
+`MAX_RETRIES`.
+
+Modules and packages should use short, lowercase names, such as `utils` or
+`analysis`.
+
+Use leading or trailing underscores with care:
+
+- A single leading underscore, as in `_variable`, conventionally marks a name
+  for internal use.
+- Two leading underscores, as in `__variable`, trigger name mangling in a class.
+- Names with two leading and trailing underscores, such as `__init__` and
+  `__str__`, are reserved for special methods defined by Python.
 
 Here is a table of examples:
 
-|Entity	|Convention	|Example|
-| ------- |  ------- |  ------- |
-|Variable	|snake_case	|user_id|
-|Function	|snake_case	|get_user_data|
-|Class	|CapWords (PascalCase)	|UserProfile|
-|Constant	|UPPER_CASE_WITH_UNDERSCORES	|MAX_RETRIES|
-|Module	|lowercase (underscores optional)	|data_utils.py|
-|Package	|lowercase (no underscores)	|datapackage|
-|Exception	|CapWords + 'Error'	|InputValidationError|
+| Entity | Convention | Example |
+| --- | --- | --- |
+| Variable | `snake_case` | `user_id` |
+| Function | `snake_case` | `get_user_data` |
+| Class | PascalCase | `UserProfile` |
+| Constant | `UPPER_CASE_WITH_UNDERSCORES` | `MAX_RETRIES` |
+| Module | Lowercase; underscores optional | `data_utils.py` |
+| Package | Lowercase | `datapackage` |
+| Exception | PascalCase ending in `Error` | `InputValidationError` |
 
-#### A crash course on documentation and type hint
+## Documentation and Type Hints
 
-PEP257 (<https://peps.python.org/pep-0257/>) is the *official* standard for Python documentation. Follow the guideline, but tweak it for your specific needs
-   * TODO: add something here
+[PEP 257](https://peps.python.org/pep-0257/) defines conventions for Python
+docstrings. Follow its guidance unless the project documents a different style.
+
+<!-- TODO: Add practical docstring and type-hint examples. -->

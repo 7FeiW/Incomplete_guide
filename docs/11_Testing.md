@@ -1,14 +1,22 @@
-### Unit Test and Pytest Framework
+# Testing and Packaging
 
-* I will add more stuff once I find them
-* For now, check out (<https://docs.pytest.org/en/stable/>), and also nice online resources here (<https://realpython.com/pytest-python-testing/>) and here (<https://www.datacamp.com/tutorial/pytest-tutorial-a-hands-on-guide-to-unit-testing>)
+Tests help detect unintended changes and make research code safer to reuse.
+Start with small tests for deterministic behavior, then add integration tests
+for important workflows.
 
-### Code Release (if you have a src directory)
+## Unit Tests with pytest
+
+<!-- TODO: Add a small, runnable pytest example and explain its prerequisites. -->
+
+For now, see the [pytest documentation](https://docs.pytest.org/en/stable/).
+
+## Package Releases for `src/` Layouts
 
 References:
-- <https://packaging.python.org/en/latest/>
-- <https://packaging.python.org/en/latest/tutorials/packaging-projects/>
-- <https://github.com/pypa/sampleproject>
+
+- [Python Packaging User Guide](https://packaging.python.org/en/latest/)
+- [Packaging Python Projects tutorial](https://packaging.python.org/en/latest/tutorials/packaging-projects/)
+- [PyPA sample project](https://github.com/pypa/sampleproject)
 
 Build Source Package:
 

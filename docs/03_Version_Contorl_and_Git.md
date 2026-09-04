@@ -4,29 +4,29 @@
 
 ## Table of Contents
 
-- [Git clients and extensions](#git-clients-and-extensions)
-- [Quick Git Basic](#quick-git-basic)
-- [Git Workflow For Research Project](#git-workflow-for-research-project)
+- [Git Clients and Extensions](#git-clients-and-extensions)
+- [Essential Git Commands](#essential-git-commands)
+- [Git Workflows for Research Projects](#git-workflows-for-research-projects)
     - [What is a Git Branch?](#what-is-a-git-branch)
     - [Aligning Branches with Research Ideas](#aligning-branches-with-research-ideas)
-    - [Workflow for One Man Army](#workflow-for-one-man-army)
-        - [Commit](#commit)
+    - [Workflow for One Researcher](#workflow-for-one-researcher)
+        - [Commit Small, Meaningful Changes](#commit-small-meaningful-changes)
         - [Use Tags for “Published” States](#use-tags-for-published-states)
     - [Workflow for a Team](#workflow-for-a-team)
         - [Branching Model](#branching-model)
         - [Pull Request](#pull-request)
         - [Collaboration Guidelines](#collaboration-guidelines)
 - [Why Not Use a Feature-Based Workflow?](#why-not-use-a-feature-based-workflow)
-- [Why Not Use a GitHub WorkFlow?](#why-not-use-a-github-workflow)
+- [Why Not Use GitHub Flow?](#why-not-use-github-flow)
 
 
-## Git clients and extensions:
+## Git Clients and Extensions
 
 - **Git (CLI)** — the canonical tool; learn the core commands below.
 - **Git Fork** — GUI client: https://git-fork.com/
 - **GitLens** — excellent VS Code extension: https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens
 
-## Quick Git Basic
+## Essential Git Commands
 
 Here are the essential commands to get started:
 
@@ -42,7 +42,8 @@ Here are the essential commands to get started:
 - **`git checkout <branch>`** / **`git switch <branch>`**: Switch branches or restore working tree files.
 - **`git merge <branch>`**: Join two or more development histories together.
 
-## Git Workflow For Research Project
+## Git Workflows for Research Projects
+
 Research Project share a lot of commonity of other software develpment project, however:
 - Researchers do not deploy to production multiple times a day.
 - Researchers do not have a fixed release plan, we are must like only create a a few release once project is finished or reach a milestone.
@@ -53,7 +54,7 @@ Research Project share a lot of commonity of other software develpment project, 
     - Minimal isolation
     - Tags for preprint, revision, dataset versions
 
-## Further reading and tools:
+## Further Reading and Tools
 
 - Git official docs: https://git-scm.com/docs
 - Pro Git book: https://git-scm.com/book/en/v2
@@ -74,7 +75,7 @@ In research, a **branch** maps perfectly to a **hypothesis** or an **experiment*
 
 This isolation lets you test wild ideas without fear of breaking your reproducible codebase. If an idea fails, you just discard the branch. If it succeeds, you merge it. Persoanlly, I recommand use a branch only when 1. code change could break existing codebase, or 2. there is multiple people work on the same project.
 
-### Workflow for One Man Army
+### Workflow for One Researcher
 
 Uses a **trunk-based development workflow**. That is All work is done in **Not So Short-Lived branches** that merge frequently into the mainline branch (**`main`**) - a.k.a trunk. It is common to just commit to `main` branch, it is not the best case but things are far less complicated if there is only one developer on the project. 
 
@@ -91,7 +92,7 @@ flowchart LR
     style F fill:#fff3e0
 ```
 
-#### Commit 
+#### Commit Small, Meaningful Changes
 
 Don’t Commit Large Data Files, Git slows down if large binary files are added.
 Use:
@@ -116,7 +117,7 @@ Avoid vague messages like “fix stuff” or “update file”.
 #### Use Tags for “Published” States
 
 Use Git tags to mark important scientific or development milestones:
-```
+```bash
 git tag -a v0.1-preprint -m "Version for preprint submission"
 git tag -a v1.0-paper -m "Final version matching accepted manuscript"
 git push origin --tags
@@ -210,6 +211,6 @@ PR requirements:
 A traditional feature-based workflow (e.g., long-lived feature branches, Git Flow) is common in enterprise software but poorly suited for scientific research. In this model, developers create large, isolated branches that may live for weeks or months before merging. Although this approach can work for highly structured product development, it introduces several problems in computational research environments.
 
 
-## Why Not Use a GitHub WorkFlow?
+## Why Not Use GitHub Flow?
 
 GitHub Flow is a lightweight branching model commonly used for web development and continuous deployment. It emphasizes simplicity and rapid integration. The core idea is that all work happens on short-lived branches that branch off from main. Once changes are tested and reviewed through a pull request, they are merged back into main and deployed immediately. Although GitHub Flow resembles trunk-based development, there are key differences in expectations and usage patterns.

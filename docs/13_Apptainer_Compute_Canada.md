@@ -5,33 +5,39 @@ This guide covers practical workflows for using **Apptainer** (formerly Singular
 ## Table of Contents
 
 ### Part 1: Apptainer Basics
+
 1. [What is Apptainer?](#what-is-apptainer)
 2. [Why Use Apptainer on Compute Canada?](#why-use-apptainer-on-compute-canada)
 3. [Apptainer vs Docker](#apptainer-vs-docker)
 
 ### Part 2: Getting Started
+
 4. [Compute Canada Cluster Overview](#compute-canada-cluster-overview)
 5. [Loading Apptainer Module](#loading-apptainer-module)
 6. [Basic Apptainer Commands](#basic-apptainer-commands)
 
 ### Part 3: Building Containers
+
 7. [Building from Docker Hub](#building-from-docker-hub)
 8. [Writing Definition Files](#writing-definition-files)
 9. [Building for GPU Applications](#building-for-gpu-applications)
 10. [Building ML/DL Containers](#building-mldl-containers)
 
 ### Part 4: Running Containers
+
 11. [Running Interactive Sessions](#running-interactive-sessions)
 12. [Running Batch Jobs with SLURM](#running-batch-jobs-with-slurm)
 13. [GPU Jobs with Apptainer](#gpu-jobs-with-apptainer)
 14. [Binding Directories and Data](#binding-directories-and-data)
 
 ### Part 5: Best Practices
+
 15. [Storage and Performance](#storage-and-performance)
 16. [Reproducibility and Versioning](#reproducibility-and-versioning)
 17. [Common Issues and Solutions](#common-issues-and-solutions)
 
 ### Part 6: Domain-Specific Examples
+
 18. [Machine Learning Workflows](#machine-learning-workflows)
    - 18.1 [Complete PyTorch Training Pipeline](#complete-pytorch-training-pipeline)
    - 18.2 [Large Language Model (LLM) Inference](#large-language-model-llm-inference)
@@ -40,7 +46,7 @@ This guide covers practical workflows for using **Apptainer** (formerly Singular
 
 ---
 
-# Part 1: Apptainer Basics
+## Part 1: Apptainer Basics
 
 ## What is Apptainer?
 
@@ -100,7 +106,7 @@ apptainer build mycontainer.sif docker://pytorch/pytorch:2.0.0-cuda11.7-cudnn8-r
 
 ---
 
-# Part 2: Getting Started
+## Part 2: Getting Started
 
 ## Compute Canada Cluster Overview
 
@@ -186,7 +192,7 @@ apptainer exec mycontainer.sif python --version
 
 ---
 
-# Part 3: Building Containers
+## Part 3: Building Containers
 
 ## Building from Docker Hub
 
@@ -488,7 +494,7 @@ From: pytorch/pytorch:2.0.0-cuda11.7-cudnn8-runtime
 
 ---
 
-# Part 4: Running Containers
+## Part 4: Running Containers
 
 ## Running Interactive Sessions
 
@@ -740,7 +746,7 @@ apptainer exec \
 
 ---
 
-# Part 5: Best Practices
+## Part 5: Best Practices
 
 ## Storage and Performance
 
@@ -757,7 +763,7 @@ apptainer pull pytorch.sif docker://pytorch/pytorch:2.0.0-cuda11.7-cudnn8-runtim
 
 ### Data Organization
 
-```
+```text
 $HOME/
 ├── projects/
 │   └── myproject/
@@ -932,7 +938,7 @@ apptainer exec --nv container.sif python train.py
 
 ---
 
-# Part 6: Domain-Specific Examples
+## Part 6: Domain-Specific Examples
 
 ## Machine Learning Workflows
 
@@ -1345,7 +1351,7 @@ apptainer exec \
 **Issue: CUDA version mismatch between H100:20G and H100:30G**
 
 **Symptoms**:
-```
+```text
 CUDA error: invalid device function
 NCCL error: unhandled cuda error
 ```
@@ -1369,7 +1375,7 @@ apptainer exec --nv $CONTAINER python -c "import torch; print(torch.version.cuda
 **Issue: `pip install` fails with `--no-index` error**
 
 **Example error**:
-```
+```text
 ERROR: Could not find a version that satisfies the requirement flash-attn==2.5.0
 ERROR: No matching distribution found for flash-attn (from --no-index)
 ```
@@ -1388,7 +1394,7 @@ ERROR: No matching distribution found for flash-attn (from --no-index)
 **Issue: vLLM can't find model files**
 
 **Symptoms**:
-```
+```text
 FileNotFoundError: Model '/scratch/models/llama3' not found
 ```
 
@@ -1532,16 +1538,19 @@ if __name__ == '__main__':
 ## Additional Resources
 
 ### Compute Canada Documentation
+
 - Apptainer on Compute Canada: https://docs.alliancecan.ca/wiki/Apptainer
 - GPU usage: https://docs.alliancecan.ca/wiki/Using_GPUs_with_Slurm
 - Storage: https://docs.alliancecan.ca/wiki/Storage_and_file_management
 
 ### Apptainer Documentation
+
 - Official docs: https://apptainer.org/docs/
 - Definition file reference: https://apptainer.org/docs/user/latest/definition_files.html
 - User guide: https://apptainer.org/docs/user/latest/
 
 ### Container Registries
+
 - Docker Hub: https://hub.docker.com/
 - NVIDIA NGC: https://catalog.ngc.nvidia.com/
 - BioContainers: https://biocontainers.pro/
