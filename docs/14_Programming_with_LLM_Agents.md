@@ -24,13 +24,15 @@ work state across tools and sessions.
 3. [Give the Agent Project Context](#give-the-agent-project-context)
 4. [Write Effective Requests](#write-effective-requests)
 5. [Work with an LLM Agent](#work-with-an-llm-agent)
-6. [Validate Agent Changes](#validate-agent-changes)
-7. [Protect Data and Credentials](#protect-data-and-credentials)
-8. [Use Agent Skills and Custom Agents](#use-agent-skills-and-custom-agents)
-9. [Connect External Tools with MCP](#connect-external-tools-with-mcp)
-10. [Common Failure Modes](#common-failure-modes)
-11. [Relationship to the Next Chapter](#relationship-to-the-next-chapter)
-12. [Further Reading](#further-reading)
+6. [Use Common Slash Commands](#use-common-slash-commands)
+7. [Validate Agent Changes](#validate-agent-changes)
+8. [Protect Data and Credentials](#protect-data-and-credentials)
+9. [Use Agent Skills and Custom Agents](#use-agent-skills-and-custom-agents)
+10. [Consider Community Add-ons](#consider-community-add-ons)
+11. [Connect External Tools with MCP](#connect-external-tools-with-mcp)
+12. [Common Failure Modes](#common-failure-modes)
+13. [Relationship to the Next Chapter](#relationship-to-the-next-chapter)
+14. [Further Reading](#further-reading)
 
 ## Choose the Appropriate Level of Delegation
 
@@ -252,6 +254,31 @@ Require explicit review before an agent:
 - force-pushes, rewrites history, or merges a pull request; or
 - publishes results or communicates externally.
 
+## Use Common Slash Commands
+
+Slash commands are shortcuts for common agent actions. Names and availability
+vary by product, version, plan, and interface. Type `/` to inspect the commands
+available in the current client.
+
+| Purpose | Codex | Claude Code | GitHub Copilot CLI |
+| --- | --- | --- | --- |
+| Initialize project instructions | `/init` | `/init` | `/init` |
+| Review code changes | `/review` | `/code-review` or `/review` | `/review` |
+| Inspect session configuration | `/status` | `/status` | `/env` |
+| Change model | `/model` | `/model` | `/model` |
+| Review permissions | `/permissions` | `/permissions` | `/permissions` |
+| Plan before editing | Plan mode | `/plan` | `/plan` |
+| Inspect the diff | Review panel or `/review` | `/diff` | `/diff` |
+
+For example, run `/review` in Codex or Copilot CLI to inspect changes before
+committing. In Claude Code, use `/code-review`; `/review` is an alias.
+
+Do not assume that commands with the same name behave identically. Check the
+[Codex CLI](https://learn.chatgpt.com/docs/codex/cli),
+[Claude Code commands](https://code.claude.com/docs/en/commands), or
+[Copilot CLI reference](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference)
+when a command can edit files, run tools, or change permissions.
+
 ## Validate Agent Changes
 
 Review agent output as if it came from a new collaborator who understands
@@ -322,6 +349,21 @@ Use a **custom agent** when a recurring role needs specialized instructions or
 a limited tool set. Discovery and configuration differ by product; chapter 15
 covers the cross-agent structure in more detail.
 
+## Consider Community Add-ons
+
+Community projects can extend an agent or improve a supporting workflow. Before
+adopting one, check its maintenance status, license, dependencies, permissions,
+data handling, and compatibility with the selected agent.
+
+| Add-on | Purpose | Use with care when |
+| --- | --- | --- |
+| [Caveman Compression](https://github.com/wilpel/caveman-compression) | Compresses LLM context by removing predictable grammar while retaining key facts and constraints. It provides LLM-, masked-language-model-, and rule-based implementations. | Wording and nuance matter. Keep the original text, test factual preservation on representative inputs, and treat compression results and benchmarks as project-reported. |
+
+Keep this list selective. Include an add-on only when its purpose, risks, and
+source can be stated clearly. Pin a reviewed version when reproducibility
+matters, and do not give a new tool access to secrets or research data by
+default.
+
 ## Connect External Tools with MCP
 
 The **Model Context Protocol (MCP)** lets an agent use external tools and data,
@@ -366,8 +408,6 @@ or LLM agent can continue safely.
 ## Further Reading
 
 - [GitHub Copilot documentation](https://docs.github.com/en/copilot)
-- [Codex documentation](https://developers.openai.com/codex/)
-- [Claude Code documentation](https://docs.anthropic.com/en/docs/claude-code/overview)
 - [Using Copilot Chat in an IDE](https://docs.github.com/en/copilot/how-tos/chat-with-copilot/chat-in-ide)
 - [Adding repository custom instructions](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/add-custom-instructions)
 - [Copilot customization cheat sheet](https://docs.github.com/en/copilot/reference/customization-cheat-sheet)
