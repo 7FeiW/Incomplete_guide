@@ -27,9 +27,9 @@ of information belongs.
 The durable knowledge and state of a research project should remain
 **tool-neutral**. Store architecture, decisions, findings, plans, and task state
 in ordinary files under `docs/` so that collaborators, Claude Code, GitHub
-Copilot, Codex, and future tools can use the same record. Claude-specific files
-should tell Claude how to find and apply that shared record; they should not
-become the only place where the record exists.
+Copilot, Codex, and future tools can use the same record. Tool-specific files
+should tell an LLM agent how to find and apply that shared record; they should
+not become the only place where the record exists.
 
 Shared persistent memory also reduces the need to reconstruct project context
 in every prompt. This can reduce token usage and leave more of the context window
@@ -55,7 +55,7 @@ official documentation for the agent being configured.
 4. [Keep Work State](#keep-work-state)
 5. [Use a Repeatable Session Workflow](#use-a-repeatable-session-workflow)
 6. [Package Recurring Research Workflows](#package-recurring-research-workflows)
-7. [Apply the Pattern to the Included Example](#apply-the-pattern-to-the-included-example)
+7. [Apply the Pattern Across Agents](#apply-the-pattern-across-agents)
 8. [Audit the System](#audit-the-system)
 9. [Further Reading](#further-reading)
 
@@ -63,11 +63,11 @@ official documentation for the agent being configured.
 
 Use three layers:
 
-| Layer | Purpose | Examples |
-| --- | --- | --- |
-| **Project record** | Shared knowledge and durable state | `docs/`, Git, experiment records |
+| Layer                        | Purpose                                                   | Examples                                           |
+| ---------------------------- | --------------------------------------------------------- | -------------------------------------------------- |
+| **Project record**     | Shared knowledge and durable state                        | `docs/`, Git, experiment records                 |
 | **LLM-agent guidance** | How an LLM agent should find information and perform work | `AGENTS.md`, `CLAUDE.md`, scoped rules, skills |
-| **Local context** | Temporary information for the current LLM agent or task | Chat history, local memory, working notes |
+| **Local context**      | Temporary information for the current LLM agent or task   | Chat history, local memory, working notes          |
 
 The project record is the source of truth. LLM-agent guidance should point to that
 record rather than duplicate it. Local context can help an agent continue, but
@@ -82,8 +82,8 @@ A simple test is whether another LLM agent can continue by reading the repositor
 If not, the necessary knowledge or state should be written to `docs/` or another
 documented project store.
 
-The rest of this chapter uses Claude Code syntax for some concrete examples,
-but the workflow applies to any LLM agent.
+The rest of this chapter provides Claude Code and Codex examples where their
+implementations differ. The workflow itself applies to any LLM agent.
 
 ## Keep Project Knowledge
 
@@ -115,8 +115,8 @@ Tool-specific entry points should point to the same documents:
 docs/architecture.md              <- shared project knowledge
 docs/experiments.md               <- shared scientific protocol
 docs/project-state.md             <- shared work state
-CLAUDE.md                         <- Claude-specific routing and behavior
-AGENTS.md                         <- Codex and cross-agent repository instructions
+CLAUDE.md                         <- Claude Code routing and behavior
+AGENTS.md                         <- Codex routing and cross-agent instructions
 .github/copilot-instructions.md   <- Copilot-specific routing and behavior
 ```
 
@@ -137,6 +137,16 @@ session. For Claude Code this is `CLAUDE.md` or `.claude/CLAUDE.md`; Codex uses
 `AGENTS.md`; GitHub Copilot can use `.github/copilot-instructions.md`. Other
 LLM-agent tools may use another format.
 
+| Tool           | Repository entry point                 | More specific guidance                              |
+| -------------- | -------------------------------------- | --------------------------------------------------- |
+| Claude Code    | `CLAUDE.md` or `.claude/CLAUDE.md` | Nested`CLAUDE.md` files and `.claude/rules/`    |
+| Codex          | `AGENTS.md`                          | Nested`AGENTS.md` or `AGENTS.override.md` files |
+| GitHub Copilot | `.github/copilot-instructions.md`    | `.github/instructions/*.instructions.md`          |
+
+Claude Code and Codex both combine instructions according to their own discovery
+rules. Do not assume that nesting, precedence, or import syntax is identical.
+Verify the behavior in the tool's current documentation.
+
 The entry point should contain:
 
 - the project's purpose and main scientific task;
@@ -147,8 +157,8 @@ The entry point should contain:
 - a small set of universal workflow rules.
 
 Prefer links or imports to shared documentation over copied content. A
-`CLAUDE.md` entry should usually say where authoritative knowledge lives and
-when Claude must read it. If a fact would also help another LLM agent or a human
+tool-specific entry should say where authoritative knowledge lives and when the
+LLM agent must read it. If a fact would also help another LLM agent or a human
 collaborator, put the fact in `docs/` first.
 
 For example:
@@ -160,10 +170,10 @@ This project trains graph neural networks from versioned molecular datasets.
 
 ## Canonical knowledge
 
-- Architecture and entry points: @docs/architecture.md
-- Dataset schema and provenance: @docs/data.md
-- Evaluation protocol: @docs/experiments.md
-- Active work and plans: @docs/project-state.md
+- Architecture and entry points: [docs/architecture.md](docs/architecture.md)
+- Dataset schema and provenance: [docs/data.md](docs/data.md)
+- Evaluation protocol: [docs/experiments.md](docs/experiments.md)
+- Active work and plans: [docs/project-state.md](docs/project-state.md)
 
 ## Environment and validation
 
@@ -181,15 +191,16 @@ This project trains graph neural networks from versioned molecular datasets.
 ```
 
 The included [CLAUDE.md](../examples/ai_coding_examples/claude/CLAUDE.md)
-provides a good behavioral core: think before coding, prefer simplicity, make
-surgical changes, and define verifiable success criteria. Add repository facts
-to that core, but keep long procedures elsewhere.
+provides a good behavioral core that can also be adapted to `AGENTS.md`: think
+before acting, prefer simplicity, make surgical changes, and define verifiable
+success criteria. Add repository facts to that core, but keep long procedures
+elsewhere.
 
-Claude loads `CLAUDE.md` as context, so concise and specific instructions tend
-to work better than a long handbook. The
-[Claude memory guide](https://code.claude.com/docs/en/memory) recommends moving
-multi-step procedures and specialized reference material into skills or scoped
-rules.
+Claude Code loads `CLAUDE.md`, while Codex constructs an instruction chain from
+applicable `AGENTS.md` files before it starts work. In both cases, concise and
+specific instructions are easier to maintain than a long handbook. See the
+[Claude memory guide](https://code.claude.com/docs/en/memory) and
+[Codex `AGENTS.md` guide](https://learn.chatgpt.com/docs/agent-configuration/agents-md).
 
 ### Use scoped instructions for specialized knowledge
 
@@ -222,13 +233,31 @@ The example already separates:
 In a working repository, these belong under `.claude/rules/` and should be
 scoped where appropriate.
 
+For Codex, place shared guidance in the repository-root `AGENTS.md` and add a
+nested `AGENTS.md` only when a directory needs more specific instructions. Use
+`AGENTS.override.md` when the local guidance should replace the regular file at
+that directory level. For example:
+
+```text
+project-root/
+├── AGENTS.md
+├── src/
+│   └── AGENTS.md
+└── experiments/
+    └── AGENTS.override.md
+```
+
+Codex reads from the project root toward the current working directory, so the
+more specific file appears later in its instruction chain. Codex `.rules` files
+serve a different purpose: they control which commands may run outside the
+sandbox and should not be used as substitutes for project knowledge.
+
 ### Use agent-local memory as a cache, not a record
 
-Some agents provide local memory across sessions. For example, Claude
-auto-memory stores learned information under the user's Claude configuration
-directory. Such memory can retain debugging hints and workflow habits, but it
-may be machine-local, differ between collaborators, and is not a reproducible
-project record.
+Some agents provide local memory across sessions. Claude Code auto-memory and
+Codex local memories can retain useful context from earlier work, including
+debugging hints and workflow habits. These memories may be machine-local, differ
+between collaborators, and are not reproducible project records.
 
 Use auto-memory for facts such as:
 
@@ -239,21 +268,25 @@ Use auto-memory for facts such as:
 Promote a memory entry into tool-neutral repository documentation when it
 becomes team knowledge, an architectural decision, a required workaround, task
 state, or evidence used to interpret a result. This makes it available to other
-LLM agents rather than only to Claude on one machine. Review auto-memory with
-`/memory`; delete stale or incorrect entries.
+LLM agents rather than only to one tool on one machine. In Claude Code, inspect
+loaded project context and auto-memory through `/memory`. In Codex clients that
+support local memories, use `/memories` to control and review their use.
 
 Do not instruct a shared workflow to write to a specific user's absolute memory
-path. Claude Code owns the location and structure of auto-memory, and the path
-is not portable across users or machines.
+path. Agent runtimes own their local memory formats and locations, which are not
+portable across users, machines, or products. Both Anthropic and OpenAI advise
+keeping required team guidance in checked-in instructions or documentation
+rather than relying on local memory alone.
 
 ## Define and Enforce Rules
 
-Rules answer how Claude should work. Separate guidance that requires judgment
+Rules answer how an LLM agent should work. Separate guidance that requires judgment
 from controls that must apply regardless of the model's interpretation.
 
 ### Behavioral rules belong in instructions
 
-Use `CLAUDE.md` and `.claude/rules/` for rules such as:
+Use the tool-specific instruction entry point and scoped instruction files for
+rules such as:
 
 - explain assumptions before implementing ambiguous scientific behavior;
 - preserve existing interfaces unless a migration is requested;
@@ -270,36 +303,44 @@ useful when Git revisions are used as experiment provenance.
 ### Enforced rules belong in settings or hooks
 
 An instruction such as "never read `.env`" is a request to the model. If the
-action must be blocked, use the LLM-agent runtime, operating system, sandbox, or CI
-to enforce it. In Claude Code, add a deny permission in
-`.claude/settings.json` instead of relying on an instruction file: put narrow, routine, safe commands
-under `allow`, actions that are sometimes appropriate but need a per-use
-confirmation under `ask`, and hard restrictions such as reading secrets or
-rewriting Git history under `deny`.
+action must be blocked, use the LLM-agent runtime, operating system, sandbox, or
+CI to enforce it.
 
-Keep allow rules narrow because they remove per-use prompts. Review the resolved
-rules with `/permissions` and verify syntax against the
-[permission documentation](https://code.claude.com/docs/en/permissions).
+- In Claude Code, configure allow, ask, and deny permissions in
+  `.claude/settings.json`, and review the result with `/permissions`.
+- In Codex, use its sandbox and approval settings. Experimental Codex `.rules`
+  files can control which matching commands may run outside the sandbox.
+- For every tool, retain operating-system permissions, secret management, and
+  CI protection as independent security boundaries.
 
-Use a hook when an action must run at a particular lifecycle event. Examples
-include validating a configuration after it changes, running a fast formatter
-after an edit, or loading a current task summary when a session starts. Hooks
-are deterministic triggers, while skills and `CLAUDE.md` require model
-interpretation. Keep hooks fast, idempotent, and safe with untrusted input. See
-the [hooks guide](https://code.claude.com/docs/en/hooks-guide).
+Keep allow rules narrow because they remove per-use prompts or sandbox
+restrictions. Verify current behavior in the
+[Claude Code permission documentation](https://code.claude.com/docs/en/permissions)
+or [Codex rules documentation](https://learn.chatgpt.com/docs/agent-configuration/rules).
+
+Use a hook or deterministic automation when an action must run at a particular
+lifecycle event. Examples include validating a configuration after it changes,
+running a fast formatter after an edit, or loading a current task summary when a
+session starts. Hooks
+are deterministic triggers, while skills and instruction files require model
+interpretation. Keep hooks fast, idempotent, and safe with untrusted input.
+Where an LLM-agent tool does not provide a suitable hook, enforce the check in
+the repository's scripts, pre-commit configuration, or CI. See the
+[Claude Code hooks guide](https://code.claude.com/docs/en/hooks-guide) for one
+implementation.
 
 ### Keep rules consistent
 
 Conflicting rules make agent behavior unpredictable. Maintain one canonical
 rule for each concern:
 
-| Concern                        | Preferred source   |
-| ------------------------------ | ------------------ |
-| Universal project workflow     | `CLAUDE.md`      |
-| Python or directory convention | Path-scoped rule   |
-| Hard tool or file restriction  | Permission setting |
-| Deterministic lifecycle action | Hook               |
-| Multi-step task procedure      | Skill              |
+| Concern                        | Preferred source          |
+| ------------------------------ | ------------------------- |
+| Universal project workflow     | Tool-specific entry point |
+| Python or directory convention | Path-scoped rule          |
+| Hard tool or file restriction  | Permission setting        |
+| Deterministic lifecycle action | Hook                      |
+| Multi-step task procedure      | Skill                     |
 
 When a rule changes, search all instruction files and remove obsolete copies.
 Rules should describe the target repository's actual configuration. For example,
@@ -399,17 +440,19 @@ the run:
 - log, checkpoint, and result locations; and
 - metrics with their definitions and aggregation method.
 
-Do not ask Claude to infer missing provenance after the run. Capture it when the
-experiment starts. A `SessionStart` hook can load current task context, while
-experiment wrappers can record execution metadata independently of Claude.
+Do not ask an LLM agent to infer missing provenance after the run. Capture it
+when the experiment starts. An agent hook may load current task context, while
+experiment wrappers should record execution metadata independently of any LLM
+agent.
 
 ### Use agent sessions for continuity, not truth
 
-LLM-agent transcripts can help continue an interrupted task, but their storage and
-availability depend on the tool. Claude Code stores sessions locally and
-provides `claude --continue` for the most recent session or `claude --resume`
-to select one. Name or resume a session when the conversation itself remains
-useful, but begin resumed work by checking:
+LLM-agent transcripts can help continue an interrupted task, but their storage
+and availability depend on the tool. For example, Claude Code provides
+`claude --continue` and `claude --resume`; Codex clients may provide conversation
+history and local memories. Use the selected tool's supported continuation
+mechanism when the conversation remains useful, but begin resumed work by
+checking:
 
 ```text
 1. Read the current task-state document.
@@ -419,8 +462,10 @@ useful, but begin resumed work by checking:
 ```
 
 This prevents an old transcript from overriding changes made by a collaborator
-or another LLM agent. The [session guide](https://code.claude.com/docs/en/sessions)
-describes continuation, resumption, and branching.
+or another LLM agent. Claude's
+[session guide](https://code.claude.com/docs/en/sessions) and Codex's
+[memory guide](https://learn.chatgpt.com/docs/customization/memories) describe
+their respective continuity mechanisms.
 
 For concurrent tasks, use separate Git worktrees so sessions do not modify the
 same working tree. Do not use parallel sessions merely to increase activity;
@@ -432,15 +477,17 @@ The following lifecycle keeps knowledge, rules, and state synchronized.
 
 ### 1. Orient
 
-Claude should read the relevant instructions and durable state before planning:
+The LLM agent should read the relevant instructions and durable state before
+planning:
 
 ```text
-Read CLAUDE.md, the rules relevant to this task, and docs/project-state.md.
+Read the repository's agent instructions and docs/project-state.md.
 Inspect git status and the existing implementation. Summarize the current state,
 identify conflicts with the state document, and do not edit files yet.
 ```
 
-The user verifies that Claude found the correct environment, files, and task.
+The user verifies that the LLM agent found the correct environment, files, and
+task.
 
 ### 2. Define the outcome
 
@@ -483,8 +530,8 @@ Validate software behavior and scientific meaning separately:
 - tests, linting, types, error paths, and compatibility;
 - data provenance, leakage, units, metrics, baselines, and interpretation.
 
-Claude must report observed command results rather than claiming a command was
-run. Generated scientific explanations and chemical assignments remain
+The LLM agent must report observed command results rather than claiming a
+command was run. Generated scientific explanations and chemical assignments remain
 hypotheses until supported by repository evidence or an authoritative source.
 
 ### 6. Update durable state
@@ -528,10 +575,18 @@ State:
 Use a reusable, version-controlled workflow when a task repeats and needs
 detailed knowledge or a procedure. Prefer the cross-agent `SKILL.md` convention
 when the participating agents support it; otherwise keep a tool-neutral runbook
-and add a thin tool-specific wrapper. In Claude Code, skills live under
-`.claude/skills/<name>/SKILL.md`, load on demand, and can be invoked as
-`/<name>`. They are preferable to expanding `CLAUDE.md` with a long analysis
-manual.
+and add a thin tool-specific wrapper. This keeps the scientific procedure
+available to humans and agents that do not load the same skill directory.
+
+| Agent       | Project skill location             | Explicit invocation                 |
+| ----------- | ---------------------------------- | ----------------------------------- |
+| Claude Code | `.claude/skills/<name>/SKILL.md` | `/<name>`                         |
+| Codex       | `.agents/skills/<name>/SKILL.md` | `$<name>` or the `/skills` menu |
+
+Both implementations use a `SKILL.md` file and can keep supporting scripts,
+references, and assets beside it. Discovery, invocation, metadata, and
+permission behavior remain tool-specific, so consult the current documentation
+before sharing one package unchanged between agents.
 
 A research skill should specify:
 
@@ -551,8 +606,6 @@ For example:
 ---
 name: analyze-subclass
 description: Analyze fragmentation-DAG misses for one chemical subclass.
-disable-model-invocation: true
-allowed-tools: Read Grep Bash(conda run -n research-gpu python *)
 ---
 
 # Analyze one chemical subclass
@@ -565,29 +618,40 @@ allowed-tools: Read Grep Bash(conda run -n research-gpu python *)
 6. Update the task-state file only after validation succeeds.
 ```
 
-Use `disable-model-invocation: true` for expensive or consequential workflows
-that should begin only when explicitly invoked. An `allowed-tools` field
-pre-approves those tools while the skill runs; it does not restrict every other
-tool. Use permission deny rules for hard restrictions. See
-[Extend Claude with skills](https://code.claude.com/docs/en/slash-commands).
+Keep permissions and invocation controls in the agent-specific wrapper or
+configuration. For example, Claude Code supports skill metadata such as
+`disable-model-invocation` and `allowed-tools`; Codex applies its sandbox,
+approval policy, and command rules independently of the skill instructions.
+See [Claude Code skills](https://code.claude.com/docs/en/slash-commands) and
+[Codex skills](https://learn.chatgpt.com/docs/build-skills).
 
 The example uses legacy single-file commands under
 [`commands/`](../examples/ai_coding_examples/claude/commands/). These still
 work when placed under `.claude/commands/`, but new multi-step workflows are
-better represented as skills with supporting scripts and reference files.
+better represented as skills with supporting scripts and reference files. A
+Codex version should use `.agents/skills/` and refer to the same canonical
+runbook and repository helpers.
 
-## Apply the Pattern to the Included Example
+## Apply the Pattern Across Agents
 
-The example contains the right categories but should be reorganized before use:
+The included Claude example contains the right categories, but its durable
+knowledge should be moved into shared locations. A repository that supports
+both Claude Code and Codex can use this structure:
 
 ```text
 project-root/
+├── AGENTS.md
 ├── CLAUDE.md
 ├── docs/
 │   ├── architecture.md
 │   ├── project-state.md
+│   ├── workflows/
+│   │   ├── analyze-subclass.md
+│   │   └── add-smarts-rule.md
 │   └── findings/
-└── .claude/
+├── scripts/
+│   └── research-analysis/
+├── .claude/
     ├── settings.json
     ├── rules/
     │   ├── code-style.md
@@ -602,25 +666,33 @@ project-root/
         ├── analyze-subclass-mh/
         │   └── SKILL.md
         └── add-smarts-rule/
-            ├── SKILL.md
-            ├── references/
-            └── scripts/
+            └── SKILL.md
+└── .agents/
+    └── skills/
+        ├── analyze-subclass/
+        │   └── SKILL.md
+        ├── analyze-subclass-mh/
+        │   └── SKILL.md
+        └── add-smarts-rule/
+            └── SKILL.md
 ```
 
 Apply these changes when turning the example into a real configuration:
 
-1. Keep the short behavioral core in `CLAUDE.md` and add links to canonical
-   architecture, data, experiment, and state documents.
-2. Move `rules/` under `.claude/` and add path scopes to rules that are not
-   universal.
+1. Put shared behavior and links to canonical architecture, data, experiment,
+   workflow, and state documents in the root `AGENTS.md`.
+2. Keep `CLAUDE.md` as a concise Claude Code entry point to the same shared
+   documents. Put Claude-specific rules under `.claude/rules/`, with path scopes
+   where appropriate.
 3. Keep architecture as human-readable repository documentation rather than
    duplicating the full tree in several prompts.
-4. Convert the subclass commands into skills and require them to distinguish
-   measurements from chemical interpretation.
+4. Convert the subclass commands into Claude Code and Codex skill wrappers that
+   refer to a shared workflow and distinguish measurements from chemical
+   interpretation.
 5. Split the 509-line SMARTS command into a concise workflow, reference pages,
-   and executable helpers with tests.
+   and shared executable helpers with tests.
 6. Remove `/home/feiw/.../memory` paths. Durable findings belong in the
-   repository; local auto-memory is optional and managed by Claude Code.
+   repository; agent-local memory is optional and managed by each tool.
 7. Replace `FRAGNNET-GPU`, package paths, dataset paths, and test names only with
    values verified in the target repository.
 8. Verify scientific constants and heuristics before treating them as rules.
@@ -629,22 +701,31 @@ Apply these changes when turning the example into a real configuration:
 10. Add a task-state template and require each long-running workflow to update
     it at meaningful checkpoints.
 11. Keep scientific knowledge, decisions, findings, and task state outside
-    `.claude/` so other LLM agents can discover and use them.
+    `.claude/`, `.agents/`, and other tool-owned directories so humans and all
+    LLM agents can discover and use them.
 
 ## Audit the System
 
-Run these commands inside Claude Code to inspect each layer:
+Audit the same layers regardless of which LLM agent is used:
 
-| Command          | Question answered                                          |
-| ---------------- | ---------------------------------------------------------- |
-| `/memory`      | Which `CLAUDE.md`, rules, and auto-memory entries loaded? |
-| `/skills`      | Which reusable workflows are available?                    |
-| `/permissions` | Which actions are allowed, prompted, or denied?            |
-| `/hooks`       | Which deterministic lifecycle actions are active?          |
-| `/agents`      | Which subagents are configured?                            |
-| `/mcp`         | Which external tools are connected?                        |
-| `/doctor`      | Are installation or configuration errors present?          |
-| `/status`      | Which settings sources are active?                         |
+| Layer        | Question to answer                                                                    |
+| ------------ | ------------------------------------------------------------------------------------- |
+| Instructions | Which repository and user instruction files were loaded, in what order?               |
+| Knowledge    | Does every required fact resolve to a current, shared source?                         |
+| State        | Can a new human or agent identify the current goal, evidence, and next action?        |
+| Skills       | Which reusable workflows are discoverable, and are their inputs and outputs explicit? |
+| Permissions  | Which actions are allowed, prompted, sandboxed, or forbidden?                         |
+| Automation   | Which hooks, scripts, and CI checks can change or validate work?                      |
+| Tools        | Which external services, environments, and data stores are available?                 |
+
+Use the tool's own inspection features for the implementation details:
+
+| Concern                       | Claude Code                    | Codex                                                                                              |
+| ----------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------- |
+| Instructions and local memory | Inspect with`/memory`        | Check the applicable`AGENTS.md` chain; inspect local memories with `/memories` where supported |
+| Skills                        | Inspect with`/skills`        | Inspect with`/skills` or explicitly invoke `$<skill-name>`                                     |
+| Permissions                   | Inspect with`/permissions`   | Review sandbox and approval settings, plus any applicable`.rules` files                          |
+| Configuration                 | Use`/doctor` and `/status` | Review the active Codex client configuration and repository instructions                           |
 
 Audit the workflow periodically:
 
@@ -657,10 +738,20 @@ Audit the workflow periodically:
 - confirm that experiment records still identify their code, data, and
   environment.
 
-The [configuration debugging guide](https://code.claude.com/docs/en/debug-your-config)
-explains how to determine whether instructions, skills, and settings were loaded.
+For tool-specific diagnostics, see the
+[Claude Code configuration debugging guide](https://code.claude.com/docs/en/debug-your-config)
+and the [Codex `AGENTS.md` guide](https://learn.chatgpt.com/docs/agent-configuration/agents-md).
 
 ## Further Reading
+
+### Codex
+
+- [Codex `AGENTS.md`](https://learn.chatgpt.com/docs/agent-configuration/agents-md)
+- [Codex skills](https://learn.chatgpt.com/docs/build-skills)
+- [Codex memories](https://learn.chatgpt.com/docs/customization/memories)
+- [Codex command rules](https://learn.chatgpt.com/docs/agent-configuration/rules)
+
+### Claude Code
 
 - [How Claude remembers a project](https://code.claude.com/docs/en/memory)
 - [Extend Claude Code](https://code.claude.com/docs/en/features-overview)
