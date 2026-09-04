@@ -20,3 +20,5 @@ Below are the documents in the `docs/` folder (click to open):
 - [Profiling and Speed](docs/10_Profiing_and_Speed.md)
 - [Testing](docs/11_Testing.md)
 - [Go With Large Scale](docs/12_Go_With_Large_Scale.md)
+- [Using Apptainer on Compute Canada](docs/13_Apptainer_Compute_Canada.md)
+- [Using GitHub Copilot for Research Software](docs/14_Use_Copilot.md)

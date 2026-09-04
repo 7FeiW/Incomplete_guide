@@ -1,10 +1,59 @@
 ## Documentation Placement
 
 - **Docstrings**: In-code documentation using Google-style docstrings (see formatting.md)
-- **Project docs**: Place in `docs/` directory (e.g., `docs/feature_name.md`)
+- **Project docs**: Place in the correct `docs/` subdirectory — see "Docs Layout" below
 - **Config docs**: Inline comments in YAML files in `config/`
-- **README files**: Only at project root; do not create README.md in subdirectories unless explicitly requested
+- **README files**: Only at project root and `docs/README.md` (the docs index); do not create
+  README.md in other subdirectories unless explicitly requested
 - **Do NOT create**: Markdown files in `src/` or alongside code files
+
+## Docs Layout
+
+`docs/` is organized by *what a document is for*, not by topic. Put a new doc in the subdirectory
+matching its kind:
+
+| Directory | Holds | Example |
+|-----------|-------|---------|
+| `docs/guides/` | How to run something | `run_inference.md` |
+| `docs/reference/` | How the system works today | `feature_set_audit.md` |
+| `docs/findings/` | A measurement and its conclusion | `ce_extent_headroom_finding.md` |
+| `docs/plans/` | Something proposed, in progress, or stopped | `model_improvement_plan.md` |
+| `docs/notes/` | Scratch and literature notes | `lz_molecular_generation.md` |
+| `docs/figures/` | PNGs referenced by docs | — |
+
+The append-only analysis logs (`missing_peak_findings.md`, `missing_peak_findings_m-h.md`) stay at
+`docs/` top level. Add sections to them with `/analyze-subclass` and `/analyze-subclass-mh` rather
+than editing by hand.
+
+### Every doc needs a status banner
+
+Insert directly under the H1, before any other content:
+
+```markdown
+# Some Plan
+
+> **Status:** ACTIVE &nbsp;·&nbsp; **Updated:** 2026-08-02
+>
+> One line on where this stands and what happens next.
+```
+
+Valid statuses: `GUIDE`, `REFERENCE`, `ACTIVE`, `PROPOSED`, `LANDED`, `FINDING`, `CLOSED`,
+`CLOSED NULL`, `SUPERSEDED`, `STOPPED`, `CURATED ANALYSIS`. Update the banner whenever the doc's
+conclusion changes — a stale `ACTIVE` on a dead line is worse than no banner.
+
+### Closed and negative results are kept, not deleted
+
+A plan that failed stays in `docs/plans/` marked `CLOSED NULL` / `STOPPED` / `SUPERSEDED`, with the
+reason it stopped. These prevent re-running a line that was already measured. Do not archive or
+delete them.
+
+### When adding, moving, or renaming a doc
+
+1. Add a row for it in [docs/README.md](../../docs/README.md) — every doc must be indexed.
+2. Update any `docs/<path>.md` references in `src/`, `tests/`, `scripts/`, `config/`, `slurm_scripts/`,
+   and `INSTALL.md`. Search **both** `*.yaml` and `*.yml`, plus `*.sh` and `*.pyx`.
+3. Check relative links inside the doc itself — a link out of `docs/` needs `../../`, and a link to
+   `docs/figures/` from a subdirectory needs `../figures/`.
 
 ## Coding Standards
 - **Type hints**: All functions must have type hints where applicable
