@@ -15,6 +15,8 @@ The next chapter, [Agentic Research Workflow](15_Agentic_Workflow.md), explains
 the complementary repository architecture for carrying knowledge, rules, and
 work state across tools and sessions.
 
+**LLM agents excel at narrow, well-defined coding tasks but struggle with complex software design.** While they can quickly write functions, debug syntax errors, or generate boilerplate code, they often falter when asked to architect a large-scale project from scratch.
+
 ## Table of Contents
 
 1. [Choose the Appropriate Level of Delegation](#choose-the-appropriate-level-of-delegation)
@@ -35,14 +37,14 @@ Coding tools use different names for their interfaces, but the work usually
 falls into a few levels of delegation. Choose the least autonomous level that
 can efficiently produce the evidence or change you need.
 
-| Workflow | Use it for | Expected result |
-| --- | --- | --- |
-| Explain or suggest | Understanding code, exploring an error, or completing a small block | An explanation or suggestion for immediate review |
-| Investigate | Tracing behavior, reproducing a failure, or comparing approaches | An evidence-based report without edits |
-| Plan | Designing a multi-file or risky change | A reviewable plan with risks and checks |
-| Implement | Editing files and running checks for a bounded task | A working-tree change that still requires validation |
-| Review | Examining a diff or pull request | Findings and suggested corrections |
-| Delegate | Running a well-specified task in a separate environment | A branch or pull request for later review |
+| Workflow           | Use it for                                                          | Expected result                                      |
+| ------------------ | ------------------------------------------------------------------- | ---------------------------------------------------- |
+| Explain or suggest | Understanding code, exploring an error, or completing a small block | An explanation or suggestion for immediate review    |
+| Investigate        | Tracing behavior, reproducing a failure, or comparing approaches    | An evidence-based report without edits               |
+| Plan               | Designing a multi-file or risky change                              | A reviewable plan with risks and checks              |
+| Implement          | Editing files and running checks for a bounded task                 | A working-tree change that still requires validation |
+| Review             | Examining a diff or pull request                                    | Findings and suggested corrections                   |
+| Delegate           | Running a well-specified task in a separate environment             | A branch or pull request for later review            |
 
 Start with explanation or investigation when the problem is not yet understood.
 Ask for a plan when a change crosses components or could alter scientific
