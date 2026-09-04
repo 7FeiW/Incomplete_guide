@@ -9,7 +9,7 @@ An agent needs three kinds of information:
 
 1. **Knowledge:** facts about the project and its scientific context.
 2. **Rules:** instructions for how work must be performed and which actions are
-   prohibited.
+   prohibited. **Note** that some rules and engineering choice are made to better handle LLM hallucinations.
 3. **State:** what has already happened, what is currently in progress, and what
    remains to be verified.
 

@@ -4,7 +4,7 @@
 
 **Always use the workspace's configured Python environment.**
 
-This project uses the `FRAGNNET-GPU` conda environment configured in VS Code settings.
+This project uses the `<project>-gpu` conda environment configured in VS Code settings.
 
 ### Finding the Correct Python Interpreter
 
@@ -21,10 +21,10 @@ This project uses the `FRAGNNET-GPU` conda environment configured in VS Code set
 cat .vscode/settings.json | grep python
 
 # Use the configured interpreter directly
-/path/to/conda/envs/FRAGNNET-GPU/bin/python script.py
+/path/to/conda/envs/<project>-gpu/bin/python script.py
 
 # Or activate conda environment first
-conda activate FRAGNNET-GPU && python script.py
+conda activate <project>-gpu && python script.py
 ```
 
 ### Environment Verification

@@ -170,7 +170,7 @@ class TestRuleNameNL:
         ...
 ```
 
-Run: `conda run -n FRAGNNET-GPU pytest tests/test_nl_prepass.py -v`
+Run: `conda run -n <project>-gpu pytest tests/test_nl_prepass.py -v`
 
 ## NL Step 7 — Update memory
 
@@ -487,7 +487,7 @@ class TestScaffoldNameRingCleavage:
         ...
 ```
 
-Run all tests: `conda run -n FRAGNNET-GPU pytest tests/test_smarts_prepass_inject.py -v`
+Run all tests: `conda run -n <project>-gpu pytest tests/test_smarts_prepass_inject.py -v`
 
 All tests must pass. The total count should increase from the previous number.
 
@@ -496,7 +496,7 @@ All tests must pass. The total count should increase from the previous number.
 ## Step 8 — Update memory
 
 After all tests pass, update the memory file at
-`/home/feiw/.claude/projects/-home-feiw-gitRepos-frag-gnn/memory/MEMORY.md`
+`MEMORY.md` (see the memory system's index conventions)
 with a new entry summarizing:
 - Rule name and what scaffold it targets
 - The 4 cut bonds (in SMARTS map notation)
@@ -505,5 +505,4 @@ with a new entry summarizing:
 - Any key debug lessons (especially SMARTS gotchas discovered)
 - Estimated coverage: N NIST20 molecules with this scaffold
 
-Also add a corresponding memory file at
-`/home/feiw/.claude/projects/-home-feiw-gitRepos-frag-gnn/memory/smarts_rule_<name>.md`.
+Also add a corresponding memory file at `memory/smarts_rule_<name>.md`.
