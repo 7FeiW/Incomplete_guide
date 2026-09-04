@@ -509,7 +509,10 @@ See the Claude [session guide](https://code.claude.com/docs/en/sessions) and
 Codex [memory guide](https://learn.chatgpt.com/docs/customization/memories) for
 tool-specific continuation features.
 
-For concurrent tasks, use separate Git worktrees and clear file ownership.
+Use multiple agents only when tasks can proceed independently with clear
+ownership; one agent may handle several roles sequentially. For concurrent
+tasks, use separate Git worktrees. Call a review independent only when the
+reviewer did not perform the work being reviewed.
 
 ## Session Workflow
 
