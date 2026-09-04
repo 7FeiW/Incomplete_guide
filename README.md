@@ -22,3 +22,4 @@ Below are the documents in the `docs/` folder (click to open):
 - [Go With Large Scale](docs/12_Go_With_Large_Scale.md)
 - [Using Apptainer on Compute Canada](docs/13_Apptainer_Compute_Canada.md)
 - [Using GitHub Copilot for Research Software](docs/14_Use_Copilot.md)
+- [Agentic Research Workflow: Knowledge, Rules, and State](docs/15_Agentic_Workflow.md)
