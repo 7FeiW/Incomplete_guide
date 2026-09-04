@@ -20,16 +20,17 @@ work state across tools and sessions.
 ## Table of Contents
 
 1. [Choose the Appropriate Level of Delegation](#choose-the-appropriate-level-of-delegation)
-2. [Give the Agent Project Context](#give-the-agent-project-context)
-3. [Write Effective Requests](#write-effective-requests)
-4. [Work with an LLM Agent](#work-with-an-llm-agent)
-5. [Validate Agent Changes](#validate-agent-changes)
-6. [Protect Data and Credentials](#protect-data-and-credentials)
-7. [Use Agent Skills and Custom Agents](#use-agent-skills-and-custom-agents)
-8. [Connect External Tools with MCP](#connect-external-tools-with-mcp)
-9. [Common Failure Modes](#common-failure-modes)
-10. [Relationship to the Next Chapter](#relationship-to-the-next-chapter)
-11. [Further Reading](#further-reading)
+2. [Understand Strengths and Limitations](#understand-strengths-and-limitations)
+3. [Give the Agent Project Context](#give-the-agent-project-context)
+4. [Write Effective Requests](#write-effective-requests)
+5. [Work with an LLM Agent](#work-with-an-llm-agent)
+6. [Validate Agent Changes](#validate-agent-changes)
+7. [Protect Data and Credentials](#protect-data-and-credentials)
+8. [Use Agent Skills and Custom Agents](#use-agent-skills-and-custom-agents)
+9. [Connect External Tools with MCP](#connect-external-tools-with-mcp)
+10. [Common Failure Modes](#common-failure-modes)
+11. [Relationship to the Next Chapter](#relationship-to-the-next-chapter)
+12. [Further Reading](#further-reading)
 
 ## Choose the Appropriate Level of Delegation
 
@@ -55,6 +56,42 @@ for stating the desired level of access and output.
 Regardless of the workflow, inspect generated commands before approving them.
 Autonomous execution changes who performs the steps, not who is responsible for
 the result.
+
+## Understand Strengths and Limitations
+
+LLM performance depends on the model, tool access, supplied context, language,
+repository, and task. Use these lists as a practical guide.
+
+### LLM agents are often good at
+
+- Explaining code and error messages.
+- Finding relevant files, symbols, tests, and configuration.
+- Drafting small, clearly defined changes.
+- Applying repetitive changes across similar files.
+- Suggesting designs, edge cases, and tests.
+- Running checks and responding to clear failures.
+- Reviewing a diff for possible problems.
+- Creating first drafts of code and documentation.
+
+They work best when success can be checked with a diff, test, linter, or small
+example.
+
+### LLM agents are not reliably good at
+
+- Knowing facts missing from the provided context.
+- Distinguishing truth from plausible-sounding text; they may invent facts,
+  APIs, output, or citations. NIST calls this
+  [confabulation](https://doi.org/10.6028/NIST.AI.600-1).
+- Making scientific or experimental decisions.
+- Handling broad tasks with unclear requirements.
+- Proving that code is correct or secure. Agent review should supplement, not
+  replace, human review ([GitHub guidance](https://docs.github.com/en/copilot/responsible-use/agents)).
+- Predicting performance without measurements.
+- Reliably recognizing gaps in their own knowledge.
+- Owning decisions involving data, cost, security, or publication.
+
+Delegate work with clear inputs, boundaries, and checks. Keep human control when
+the task depends on domain judgment or has serious consequences.
 
 ## Give the Agent Project Context
 
@@ -489,3 +526,5 @@ or LLM agent can continue safely.
 - [About agent skills](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills)
 - [VS Code MCP configuration reference](https://code.visualstudio.com/docs/agents/reference/mcp-configuration)
 - [Model Context Protocol documentation](https://modelcontextprotocol.io/docs)
+- [NIST AI 600-1: Generative AI Profile](https://doi.org/10.6028/NIST.AI.600-1)
+- [Responsible use of GitHub Copilot agents](https://docs.github.com/en/copilot/responsible-use/agents)
