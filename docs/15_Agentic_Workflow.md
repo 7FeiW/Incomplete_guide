@@ -19,14 +19,14 @@ official documentation for the agent being configured.
 ## Table of Contents
 
 1. [The Idea](#the-idea)
-2. [Project Record](#project-record)
-3. [Agent Guidance](#agent-guidance)
-4. [Local Context](#local-context)
-5. [Session Workflow](#session-workflow)
-6. [Step-by-Step Setup](#step-by-step-setup)
-7. [Reusable Workflows](#reusable-workflows)
-8. [System Audit](#system-audit)
-9. [Further Reading](#further-reading)
+   - [Project Record](#project-record)
+   - [Agent Guidance](#agent-guidance)
+   - [Local Context](#local-context)
+2. [Session Workflow](#session-workflow)
+3. [Step-by-Step Setup](#step-by-step-setup)
+4. [Reusable Workflows](#reusable-workflows)
+5. [System Audit](#system-audit)
+6. [Further Reading](#further-reading)
 
 ## The Idea
 
@@ -74,7 +74,7 @@ sample-project/
     └── skills/
 ```
 
-## Project Record
+### Project Record
 
 The `docs/` directory is the tool-neutral project record. Its files separate
 stable project knowledge from changing plans and findings:
@@ -92,13 +92,13 @@ remain stable for months, while an active plan may change
 several times in one day. Keep each fact in one canonical location and link to
 it from the other documents.
 
-### Shared Knowledge
+#### Shared Knowledge
 
 Project knowledge includes architecture, terminology, data contracts,
 experimental assumptions, verified findings, reusable procedures, and rules.
 Place it according to its purpose instead of the agent that will read it.
 
-#### Project Documentation
+##### Project Documentation
 
 Use `docs/architecture.md` for the stable map of the codebase. Put repeatable
 procedures in `docs/knowledge/`, supported conclusions in `docs/findings/`, and
@@ -113,22 +113,16 @@ Update them when the underlying fact changes, and link to the canonical document
 instead of copying the same explanation into `CLAUDE.md`, `AGENTS.md`, Copilot
 instructions, and several agent memories.
 
-The example's
-[architecture.md](../examples/ai_coding_examples/docs/architecture.md)
-illustrates an architecture inventory. In a real project, verify it against the
-repository and update it when files move. A stale inventory is worse than a
-shorter document that identifies only stable boundaries and entry points.
-
-### Plans and Experiment Records
+#### Plans and Experiment Records
 
 A plan is the durable record for a task or investigation, from proposal through
 completion or abandonment. Keep its objective, steps, status, progress, evidence,
 open questions, and next action together in `docs/plans/`. Update that document
 as work proceeds; no separate task-state file or project-state index is needed.
 
-#### Task Plans
+##### Task Plans
 
-Use a status banner and an updated date on each plan. For example:
+Use a status banner and an updated date on each plan. Choose from these statuses:
 
 | Status      | Meaning                                                               |
 | ----------- | --------------------------------------------------------------------- |
@@ -153,61 +147,13 @@ and linked experiment records. The plan records observed evidence; it does not
 replace checking the code or a running job. Keep durable records in tool-neutral
 formats and documented locations so another agent can take over.
 
-Use the following initial plan for the sample project. Replace angle-bracket
-placeholders with observed values; they are not example test results:
-
-```markdown
-# Plan: Reject duplicate sample IDs
-
-> **Status:** PROPOSED
-> **Updated:** <YYYY-MM-DD>
-
-## Objective
-
-Reject duplicate sample IDs before dataset construction without changing the
-manifest schema.
-
-## Established facts
-
-- Validation begins in `src/project/dataset.py`.
-- Constraints: [manifest validation rules](../rules/data-validation.md).
-- Baseline revision: <git rev-parse HEAD output>.
-- Baseline working tree: <git status --short output, or clean>.
-- Baseline focused tests: <command, exit code, and observed summary>.
-
-## Approach
-
-- Report all duplicate IDs in one error.
-- Do not read sample contents during manifest validation.
-
-## Completed
-
-- Shared architecture and rules created; baseline recorded above.
-
-## Progress
-
-- Regression test and implementation pending; no fix has been verified.
-
-## Next checks
-
-1. Add a duplicate-ID regression test and confirm it fails for the intended reason.
-2. Implement validation, then run `uv run pytest tests/test_dataset.py -q`.
-3. Run `uv run pytest tests -q`.
-4. Run `uv run ruff check src/project/dataset.py tests/test_dataset.py`.
-5. Review the diff for changes to dataset splitting and image loading.
-
-## Open questions
-
-- None at setup; record any conflict between the rules and existing behavior.
-```
-
 Write facts as facts and unresolved ideas as questions or hypotheses. Update the
 plan at meaningful checkpoints, not after every small tool call. When work ends,
 update its status, record the final validation result or reason for stopping,
 and link any durable conclusion under `docs/findings/`. Retain the plan and its
 evidence even when the work is abandoned or superseded.
 
-#### Experiment Records
+##### Experiment Records
 
 An experiment record should contain enough information to reproduce or explain
 the run:
@@ -230,18 +176,13 @@ documented data locations rather than committing them to `docs/`. An agent hook
 may load current task context, while experiment wrappers should record execution
 metadata independently of any LLM agent.
 
-For the sample project, the duplicate-ID fix needs a plan and test evidence,
-but no training run. If you later retrain using the validated manifest, record
-its identity and the code revision containing the fix with that run. Passing
-validation tests alone does not establish improved classifier performance.
-
-## Agent Guidance
+### Agent Guidance
 
 Agent guidance tells a particular tool where to find the project record and how
 to operate. Keep this layer concise and separate advisory instructions from
 controls enforced by the runtime or operating system.
 
-### Tool-Specific Entry Points
+#### Tool-Specific Entry Points
 
 Each LLM-agent tool may have a preferred instruction file. Use that file as a
 thin entry point containing information the LLM agent needs in nearly every
@@ -316,7 +257,7 @@ specific instructions are easier to maintain than a long handbook. See the
 [Claude memory guide](https://code.claude.com/docs/en/memory) and
 [Codex `AGENTS.md` guide](https://learn.chatgpt.com/docs/agent-configuration/agents-md).
 
-### Scoped Instructions
+#### Scoped Instructions
 
 Use the agent's scoped-instruction mechanism for language-, directory-, or
 task-specific knowledge. In Claude Code, place topic files under
@@ -368,12 +309,12 @@ more specific file appears later in its instruction chain. Codex `.rules` files
 serve a different purpose: they control which commands may run outside the
 sandbox and should not be used as substitutes for project knowledge.
 
-### Advisory and Enforced Rules
+#### Advisory and Enforced Rules
 
 Rules answer how an LLM agent should work. Separate guidance that requires
 judgment from controls that must apply regardless of the model's interpretation.
 
-#### Behavioral Rules
+##### Behavioral Rules
 
 Use the tool-specific instruction entry point and scoped instruction files for
 rules such as:
@@ -390,7 +331,7 @@ The example's
 uses this approach to keep commits under human control. This is particularly
 useful when Git revisions are used as experiment provenance.
 
-#### Enforced Rules
+##### Enforced Rules
 
 An instruction such as "never read `.env`" is a request to the model. If the
 action must be blocked, use the LLM-agent runtime, operating system, sandbox, or
@@ -414,7 +355,7 @@ idempotent, and safe with untrusted input. If the agent has no suitable hook,
 use a repository script, pre-commit check, or CI. See the
 [Claude Code hooks guide](https://code.claude.com/docs/en/hooks-guide).
 
-#### Rule Consistency
+##### Rule Consistency
 
 Conflicting rules make agent behavior unpredictable. Maintain one canonical
 rule for each concern:
@@ -432,7 +373,7 @@ Rules should describe the target repository's actual configuration. For example,
 do not state that Black, isort, and Ruff are all required unless their settings
 and validation commands agree in the repository.
 
-## Local Context
+### Local Context
 
 Chat history and agent-local memory can make a session convenient to resume, but
 they may be stale, incomplete, or machine-specific. They are caches, not a
@@ -450,7 +391,7 @@ Use `/memory` in Claude Code or `/memories` in supporting Codex clients to revie
 local memory. Do not write shared workflows to a user's absolute memory path;
 that storage is non-portable and owned by the individual agent installation.
 
-### Evidence-Based Resumption
+#### Evidence-Based Resumption
 
 Transcripts help continue interrupted work but may be stale. Start resumed work
 by checking:
@@ -672,10 +613,55 @@ Here, **duplicate sample IDs** means that multiple manifest rows share the same
 `duplicate-sample-ids.md` names the document tracking this task's plan, progress,
 and validation results. It is not a dataset or a Python script.
 
-Save the [task-plan template](#task-plans) as
-`docs/plans/duplicate-sample-ids.md`. Replace its date placeholder and record the
-revision, working-tree status, and test output from step 1. Leave unperformed
-work marked as pending.
+Save the following template as `docs/plans/duplicate-sample-ids.md`. Replace its
+angle-bracket placeholders with observed values; they are not example test
+results. Record the revision, working-tree status, and test output from step 1,
+and leave unperformed work marked as pending.
+
+```markdown
+# Plan: Reject duplicate sample IDs
+
+> **Status:** PROPOSED
+> **Updated:** <YYYY-MM-DD>
+
+## Objective
+
+Reject duplicate sample IDs before dataset construction without changing the
+manifest schema.
+
+## Established facts
+
+- Validation begins in `src/project/dataset.py`.
+- Constraints: [manifest validation rules](../rules/data-validation.md).
+- Baseline revision: <git rev-parse HEAD output>.
+- Baseline working tree: <git status --short output, or clean>.
+- Baseline focused tests: <command, exit code, and observed summary>.
+
+## Approach
+
+- Report all duplicate IDs in one error.
+- Do not read sample contents during manifest validation.
+
+## Completed
+
+- Shared architecture and rules created; baseline recorded above.
+
+## Progress
+
+- Regression test and implementation pending; no fix has been verified.
+
+## Next checks
+
+1. Add a duplicate-ID regression test and confirm it fails for the intended reason.
+2. Implement validation, then run `uv run pytest tests/test_dataset.py -q`.
+3. Run `uv run pytest tests -q`.
+4. Run `uv run ruff check src/project/dataset.py tests/test_dataset.py`.
+5. Review the diff for changes to dataset splitting and image loading.
+
+## Open questions
+
+- None at setup; record any conflict between the rules and existing behavior.
+```
 
 If the baseline failed, record the blocker and next action in the plan. Add a
 link to the plan from the project's `README.md` so a fresh session can find it.
