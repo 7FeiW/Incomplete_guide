@@ -186,17 +186,6 @@ message. Use an explicit repository command or CI for expensive test suites and
 external actions. A hook is automation, not a security boundary or a substitute
 for human review.
 
-Maintain one canonical rule for each concern:
-
-| Concern                        | Preferred source          |
-| ------------------------------ | ------------------------- |
-| Universal project workflow     | Tool-specific entry point |
-| Python or directory convention | Path-scoped rule          |
-| Hard tool or file restriction  | Permission setting        |
-| Deterministic lifecycle action | Hook                      |
-| Multi-step task procedure      | Skill                     |
-
-When a rule changes, remove obsolete copies from other instruction files.
 
 ### Local Context
 
