@@ -1,31 +1,5 @@
 # Agentic Research Workflow: Knowledge, Rules, and Plans
 
-This workflow lets **large language model (LLM) agents** continue work across
-sessions while keeping a human in control. Version-controlled documentation
-holds shared project memory. Humans remain responsible for scientific decisions,
-consequential actions, and final results.
-
-An agent needs three kinds of information:
-
-1. **Knowledge:** facts about the project and its scientific context.
-2. **Rules:** instructions for how work must be performed and which actions are
-   prohibited. Some rules and engineering choices exist specifically to reduce
-   the impact of LLM errors and fabricated claims.
-3. **Plans:** task objectives, intended steps, current status, completed work,
-   and what remains to be verified.
-
-These concerns need different storage. Tool-specific instruction files become
-unwieldy when they contain everything, while chat history is not a durable
-project record.
-
-Keep durable knowledge and plans **tool-neutral**. Store architecture, decisions,
-findings, and plans with their status and evidence in ordinary project files.
-Tool-specific files
-should point to that shared record, not replace it.
-
-This reduces repeated prompting and gives agents stable facts. Keep the record
-concise and current; duplicated or stale documents create conflicting context.
-
 This chapter follows one sample project, which trains
 image classifiers from sample manifests. The task is to reject duplicate sample
 IDs before constructing a dataset, continuing the example in
@@ -44,203 +18,29 @@ official documentation for the agent being configured.
 
 ## Table of Contents
 
-1. [Step-by-Step Setup](#step-by-step-setup)
-2. [Three-Layer Model](#three-layer-model)
-3. [Project Record](#project-record)
-4. [Agent Guidance](#agent-guidance)
-5. [Local Context](#local-context)
-6. [Session Workflow](#session-workflow)
+1. [The Idea](#three-layer-model)
+2. [Project Record](#project-record)
+3. [Agent Guidance](#agent-guidance)
+4. [Local Context](#local-context)
+5. [Session Workflow](#session-workflow)
+6. [Step-by-Step Setup](#step-by-step-setup)
 7. [Reusable Workflows](#reusable-workflows)
 8. [System Audit](#system-audit)
 9. [Further Reading](#further-reading)
 
-## Step-by-Step Setup
+## The Idea
 
-The goal is to let a fresh agent continue the duplicate-ID task from repository
-files. This sets up the workflow around an existing Python project; it does not
-create the classifier or install an agent client. The example paths below belong
-to the sample project, not to this documentation repository.
+The core idea of this workflow is to let **large language model (LLM) agents** continue work across
+sessions while keeping a human in control. Version-controlled documentation holds shared project memory - such as knowledge, project rules, and plans. **Humans remain responsible for scientific decisions,
+consequential actions, and final results.** All project record should be tracked and verfied by human. 
 
-The guide stores shared example documents under
-`examples/ai_coding_examples/docs/`; in your project, the equivalent location is
-`docs/`. The shared example folder has `findings/`, `knowledge/`, `plans/`,
-and `rules/` directories. It includes architecture and rules examples
-plus a [sample duplicate-ID plan](../examples/ai_coding_examples/docs/plans/duplicate-sample-ids.md)
-for this chapter's image-classifier task. Use the templates below to populate
-the other directories as work proceeds.
+Both an LLM agent and human needs infomation to perform well in each task, these information include:
 
-### 1. Establish the Starting Point
-
-Assume Git and an agent client are installed, and the Python project already has:
-
-```text
-sample-project/
-├── README.md
-├── pyproject.toml
-├── uv.lock
-├── src/project/dataset.py
-└── tests/test_dataset.py
-```
-
-For this example, the project uses uv, declares pytest and Ruff as development
-dependencies, and configures imports so its tests can import `project`. Its
-`Dataset` constructor consumes manifest rows containing `sample_id`, `path`, and
-`split`. Adapt these assumptions to your actual project before copying the files.
-
-Open a terminal at the project root. The following commands work in Bash or
-PowerShell. `uv sync --dev` installs the project's development environment; the
-remaining commands record the starting revision, local changes, and test result.
-See the [uv project guide](https://docs.astral.sh/uv/guides/projects/).
-
-```bash
-uv sync --dev
-git rev-parse HEAD
-git status --short
-uv run pytest tests/test_dataset.py -q
-```
-
-Keep the actual output for the task record. If setup or tests fail, record the
-failure and resolve it before attributing failures to the duplicate-ID change.
-
-### 2. Write the Shared Knowledge and Rules
-
-Create `docs/`, `docs/rules/`, `docs/plans/`, and `docs/knowledge/`
-in your editor.
-Create `docs/architecture.md` with the following starting content, checking each
-statement against the code first:
-
-```markdown
-# Sample project architecture
-
-- Purpose: train image classifiers from sample manifests.
-- Input: manifest rows with sample_id, path, and split fields.
-- Entry point: Dataset in src/project/dataset.py.
-- Data flow: manifest rows → validation → dataset construction → image loading.
-- Focused tests: tests/test_dataset.py.
-- Environment and baseline setup: see ../README.md.
-```
-
-Create `docs/rules/data-validation.md` with the agreed task constraints:
-
-```markdown
-# Manifest validation rules
-
-- Preserve the Dataset constructor and manifest schema for this task.
-- Preserve row order and existing split assignments.
-- Compare sample IDs as exact strings; do not normalize case or Unicode.
-- Reject duplicates with one ValueError listing every duplicated ID once.
-- Validate identifiers without reading image contents.
-- Use synthetic manifest rows in tests; do not modify research datasets.
-```
-
-Exact string comparison is a deliberate choice for this example, not a universal
-rule for sample identity. Settle the equivalent decision with the project owner
-before implementation. Add links to these two files and the verified setup
-commands from step 1 to the project's `README.md`.
-
-### 3. Create the First Plan
-
-Here, **duplicate sample IDs** means that multiple manifest rows share the same
-`sample_id`; see the [sample project example](14_Programming_with_LLM_Agents.md#sample-project).
-`duplicate-sample-ids.md` names the document tracking this task's plan, progress,
-and validation results. It is not a dataset or a Python script.
-
-Save the [plan template below](#task-plans) as
-`docs/plans/duplicate-sample-ids.md`. Replace its date placeholder and record the
-revision, working-tree status, and test output from step 1. Leave unperformed
-work marked as pending.
-
-If the baseline failed, record the blocker and next action in the plan. Add a
-link to the plan from the project's `README.md` so a fresh session can find it.
-Keep status and progress in the plan itself.
-
-### 4. Connect the Agent to the Record
-
-For Codex, save the [entry-point example below](#tool-specific-entry-points) as
-`AGENTS.md` at the project root. For Claude Code, save it as root `CLAUDE.md`.
-If you use both, keep both short and point them to the same shared files. Merge
-with existing instructions instead of overwriting them. See the
-[Codex instruction guide](https://learn.chatgpt.com/docs/agent-configuration/agents-md)
-and [Claude project-memory guide](https://code.claude.com/docs/en/memory).
-
-Open a fresh agent session with the sample project root as its working directory. Send:
-
-```text
-Read the repository instructions, docs/architecture.md,
-docs/rules/data-validation.md, and docs/plans/duplicate-sample-ids.md.
-Inspect src/project/dataset.py, tests/test_dataset.py, and git status.
-Summarize the duplicate-ID task, validation commands, and permitted changes.
-Cite the files you read and flag any mismatch. Do not edit files yet.
-```
-
-Check the response against the files. A Markdown link alone is not evidence that
-the agent read its target. Correct missing context before starting the task.
-Review the client's active permissions as described under
-[Advisory and Enforced Rules](#advisory-and-enforced-rules); this task needs local
-code edits and tests, with synthetic inputs.
-
-### 5. Run One Bounded Task
-
-Use the prompts in [Session Workflow](#session-workflow) to define, plan, and
-implement the duplicate-ID change. The expected cases are unique IDs, one repeated
-ID, and multiple distinct repeated IDs. Include a check that validation does not
-read image contents and that valid rows retain their order and split assignments.
-
-After reviewing the plan, send:
-
-```text
-Implement the accepted duplicate-ID plan using the shared data-validation rules.
-First add a regression test and run it to demonstrate the missing validation.
-Confirm it fails for that reason, then implement the fix and run the checks in
-the plan. Preserve unrelated changes. Update the plan with observed results,
-including failures and checks you could not run. Leave changes uncommitted.
-```
-
-### 6. Record and Test the Handoff
-
-Review the diff and actual test output. Have the agent update
-`docs/plans/duplicate-sample-ids.md` using the [handoff template](#7-hand-off).
-Keep the plan IN PROGRESS or BLOCKED if verification or review is incomplete.
-Once reviewed and complete, mark the plan COMPLETED. Commit the reviewed code,
-tests, and records together using
-your normal Git workflow so another checkout can receive them.
-
-Start a fresh session and send:
-
-```text
-Read the repository instructions and docs/plans/duplicate-sample-ids.md.
-Compare the recorded progress and evidence with Git and the
-current implementation. Report what was verified, what remains unresolved,
-and the next action, citing evidence. Do not edit files.
-```
-
-The setup works when the new session can recover the task and its evidence
-without your previous chat. Fix missing or stale records if it cannot.
-
-### 7. Add Reuse When Needed
-
-After completing the task, use [Reusable Workflows](#reusable-workflows) to save
-the procedure as `docs/knowledge/validate-manifest.md`. Add a tool-specific skill
-wrapper only if this procedure recurs. Create `docs/findings/` when there is a
-supported conclusion to preserve, and experiment records when actual runs begin.
-The remaining sections explain how to maintain and extend this setup.
-
-## Three-Layer Model
-
-Organize agent context into three layers:
-
-| Layer                    | Purpose                                  | Examples                                           |
-| ------------------------ | ---------------------------------------- | -------------------------------------------------- |
-| **Project record** | Shared knowledge and plans       | `docs/`, Git, experiment records                 |
-| **Agent guidance** | How an agent finds information and works | `AGENTS.md`, `CLAUDE.md`, scoped rules, skills |
-| **Local context**  | Temporary task context                   | Chat history, local memory, working notes          |
-
-The project record is the source of truth. LLM-agent guidance should point to that
-record rather than duplicate it. Local context can help an agent continue, but
-it is not a durable or shared record.
-
-The human defines the goal. The agent reads the record, performs bounded work,
-and updates the plan with verified progress. The human reviews the result.
+1. **Project Record** - Shared knowledge, plans, working notes.  The project record is the source of truth. LLM-agent guidance should point to that
+  record rather than duplicate it.
+2. **Agent Guidance** - How an agent finds information and works, and to some extend how task should be done in this project. These instructions are important, it tell agent for how work must be performed and which actions are prohibited. Some rules and engineering choices exist specifically to reduce
+   the impact of LLM errors and fabricated claims.
+3. **Local Context** - Temporary task context, such as Chat history, local memory, Local context can help an agent continue, but it is not a durable or shared record.
 
 ```mermaid
 %%{init: {"themeVariables": {"fontSize": "20px"}, "flowchart": {"nodeSpacing": 35, "rankSpacing": 55}}}%%
@@ -326,13 +126,13 @@ record. Finally, treat session context as a convenience rather than evidence.
 The `docs/` directory is the tool-neutral project record. Its files separate
 stable project knowledge from changing plans and findings:
 
-| Path                      | Contents                                                               |
-| ------------------------- | ---------------------------------------------------------------------- |
-| `docs/architecture.md`  | Components, entry points, interfaces, and data flow                    |
-| `docs/knowledge/`       | Project explanations and reusable procedures for development, experiments, and operations |
-| `docs/findings/`        | Verified observations, measurements, negative results, and conclusions |
-| `docs/plans/`           | Task objectives, steps, status, progress, blockers, and validation evidence            |
-| `docs/rules/`           | Shared scientific, data-handling, and engineering constraints          |
+| Path                     | Contents                                                                                  |
+| ------------------------ | ----------------------------------------------------------------------------------------- |
+| `docs/architecture.md` | Components, entry points, interfaces, and data flow                                       |
+| `docs/knowledge/`      | Project explanations and reusable procedures for development, experiments, and operations |
+| `docs/findings/`       | Verified observations, measurements, negative results, and conclusions                    |
+| `docs/plans/`          | Task objectives, steps, status, progress, blockers, and validation evidence               |
+| `docs/rules/`          | Shared scientific, data-handling, and engineering constraints                             |
 
 These documents change at different rates. Architecture and shared rules may
 remain stable for months, while an active plan may change
@@ -377,14 +177,14 @@ as work proceeds; no separate task-state file or project-state index is needed.
 
 Use a status banner and an updated date on each plan. For example:
 
-| Status | Meaning |
-| --- | --- |
-| PROPOSED | Work is defined but has not started. |
-| IN PROGRESS | Work is underway, including validation or review. |
-| BLOCKED | Work cannot proceed until a named dependency or question is resolved. |
-| COMPLETED | Acceptance criteria, required checks, and review are satisfied. |
-| ABANDONED | Work stopped without completion; record why and any useful results. |
-| SUPERSEDED | Another plan replaces this one; link to its successor. |
+| Status      | Meaning                                                               |
+| ----------- | --------------------------------------------------------------------- |
+| PROPOSED    | Work is defined but has not started.                                  |
+| IN PROGRESS | Work is underway, including validation or review.                     |
+| BLOCKED     | Work cannot proceed until a named dependency or question is resolved. |
+| COMPLETED   | Acceptance criteria, required checks, and review are satisfied.       |
+| ABANDONED   | Work stopped without completion; record why and any useful results.   |
+| SUPERSEDED  | Another plan replaces this one; link to its successor.                |
 
 Change the status as circumstances change. A blocked plan can return to
 IN PROGRESS once its blocker is resolved. Preserve completed, abandoned, and
@@ -825,6 +625,179 @@ Plan and repository:
 - docs/plans/duplicate-sample-ids.md: <status, evidence, and next action>.
 ```
 
+## Step-by-Step Setup
+
+This walkthrough puts the preceding model and session lifecycle into practice.
+The goal is to let a fresh agent continue the duplicate-ID task from repository
+files. It sets up the workflow around an existing Python project; it does not
+create the classifier or install an agent client. The example paths below belong
+to the sample project, not to this documentation repository.
+
+The guide stores shared example documents under
+`examples/ai_coding_examples/docs/`; in your project, the equivalent location is
+`docs/`. The shared example folder has `findings/`, `knowledge/`, `plans/`,
+and `rules/` directories. It includes architecture and rules examples
+plus a [sample duplicate-ID plan](../examples/ai_coding_examples/docs/plans/duplicate-sample-ids.md)
+for this chapter's image-classifier task. Use the templates below to populate
+the other directories as work proceeds.
+
+### 1. Establish the Starting Point
+
+Assume Git and an agent client are installed, and the Python project already has:
+
+```text
+sample-project/
+├── README.md
+├── pyproject.toml
+├── uv.lock
+├── src/project/dataset.py
+└── tests/test_dataset.py
+```
+
+For this example, the project uses uv, declares pytest and Ruff as development
+dependencies, and configures imports so its tests can import `project`. Its
+`Dataset` constructor consumes manifest rows containing `sample_id`, `path`, and
+`split`. Adapt these assumptions to your actual project before copying the files.
+
+Open a terminal at the project root. The following commands work in Bash or
+PowerShell. `uv sync --dev` installs the project's development environment; the
+remaining commands record the starting revision, local changes, and test result.
+See the [uv project guide](https://docs.astral.sh/uv/guides/projects/).
+
+```bash
+uv sync --dev
+git rev-parse HEAD
+git status --short
+uv run pytest tests/test_dataset.py -q
+```
+
+Keep the actual output for the task record. If setup or tests fail, record the
+failure and resolve it before attributing failures to the duplicate-ID change.
+
+### 2. Write the Shared Knowledge and Rules
+
+Create `docs/`, `docs/rules/`, `docs/plans/`, and `docs/knowledge/`
+in your editor.
+Create `docs/architecture.md` with the following starting content, checking each
+statement against the code first:
+
+```markdown
+# Sample project architecture
+
+- Purpose: train image classifiers from sample manifests.
+- Input: manifest rows with sample_id, path, and split fields.
+- Entry point: Dataset in src/project/dataset.py.
+- Data flow: manifest rows → validation → dataset construction → image loading.
+- Focused tests: tests/test_dataset.py.
+- Environment and baseline setup: see ../README.md.
+```
+
+Create `docs/rules/data-validation.md` with the agreed task constraints:
+
+```markdown
+# Manifest validation rules
+
+- Preserve the Dataset constructor and manifest schema for this task.
+- Preserve row order and existing split assignments.
+- Compare sample IDs as exact strings; do not normalize case or Unicode.
+- Reject duplicates with one ValueError listing every duplicated ID once.
+- Validate identifiers without reading image contents.
+- Use synthetic manifest rows in tests; do not modify research datasets.
+```
+
+Exact string comparison is a deliberate choice for this example, not a universal
+rule for sample identity. Settle the equivalent decision with the project owner
+before implementation. Add links to these two files and the verified setup
+commands from step 1 to the project's `README.md`.
+
+### 3. Create the First Plan
+
+Here, **duplicate sample IDs** means that multiple manifest rows share the same
+`sample_id`; see the [sample project example](14_Programming_with_LLM_Agents.md#sample-project).
+`duplicate-sample-ids.md` names the document tracking this task's plan, progress,
+and validation results. It is not a dataset or a Python script.
+
+Save the [task-plan template](#task-plans) as
+`docs/plans/duplicate-sample-ids.md`. Replace its date placeholder and record the
+revision, working-tree status, and test output from step 1. Leave unperformed
+work marked as pending.
+
+If the baseline failed, record the blocker and next action in the plan. Add a
+link to the plan from the project's `README.md` so a fresh session can find it.
+Keep status and progress in the plan itself.
+
+### 4. Connect the Agent to the Record
+
+For Codex, save the [tool-specific entry-point example](#tool-specific-entry-points) as
+`AGENTS.md` at the project root. For Claude Code, save it as root `CLAUDE.md`.
+If you use both, keep both short and point them to the same shared files. Merge
+with existing instructions instead of overwriting them. See the
+[Codex instruction guide](https://learn.chatgpt.com/docs/agent-configuration/agents-md)
+and [Claude project-memory guide](https://code.claude.com/docs/en/memory).
+
+Open a fresh agent session with the sample project root as its working directory. Send:
+
+```text
+Read the repository instructions, docs/architecture.md,
+docs/rules/data-validation.md, and docs/plans/duplicate-sample-ids.md.
+Inspect src/project/dataset.py, tests/test_dataset.py, and git status.
+Summarize the duplicate-ID task, validation commands, and permitted changes.
+Cite the files you read and flag any mismatch. Do not edit files yet.
+```
+
+Check the response against the files. A Markdown link alone is not evidence that
+the agent read its target. Correct missing context before starting the task.
+Review the client's active permissions as described under
+[Advisory and Enforced Rules](#advisory-and-enforced-rules); this task needs local
+code edits and tests, with synthetic inputs.
+
+### 5. Run One Bounded Task
+
+Use the prompts in [Session Workflow](#session-workflow) to define, plan, and
+implement the duplicate-ID change. The expected cases are unique IDs, one repeated
+ID, and multiple distinct repeated IDs. Include a check that validation does not
+read image contents and that valid rows retain their order and split assignments.
+
+After reviewing the plan, send:
+
+```text
+Implement the accepted duplicate-ID plan using the shared data-validation rules.
+First add a regression test and run it to demonstrate the missing validation.
+Confirm it fails for that reason, then implement the fix and run the checks in
+the plan. Preserve unrelated changes. Update the plan with observed results,
+including failures and checks you could not run. Leave changes uncommitted.
+```
+
+### 6. Record and Test the Handoff
+
+Review the diff and actual test output. Have the agent update
+`docs/plans/duplicate-sample-ids.md` using the [handoff template](#7-hand-off).
+Keep the plan IN PROGRESS or BLOCKED if verification or review is incomplete.
+Once reviewed and complete, mark the plan COMPLETED. Commit the reviewed code,
+tests, and records together using
+your normal Git workflow so another checkout can receive them.
+
+Start a fresh session and send:
+
+```text
+Read the repository instructions and docs/plans/duplicate-sample-ids.md.
+Compare the recorded progress and evidence with Git and the
+current implementation. Report what was verified, what remains unresolved,
+and the next action, citing evidence. Do not edit files.
+```
+
+The setup works when the new session can recover the task and its evidence
+without your previous chat. Fix missing or stale records if it cannot.
+
+### 7. Add Reuse When Needed
+
+After completing the task, use [Reusable Workflows](#reusable-workflows) to save
+the procedure as `docs/knowledge/validate-manifest.md`. Add a tool-specific skill
+wrapper only if this procedure recurs. Create `docs/findings/` when there is a
+supported conclusion to preserve, and experiment records when actual runs begin.
+The next section explains how to turn a repeated procedure into a reusable
+workflow.
+
 ## Reusable Workflows
 
 For repeated tasks, keep a version-controlled runbook and add a `SKILL.md`
@@ -911,15 +884,15 @@ can be converted into thin skills that share the same runbook and scripts.
 
 Audit the same layers regardless of which LLM agent is used:
 
-| Layer        | Question to answer                                                                    |
-| ------------ | ------------------------------------------------------------------------------------- |
-| Instructions | Which repository and user instruction files were loaded, in what order?               |
-| Knowledge    | Does every required fact resolve to a current, shared source?                         |
-| Plans        | Can a new human or agent identify each task's status, goal, evidence, and next action?        |
-| Skills       | Which reusable workflows are discoverable, and are their inputs and outputs explicit? |
-| Permissions  | Which actions are allowed, prompted, sandboxed, or forbidden?                         |
-| Automation   | Which hooks, scripts, and CI checks can change or validate work?                      |
-| Tools        | Which external services, environments, and data stores are available?                 |
+| Layer        | Question to answer                                                                     |
+| ------------ | -------------------------------------------------------------------------------------- |
+| Instructions | Which repository and user instruction files were loaded, in what order?                |
+| Knowledge    | Does every required fact resolve to a current, shared source?                          |
+| Plans        | Can a new human or agent identify each task's status, goal, evidence, and next action? |
+| Skills       | Which reusable workflows are discoverable, and are their inputs and outputs explicit?  |
+| Permissions  | Which actions are allowed, prompted, sandboxed, or forbidden?                          |
+| Automation   | Which hooks, scripts, and CI checks can change or validate work?                       |
+| Tools        | Which external services, environments, and data stores are available?                  |
 
 Use the tool's own inspection features for the implementation details:
 
