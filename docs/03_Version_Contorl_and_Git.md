@@ -18,13 +18,13 @@
         - [Collaboration Guidelines](#collaboration-guidelines)
 - [Why Not Use a Feature-Based Workflow?](#why-not-use-a-feature-based-workflow)
 - [Why Not Use GitHub Flow?](#why-not-use-github-flow)
-
+- [Further Reading and Tools](#further-reading-and-tools)
 
 ## Git Clients and Extensions
 
 - **Git (CLI)** — the canonical tool; learn the core commands below.
-- **Git Fork** — GUI client: https://git-fork.com/
-- **GitLens** — excellent VS Code extension: https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens
+- **[Fork](https://git-fork.com/)** — graphical Git client.
+- **[GitLens](https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens)** — Git extension for Visual Studio Code.
 
 ## Essential Git Commands
 
@@ -39,51 +39,44 @@ Here are the essential commands to get started:
 - **`git pull`**: Fetch from and integrate with another repository or a local branch.
 - **`git log`**: Show commit logs.
 - **`git branch`**: List, create, or delete branches.
-- **`git checkout <branch>`** / **`git switch <branch>`**: Switch branches or restore working tree files.
+- **`git checkout <branch>`** / **`git switch <branch>`**: Switch to an existing branch.
 - **`git merge <branch>`**: Join two or more development histories together.
 
 ## Git Workflows for Research Projects
 
-Research Project share a lot of commonity of other software develpment project, however:
-- Researchers do not deploy to production multiple times a day.
-- Researchers do not have a fixed release plan, we are must like only create a a few release once project is finished or reach a milestone.
-- Experiments produce figures, models, papers, they are not "merge immediately then deploy"
-- Research tasks often need:
-    - Multiple iteration cycles
-    - Quick integration
-    - Minimal isolation
-    - Tags for preprint, revision, dataset versions
+Research projects share many needs with other software projects, but their milestones may be figures, models, datasets, or papers rather than production deployments. Choose a workflow that supports:
 
-## Further Reading and Tools
-
-- Git official docs: https://git-scm.com/docs
-- Pro Git book: https://git-scm.com/book/en/v2
-- pre-commit: https://pre-commit.com/
+- Repeated experiment and revision cycles.
+- Frequent integration of useful code changes.
+- Temporary isolation for changes that could break the shared baseline.
+- Tags for the code states used at scientific milestones.
 
 ### What is a Git Branch?
 
-A **branch** in Git is essentially a lightweight movable pointer to a commit. The default branch name in Git is `main` (or `master` in older repositories). As you make commits, the branch pointer moves forward automatically.
+A **branch** in Git is essentially a lightweight movable pointer to a commit. As you make commits on a branch, its pointer moves forward automatically. This guide calls the main development branch `main`; the initial name depends on Git's version and configuration. When creating a new repository, `git init -b main` explicitly selects that name. See the [Git initialization documentation](https://git-scm.com/docs/git-init).
 
 Think of it as a separate line of development. You can create a new branch to work on a new feature or fix a bug without affecting the main codebase. Once your work is done, you can merge that branch back into the main branch.
 
 ### Aligning Branches with Research Ideas
 
-In research, a **branch** maps perfectly to a **hypothesis** or an **experiment**.
+In research, a branch can isolate code changes needed to test a hypothesis or experiment. Runs that only change configuration values do not necessarily need separate branches.
 
 - **`main` branch**: Your stable baseline code that always runs.
 - **Feature branch**: A specific experiment (e.g., `experiment/new-loss-function`, `idea/transformer-backbone`).
 
-This isolation lets you test wild ideas without fear of breaking your reproducible codebase. If an idea fails, you just discard the branch. If it succeeds, you merge it. Persoanlly, I recommand use a branch only when 1. code change could break existing codebase, or 2. there is multiple people work on the same project.
+This isolation lets you develop an idea without changing the shared baseline. Merge useful code after checking it. If an idea fails, retain any code and run records needed to explain the result before discarding the branch. Personally, I recommend using a branch when a change could break the existing codebase or when multiple people work on the project.
 
 ### Workflow for One Researcher
 
-Uses a **trunk-based development workflow**. That is All work is done in **Not So Short-Lived branches** that merge frequently into the mainline branch (**`main`**) - a.k.a trunk. It is common to just commit to `main` branch, it is not the best case but things are far less complicated if there is only one developer on the project. 
+Use a simple workflow centered on `main`. For small, checked changes, committing directly to `main` can be practical when you are the only developer. For larger or disruptive changes, use a temporary branch and integrate small, working increments frequently. A pull request (PR), which proposes changes for review and merging, is optional for solo work but can provide a useful review record.
+
+The diagram shows the branch-based option:
 
 ```mermaid
 flowchart LR
-    A[main<br>Always stable] --> B[Create branch For Your Ground Breaking Idea]
+    A[main<br>Stable baseline] --> B[Create branch for an idea]
     B --> C[Work & Commit]
-    C --> D[Push & PR]
+    C --> D[Review changes, optionally through a PR]
     D --> E[Review & Merge]
     E --> A
     E --> F[Tag milestones]
@@ -94,19 +87,18 @@ flowchart LR
 
 #### Commit Small, Meaningful Changes
 
-Don’t Commit Large Data Files, Git slows down if large binary files are added.
-Use:
-- cloud storage
-- data servers
+Keep source material needed to understand and reproduce the work in Git. Typical tracked files include:
 
-Commit only:
-- metadata
-- configs
-- scripts
+- Python modules and scripts.
+- Tests and small test fixtures.
+- Configurations and environment specifications or lock files.
+- Documentation, manuscript source, and maintained notebooks.
+- Small provenance records and data retrieval instructions.
 
-Commit Often, Use concise, descriptive commit messages:
+Store large datasets, model files, and generated outputs in a documented, durable location, such as institutional data storage. See [Research Data and Run Outputs](02_Project_Structure.md#research-data-and-run-outputs) for storage and provenance guidance, and [Git Hygiene](02_Project_Structure.md#git-hygiene) for exclusions.
 
-Commit Message examples:
+Commit small, meaningful changes often and use concise, descriptive messages. Examples:
+
 - `Add dropout hyperparameter to model config`
 - `Fix off-by-one error in data indexing`
 - `Implement LR sweep experiment`
@@ -116,48 +108,39 @@ Avoid vague messages like “fix stuff” or “update file”.
 
 #### Use Tags for “Published” States
 
-Use Git tags to mark important scientific or development milestones:
+Use Git tags to mark important scientific or development milestones. An annotated tag records a name and message for a particular commit; without an explicit commit argument, it targets the current `HEAD`. It does not capture uncommitted edits or external datasets. See the [Git tag documentation](https://git-scm.com/docs/git-tag).
+
+These examples work in Bash or PowerShell from an existing repository. They assume a configured Git identity, a writable remote named `origin`, and unused example tag names. First commit and verify the intended milestone state, then create and publish its tag. At preprint submission:
+
 ```bash
 git tag -a v0.1-preprint -m "Version for preprint submission"
-git tag -a v1.0-paper -m "Final version matching accepted manuscript"
-git push origin --tags
+git push origin tag v0.1-preprint
 ```
+
+Later, after committing and verifying the changes for the accepted manuscript, tag that state:
+
+```bash
+git tag -a v1.0-paper -m "Final version matching accepted manuscript"
+git push origin tag v1.0-paper
+```
+
+Each push publishes only the named tag and the objects it needs. Avoid `git push origin --tags` when you only intend to publish one milestone, because it pushes all local tags. See the [Git push documentation](https://git-scm.com/docs/git-push). Preserve the environment, configuration, seeds where applicable, input provenance, and output location with the run records; a code tag alone is insufficient to reproduce a result.
 
 ### Workflow for a Team
 
-A **trunk-based development workflow** is in most time well fitted for research project. That is:
-- **Single trunk (`main`)**: Always deployable and reproducible; no long-lived branches.
-- **Not So Short-lived branches**: Few Day lifespan, 1 developer per branch, work is done in this branch, that merge frequently into the mainline branch (**`main`**) - a.k.a trunk. Note that `commit` and `tags` discussed in **one man army workflow** are still appied to this case.
+A **trunk-based development workflow** can suit research teams that want to integrate changes frequently into one shared branch, the trunk (`main`). Keep change branches short-lived: aim for a couple of days and split larger tasks into working increments. The [trunk-based development guide](https://trunkbaseddevelopment.com/short-lived-feature-branches/) describes this integration model. An experiment may run for weeks without requiring its code changes to remain unmerged for that duration.
 
-This workflow is gear towards to ensure
-- Continuous reproducibility  
-- Minimal merge conflicts
-- Incremental scientific development  
-- Clean and traceable version history 
+Frequent integration may reduce the size of merge conflicts and make review easier. It does not guarantee reproducibility: retain run metadata and check the integrated code. The commit and tagging guidance for one researcher also applies here.
 
-### Branching Model
+#### Branching Model
 
-**main** Branch：
-- The single authoritative branch.  
-- Must remain **runnable and stable** at all times.  
-- All contributions merge into `main` through reviewed pull requests.
+- **`main`**: The shared integration branch. Keep it runnable and stable through appropriate checks and reviewed pull requests.
+- **Temporary change branches**: Keep each branch focused on one change, including features, fixes, and refactoring. Merge checked increments frequently and delete branches after merging.
+- **Exceptions**: A disruptive investigation may need longer isolation. Document why, keep it synchronized with `main`, and plan how useful changes will be integrated. Treat this as an exception, not the default refactoring workflow.
 
-**develop** Branch
-- In the case that there is a deployment requirement, keep main as the **runnable and stable**
-- Use this branch to integrate latest change from each feature branch
+This default uses no separate `develop` branch. A deployment requirement alone does not require one. Add a separate integration or maintenance branch only when the project has a specific need, and document its purpose and merge direction as an alternative workflow.
 
-**Not So Short-Lived Branches** branch：
-- Every task should occur in its own temporary branch.
-- These branch should be small in scope and focused on one change
-- These branch shoul be Merged within a few days and Deleted after merging
-- This is based on the idea of **Short-Lived** Branches, however nature of the research project means each of these branch would be as short-lived as their purely software development couter parts.
-
-**Long-Lived Branches** branch:
-- Idealy we should **not** have any long lived branch, because it will make merge code back to main branch a headache.
-- Use this for refactoring code.
-- **DO NOT** use this to store new features or new task, as switch between branch would be hard to deal with in a day-to-day base.
-
-In a collabtrated team:
+For a collaborating team:
 
 ```mermaid
 flowchart TB
@@ -189,28 +172,41 @@ flowchart TB
     style H fill:#fff3e0
 ```
 
-### Pull Request
+#### Pull Request
 
-PR requirements:
-- Code runs without breaking existing functionality  
-- Clear commit messages  
-- Reviewer approval (if working collaboratively) 
+For this team workflow, agree on PR requirements such as:
 
-### Collaboration Guidelines
+- Relevant checks pass and existing functionality still works.
+- The description explains the change and how it was validated.
+- Commit messages are clear.
+- Another team member reviews and approves the change.
 
-- Never push directly to main
-- Always use a branch + PR
-- Keep PRs small and focused
-- Document experimental branches
-- Tag important analysis states
-- Use Issues to track tasks and bugs
+#### Collaboration Guidelines
+
+For teams adopting this workflow:
+
+- Use a branch and reviewed PR for contributions to `main`.
+- Keep PRs small and focused.
+- Document experimental branches and any need for longer isolation.
+- Tag important analysis states.
+- Use issues to track tasks and bugs.
 
 
 ## Why Not Use a Feature-Based Workflow?
 
-A traditional feature-based workflow (e.g., long-lived feature branches, Git Flow) is common in enterprise software but poorly suited for scientific research. In this model, developers create large, isolated branches that may live for weeks or months before merging. Although this approach can work for highly structured product development, it introduces several problems in computational research environments.
+Feature branches are compatible with the workflow above. The useful comparison is how long changes remain isolated and how much work accumulates before review. Short, focused branches support frequent integration; branches that diverge for weeks may require more reconciliation and larger reviews.
+
+Git Flow is a distinct model with separate development and release-related branches, not a synonym for feature branches. Its additional structure may help projects maintaining versioned releases, but also adds branches and merge paths to manage. Use it when those release needs justify the maintenance burden. See the [original Git Flow description and its author's subsequent guidance](https://nvie.com/posts/a-successful-git-branching-model/).
 
 
 ## Why Not Use GitHub Flow?
 
-GitHub Flow is a lightweight branching model commonly used for web development and continuous deployment. It emphasizes simplicity and rapid integration. The core idea is that all work happens on short-lived branches that branch off from main. Once changes are tested and reviewed through a pull request, they are merged back into main and deployed immediately. Although GitHub Flow resembles trunk-based development, there are key differences in expectations and usage patterns.
+GitHub Flow is a reasonable choice for research projects. Its branch, review, and merge process closely matches the team workflow above, and it does not require immediate deployment after merging. See [GitHub's workflow documentation](https://docs.github.com/en/get-started/using-github/github-flow).
+
+Use it when pull requests help the team discuss and check changes. Keep branches short-lived if frequent integration is the goal, and use tags and archived run records for scientific milestones. A solo researcher can choose the simpler direct-to-`main` option described earlier.
+
+## Further Reading and Tools
+
+- [Git command reference](https://git-scm.com/docs).
+- [Pro Git book](https://git-scm.com/book/en/v2).
+- [pre-commit](https://pre-commit.com/).

@@ -10,7 +10,9 @@ Code, and GitHub Copilot. Some examples use GitHub Copilot, but the underlying
 practices apply to other agents too. Product details change quickly, so check the
 official documentation when an interface or feature matters.
 
-This chapter follows one bounded task from delegation through validation. The
+This chapter follows the sample project used in chapter 15: an image-classifier
+project whose dataset constructor needs to reject duplicate sample IDs. The
+examples take this bounded task from delegation through validation. The
 next chapter, [Agentic Research Workflow](15_Agentic_Workflow.md), explains the
 complementary repository architecture for carrying knowledge, rules, and work
 state across tools and sessions.
@@ -103,6 +105,49 @@ the task depends on domain judgment or has serious consequences.
 A useful request combines two kinds of context: repository guidance that applies
 again and again, and details about the task in front of you.
 
+### Sample Project
+
+Assume an existing Python project with `src/project/dataset.py` and
+`tests/test_dataset.py`. Its `Dataset` constructor consumes manifest rows with
+`sample_id`, `path`, and `split` fields. The project uses uv with pytest and Ruff
+declared as development dependencies, and its tests can import the project code.
+These are illustrative assumptions; inspect your repository before using the
+prompts. Run commands from the project root in its configured environment.
+See [chapter 15's setup walkthrough](15_Agentic_Workflow.md#step-by-step-setup)
+for the layout, environment setup, and shared instruction files.
+
+The accompanying [shared documentation examples](../examples/ai_coding_examples/docs/)
+live outside the agent-specific folders. In the sample project, use `docs/rules/`
+for constraints, `docs/knowledge/` for explanations and procedures,
+`docs/plans/` for task plans, `docs/state/` for current work, and `docs/findings/`
+for supported conclusions. The included architecture and sample plan use this
+image-classifier project. The supplementary rules come from a mass-spectrometry
+project; adapt their content before using them here.
+
+**Duplicate sample IDs** means that two or more manifest rows have the same
+`sample_id`. For example, rows pairing `s001` with `images/a.png` and `s001` with
+`images/b.png` have a duplicate ID even though their image paths differ.
+
+This sample project requires one unique ID per manifest row. Repeated
+measurements can legitimately share a subject or sample identifier in other
+research projects; define which identifier must be unique before adding this
+validation.
+
+The task is to reject duplicate IDs before dataset construction. For this
+example, the project owner has chosen exact string comparison, with no case or
+Unicode normalization. These synthetic cases define the expected behavior:
+
+| Sample IDs in manifest order | Expected result |
+| --- | --- |
+| `s1`, `s2` | Accept; preserve row order and split assignments. |
+| `s1`, `s1` | Raise one `ValueError` identifying `s1`. |
+| `s2`, `s1`, `s2`, `s1`, `s1` | Raise one `ValueError` identifying both `s1` and `s2`, each once. |
+| `s1`, `S1` | Treat as distinct IDs under the agreed comparison rule. |
+
+Use synthetic rows and test fixtures for paths; no research images are needed.
+Missing-path checks are outside this task, and existing path-validation behavior
+must be preserved. The table specifies acceptance criteria, not observed results.
+
 ### Project Context
 
 An agent only sees what its tool makes available. It may miss uncommitted work,
@@ -130,13 +175,19 @@ For example:
 ```markdown
 # Repository instructions
 
-This project trains image classifiers from versioned manifests in `data/`.
-Use Python 3.12 and install development dependencies with `uv sync --dev`.
+This project trains image classifiers from sample manifests.
+Use the Python environment specified by the project and documented in README.md.
+Install development dependencies with `uv sync --dev`.
+
+Read the relevant shared rules in docs/rules/ before editing. When present,
+read docs/state/project-state.md and its linked plan for the current task.
+Use docs/knowledge/ for procedures and docs/findings/ for supported conclusions.
 
 Run these checks after changing Python code:
 
-1. `uv run ruff check .`
-2. `uv run pytest -q`
+1. `uv run pytest tests/test_dataset.py -q` for manifest changes.
+2. `uv run pytest tests -q` for the full suite.
+3. `uv run ruff check src tests`.
 
 Never commit datasets, credentials, model checkpoints, or generated results.
 Do not submit SLURM jobs unless the user explicitly requests it.
@@ -150,6 +201,10 @@ Other agents may use `AGENTS.md`, `CLAUDE.md`, or scoped instruction files.
 Keep these files short and consistent. They should identify the environment,
 routine checks, important boundaries, and where detailed project knowledge
 lives. Chapter 15 explains how to organize them without duplication.
+
+Keep shared rules in `docs/rules/` and have each agent's entry point direct it to
+the relevant files. The [shared rules examples](../examples/ai_coding_examples/docs/rules/)
+illustrate this content; tool-specific instruction files provide the entry points.
 
 ### Task Requests
 
@@ -166,17 +221,20 @@ usually includes:
 For example:
 
 ```text
-Add validation for sample manifests loaded by src/project/dataset.py.
+Reject duplicate sample IDs in manifests loaded by src/project/dataset.py.
 
 Requirements:
-- Reject duplicate sample IDs and missing input paths.
-- Report all invalid rows in one error rather than stopping at the first row.
-- Preserve the current public Dataset constructor.
+- Compare IDs as exact strings without case or Unicode normalization.
+- Raise one ValueError listing every duplicated ID once.
+- Preserve the public Dataset constructor, manifest schema, and path checks.
+- Preserve row order and existing split assignments for valid manifests.
 - Do not read image contents during manifest validation.
+- Do not modify research datasets or start training.
 
 Validation:
 - Add focused tests to tests/test_dataset.py.
 - Run: uv run pytest tests/test_dataset.py -q
+- Run: uv run pytest tests -q
 - Run: uv run ruff check src/project/dataset.py tests/test_dataset.py
 ```
 
@@ -205,13 +263,18 @@ relevant files. Check its explanation against the code. Semantic search can
 miss dynamically imported modules, generated files, notebooks, external jobs,
 or configuration supplied outside the repository.
 
-Useful questions include:
+Start the sample task with this prompt:
 
 ```text
-Trace how a raw sample ID becomes a model input. Cite every relevant file and
-configuration key, and identify any behavior that cannot be established from
-the repository.
+Read the repository instructions and inspect git status, src/project/dataset.py,
+and tests/test_dataset.py. Trace where manifest validation happens relative to
+dataset construction and image loading. Identify current duplicate-ID behavior
+and existing tests. Cite files and flag unknowns. Do not edit files yet.
 ```
+
+Check that the response identifies the actual constructor and validation path.
+If the code differs from the sample assumptions, revise the task before proceeding.
+For other investigations, use a similarly bounded prompt:
 
 ```text
 Find every entry point that writes evaluation metrics. Report the output format,
@@ -224,6 +287,21 @@ For a multi-file change, use Plan mode or request a written plan. The plan
 should identify affected files, data or schema migrations, compatibility risks,
 tests, and unresolved questions. Review the plan before implementation,
 especially when it changes an experimental protocol.
+
+For the duplicate-ID task, send:
+
+```text
+Plan the duplicate-ID change described above. Name the files to edit, where the
+check belongs, and the regression cases. Include unique IDs, one repeated ID,
+multiple distinct repeated IDs, and case-sensitive IDs. Explain how tests will
+check that validation does not read images or alter valid rows and splits.
+List the validation commands and any unresolved choices. Do not edit files yet.
+```
+
+Review whether the proposed tests check the agreed behavior and whether the plan
+preserves existing path checks. Resolve new identity or schema questions before
+accepting it. The plan should produce a small change to the dataset module and
+its tests; additional files need a task-related reason.
 
 Do not treat a generated plan as evidence that the proposed method is
 scientifically appropriate. Decisions about labels, data leakage, metrics,
@@ -238,6 +316,21 @@ change affected an experimental result.
 
 Ask the agent to follow existing interfaces unless the task explicitly includes
 a migration. Require it to report assumptions and deviations from the plan.
+
+After accepting the sample task's plan, send:
+
+```text
+Implement the accepted plan. First add a regression test and run it against the
+current implementation. Confirm that it fails because duplicate IDs are accepted,
+not because of an import or fixture error. Then add the validation and run the
+focused tests, full test suite, and Ruff check from the task request.
+Preserve unrelated changes and leave the result uncommitted. Report actual
+command results, deviations from the plan, and anything not verified.
+```
+
+If inspection shows duplicates are already rejected, reassess the reported
+problem instead of manufacturing a failing test. If a check cannot run, have the
+agent report the blocker rather than treating the change as verified.
 
 ### Record Reproducibility
 
@@ -303,13 +396,27 @@ Start with the smallest relevant check, then run the broader repository suite.
 For example:
 
 ```bash
-pytest tests/test_dataset.py -q
-pytest tests -q
-ruff check .
+uv run pytest tests/test_dataset.py -q
+uv run pytest tests -q
+uv run ruff check src/project/dataset.py tests/test_dataset.py
 ```
 
 These commands are illustrative. Use the commands documented by the target
 repository and do not claim a check passed unless its output was observed.
+
+For the sample task, request a final review:
+
+```text
+Review the duplicate-ID diff against the accepted plan and sample cases.
+Check exact string comparison, one error containing all duplicated IDs once,
+unchanged path checks, preserved row order and splits, and no image reads during
+validation. Report findings with file references. Summarize the regression
+failure before the fix, checks after the fix, and any checks not run. Do not edit.
+```
+
+Compare the report with the diff and captured command output. Accept the change
+only when the required behavior and checks are accounted for; keep any remaining
+failure or uncertainty explicit. There is no predetermined passing test count.
 
 ### Scientific Validation
 
@@ -421,6 +528,11 @@ the request, inspecting the proposed work, and validating the result. Chapter
 15, [Agentic Research Workflow](15_Agentic_Workflow.md), covers the system around
 those tasks: durable project knowledge, instruction files, permissions, task and
 experiment state, reusable skills, and handoffs between sessions or tools.
+
+Continue with the same duplicate-ID task in
+[chapter 15's setup walkthrough](15_Agentic_Workflow.md#step-by-step-setup).
+It shows where to save the agreed constraints, plan, observed checks, and next
+action so a fresh session can recover the work described here.
 
 Come back to this chapter when you are working through a specific programming
 task. Use chapter 15 when you are deciding what the repository must preserve so
