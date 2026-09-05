@@ -9,6 +9,7 @@
 - [Git Workflows for Research Projects](#git-workflows-for-research-projects)
     - [What is a Git Branch?](#what-is-a-git-branch)
     - [Aligning Branches with Research Ideas](#aligning-branches-with-research-ideas)
+    - [Choosing Your Next Step](#choosing-your-next-step)
     - [Workflow for One Researcher](#workflow-for-one-researcher)
         - [Commit Small, Meaningful Changes](#commit-small-meaningful-changes)
         - [Use Tags for “Published” States](#use-tags-for-published-states)
@@ -66,24 +67,34 @@ In research, a branch can isolate code changes needed to test a hypothesis or ex
 
 This isolation lets you develop an idea without changing the shared baseline. Merge useful code after checking it. If an idea fails, retain any code and run records needed to explain the result before discarding the branch. Personally, I recommend using a branch when a change could break the existing codebase or when multiple people work on the project.
 
-### Workflow for One Researcher
+### Choosing Your Next Step
 
-Use a simple workflow centered on `main`. For small, checked changes, committing directly to `main` can be practical when you are the only developer. For larger or disruptive changes, use a temporary branch and integrate small, working increments frequently. A pull request (PR), which proposes changes for review and merging, is optional for solo work but can provide a useful review record.
-
-The diagram shows the branch-based option:
+Use this decision flow for the solo and team workflows described below. A pull request (PR) proposes changes for review and merging. Tagging is a later milestone decision: both development paths record changes in commits.
 
 ```mermaid
-flowchart LR
-    A[main<br>Stable baseline] --> B[Create branch for an idea]
-    B --> C[Work & Commit]
-    C --> D[Review changes, optionally through a PR]
-    D --> E[Review & Merge]
-    E --> A
-    E --> F[Tag milestones]
-    
-    style A fill:#e1f5fe,stroke:#333,stroke-width:2px
-    style F fill:#fff3e0
+flowchart TD
+    A{"Working with a team?"} -->|Yes| B["Create a short-lived change branch"]
+    A -->|No| C{"Is the change small and low risk?"}
+    C -->|Yes| D["Check the change and commit to main"]
+    C -->|No| E["Create a temporary change branch"]
+    B --> F["Commit focused changes and open a PR"]
+    F --> G["Review, pass checks, and merge to main"]
+    E --> H["Commit and check working increments; optionally use a PR"]
+    H --> I["Merge checked increments to main"]
+    D --> J{"Scientific milestone to preserve?"}
+    G --> J
+    I --> J
+    J -->|Yes| K["Verify the intended commit and preserve run records"]
+    K --> L["Create and publish an annotated milestone tag"]
+    J -->|No| M["Continue development"]
+    L --> M
 ```
+
+For runs that only vary configuration values, a separate branch may be unnecessary. Keep the configuration and code revision with each run's records. See [Use Tags for “Published” States](#use-tags-for-published-states) for what to preserve alongside a milestone tag.
+
+### Workflow for One Researcher
+
+Use a simple workflow centered on `main`. For small, checked changes, committing directly to `main` can be practical when you are the only developer. For larger or disruptive changes, use a temporary branch and integrate small, working increments frequently. A PR is optional for solo work but can provide a useful review record.
 
 #### Commit Small, Meaningful Changes
 
@@ -108,7 +119,30 @@ Avoid vague messages like “fix stuff” or “update file”.
 
 #### Use Tags for “Published” States
 
-Use Git tags to mark important scientific or development milestones. An annotated tag records a name and message for a particular commit; without an explicit commit argument, it targets the current `HEAD`. It does not capture uncommitted edits or external datasets. See the [Git tag documentation](https://git-scm.com/docs/git-tag).
+A **tag** is a named reference to a particular point in Git history, usually a commit. Think of it as a bookmark for a version you want to find again: `v0.1-preprint` can identify the code used for a preprint submission. Creating a tag names an existing commit; it does not create a new code snapshot or capture uncommitted edits or external datasets.
+
+A branch moves forward as you commit new work on it, while a tag stays at the commit it names unless explicitly changed. For example, `main` can advance through several revisions while `v0.1-preprint` still identifies the submitted version. Treat published milestone tags as stable references: give a later milestone a new tag name instead of moving the old one.
+
+The figure shows an example history from left to right. Each circle represents a commit; the letters are illustrative labels, not actual Git commit hashes.
+
+```mermaid
+gitGraph LR:
+    commit id: "A"
+    commit id: "B" tag: "v0.1-preprint"
+    branch experiment
+    commit id: "C"
+    commit id: "D"
+    checkout main
+    commit id: "E"
+    merge experiment id: "F" tag: "v1.0-paper"
+    commit id: "G"
+```
+
+The `experiment` branch starts at B and adds C and D while `main` adds E. Merge commit F joins both histories and is tagged `v1.0-paper`. After the next commit, `main` points to G, while the preprint tag still identifies B and the paper tag still identifies F. The experiment branch, if retained after merging, still points to D. The branch labels identify development lanes in this figure; tags label specific commits.
+
+Git supports **lightweight tags**, which are simply named references, and **annotated tags**, which also record the tagger's identity, date, and a message. Use annotated tags for scientific milestones when that context is useful; the examples below create them with `-a` and supply their messages with `-m`. See [Tagging in Pro Git](https://git-scm.com/book/en/v2/Git-Basics-Tagging).
+
+When creating a named tag without an explicit commit argument, Git targets `HEAD`, the currently checked-out commit. See the [Git tag documentation](https://git-scm.com/docs/git-tag).
 
 These examples work in Bash or PowerShell from an existing repository. They assume a configured Git identity, a writable remote named `origin`, and unused example tag names. First commit and verify the intended milestone state, then create and publish its tag. At preprint submission:
 
