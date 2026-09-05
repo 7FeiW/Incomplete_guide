@@ -1,16 +1,16 @@
 # Agentic Research Workflow: Knowledge, Rules, and Plans
 
-This chapter follows one sample project, which trains
-image classifiers from sample manifests. The task is to reject duplicate sample
-IDs before constructing a dataset, continuing the example in
+This chapter follows a sample project that trains image classifiers from sample
+manifests. The task is to reject duplicate sample IDs before constructing a
+dataset. This continues the example in
 [chapter 14](14_Programming_with_LLM_Agents.md#task-requests).
 The setup, plans, prompts, and reusable workflow below all use this task.
 
 The workflow applies across LLM agents. The supplementary
 [shared documentation examples](../examples/ai_coding_examples/docs/) contain
 the image-classifier architecture and sample plan, plus rules from a Python
-mass-spectrometry project that need adaptation before use here. Agent-specific examples
-remain in [claude/](../examples/ai_coding_examples/claude/) and
+mass-spectrometry project that need adaptation before use here. Agent-specific
+examples remain in [claude/](../examples/ai_coding_examples/claude/) and
 [copilot/](../examples/ai_coding_examples/copilot/).
 
 LLM-agent products change frequently. Verify tool-specific feature details in the
@@ -18,7 +18,7 @@ official documentation for the agent being configured.
 
 ## Table of Contents
 
-1. [The Idea](#three-layer-model)
+1. [The Idea](#the-idea)
 2. [Project Record](#project-record)
 3. [Agent Guidance](#agent-guidance)
 4. [Local Context](#local-context)
@@ -30,17 +30,27 @@ official documentation for the agent being configured.
 
 ## The Idea
 
-The core idea of this workflow is to let **large language model (LLM) agents** continue work across
-sessions while keeping a human in control. Version-controlled documentation holds shared project memory - such as knowledge, project rules, and plans. **Humans remain responsible for scientific decisions,
-consequential actions, and final results.** All project record should be tracked and verfied by human. 
+The core idea of this workflow is to let **large language model (LLM) agents**
+continue work across sessions while keeping a human in control.
+Version-controlled documentation holds shared project memory, such as knowledge,
+project rules, and plans. **Humans remain responsible for scientific decisions,
+consequential actions, and final results.** Humans should track and verify all
+project records.
 
-Both an LLM agent and human needs infomation to perform well in each task, these information include:
+Both an LLM agent and a human need information to perform each task well. This
+information falls into three categories:
 
-1. **Project Record** - Shared knowledge, plans, working notes.  The project record is the source of truth. LLM-agent guidance should point to that
-  record rather than duplicate it.
-2. **Agent Guidance** - How an agent finds information and works, and to some extend how task should be done in this project. These instructions are important, it tell agent for how work must be performed and which actions are prohibited. Some rules and engineering choices exist specifically to reduce
+1. **Project record:** Shared knowledge, plans, and working notes. The project
+   record is the source of truth. LLM-agent guidance should point to that record
+   rather than duplicate it.
+2. **Agent guidance:** Information about how an agent finds information and
+   works and, to some extent, how tasks should be performed in the project.
+   These instructions explain how work must be performed and which actions are
+   prohibited. Some rules and engineering choices exist specifically to reduce
    the impact of LLM errors and fabricated claims.
-3. **Local Context** - Temporary task context, such as Chat history, local memory, Local context can help an agent continue, but it is not a durable or shared record.
+3. **Local context:** Temporary task context, such as chat history and local
+   memory. Local context can help an agent continue, but it is not a durable or
+   shared record.
 
 ```mermaid
 %%{init: {"themeVariables": {"fontSize": "20px"}, "flowchart": {"nodeSpacing": 35, "rankSpacing": 55}}}%%
@@ -75,8 +85,7 @@ flowchart TB
 **Figure 1.** The agent receives the task, project record, guidance, and local
 context as inputs. After doing and validating the work, it reports the result
 and records observed progress in the plan. Conclusions remain provisional until
-a human
-reviews and approves or revises them.
+a human reviews and approves or revises them.
 
 A simple test is whether another LLM agent can continue by reading the repository.
 If not, write the missing knowledge or plan updates to `docs/` or another
