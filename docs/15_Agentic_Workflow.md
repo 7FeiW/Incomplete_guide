@@ -51,6 +51,21 @@ Both an LLM agent and a human need information to perform each task well. This i
    memory. Local context can help an agent continue, but it is not a durable or
    shared record.
 
+```mermaid
+flowchart LR
+    H[Human goal and review] --> A[LLM agent]
+    R[(Project record<br/>version-controlled)] --> A
+    G[Agent guidance] --> A
+    C[Local context<br/>temporary] --> A
+    A --> W[Work and validation]
+    W --> H
+    W --> R
+```
+
+**Figure 1.** The agent uses all three context layers, but verified progress and
+evidence return to the shared project record. Human review remains part of the
+workflow.
+
 ### Project Record
 
 The `docs/` directory is the tool-neutral project record. Its files separate
@@ -112,6 +127,23 @@ summarize the raw outputs as a researcher would. Humans and agents can then work
 from the same compact summaries, metrics, and figures. Provide only the minimal
 diagnostic excerpts needed for a specific task while the complete raw results
 remain in their documented storage location.
+
+```mermaid
+flowchart LR
+    C[Version-controlled configuration] --> E[Experiment]
+    P[Code, environment, and input provenance] --> E
+    E --> R[(Raw results<br/>external storage)]
+    R --> S[Version-controlled analysis scripts]
+    S --> M[Summaries, metrics, and figures]
+    M --> A[Agent-assisted analysis]
+    M --> H[Human review]
+    A --> H
+    H --> F[Supported findings]
+```
+
+**Figure 2.** Raw results stay in their documented storage location.
+Version-controlled analysis scripts produce compact evidence that agents and
+humans can inspect consistently.
 
 ### Agent Guidance
 
