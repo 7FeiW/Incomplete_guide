@@ -37,66 +37,23 @@ project rules, and plans. **Humans remain responsible for scientific decisions,
 consequential actions, and final results.** Humans should track and verify all
 project records.
 
-Both an LLM agent and a human need information to perform each task well. This
-information falls into three categories:
+Both an LLM agent and a human need information to perform each task well. This information falls into three categories:
 
-1. **Project record:** Shared knowledge, plans, and working notes. The project
-   record is the source of truth. LLM-agent guidance should point to that record
-   rather than duplicate it.
+1. **Project record:** Version-controlled knowledge, plans, project rules, and
+   research working notes shared by humans and LLM agents. These records help
+   teams track tasks, results, decisions, and setup procedures, even when no LLM
+   agent is involved.
 2. **Agent guidance:** Information about how an agent finds information and
-   works and, to some extent, how tasks should be performed in the project.
-   These instructions explain how work must be performed and which actions are
-   prohibited. Some rules and engineering choices exist specifically to reduce
-   the impact of LLM errors and fabricated claims.
+   works. These instructions explain how work must be performed and which
+   actions are prohibited. Some rules and engineering choices exist specifically
+   to reduce the impact of LLM errors and fabricated claims.
 3. **Local context:** Temporary task context, such as chat history and local
    memory. Local context can help an agent continue, but it is not a durable or
    shared record.
 
-```mermaid
-%%{init: {"themeVariables": {"fontSize": "20px"}, "flowchart": {"nodeSpacing": 35, "rankSpacing": 55}}}%%
-flowchart TB
-    H[Human task and acceptance criteria] --> A
-    G[Agent guidance] --> A
-    C[Local context] --> A
-    R[(Project record)] -->|knowledge and plans| A
-
-    subgraph LLM[LLM agent]
-        direction LR
-        A[Orient and implement]
-        D[Validate and report]
-    end
-
-    A -->|creates or changes| W[Code, data, and experiments]
-    W -->|produces| V[Validation evidence]
-    V --> D
-    D -->|result and evidence| Q[Human review]
-    D -->|update plans and provisional conclusions| R
-    Q -->|approve or revise conclusions| R
-
-    classDef standard fill:#f8fafc,stroke:#64748b,color:#0f172a,stroke-width:1.5px,font-size:20px
-    classDef agent fill:#e2e8f0,stroke:#334155,color:#0f172a,stroke-width:2px,font-size:20px
-    classDef record fill:#dbeafe,stroke:#3b82f6,color:#172554,stroke-width:2px,font-size:20px
-    class H,G,C,W,V,Q standard
-    class A,D agent
-    class R record
-    style LLM fill:#f8fafc,stroke:#94a3b8,color:#0f172a,stroke-width:1px,font-size:20px
-```
-
-**Figure 1.** The agent receives the task, project record, guidance, and local
-context as inputs. After doing and validating the work, it reports the result
-and records observed progress in the plan. Conclusions remain provisional until
-a human reviews and approves or revises them.
-
-A simple test is whether another LLM agent can continue by reading the repository.
-If not, write the missing knowledge or plan updates to `docs/` or another
-documented project store.
-
-Tool-specific examples appear only where implementations differ.
-
-### Cross-Agent Layout
-
-Keep shared records outside tool-owned directories. A repository used with
-Claude Code and Codex might grow from the minimal setup into:
+For ease of access, keep shared records outside tool-owned directories. A
+repository used with Claude Code and Codex might grow from the minimal setup
+into the following structure:
 
 ```text
 sample-project/
@@ -116,19 +73,6 @@ sample-project/
 └── .agents/
     └── skills/
 ```
-
-When adapting the included example:
-
-1. Keep durable knowledge, findings, rules, and plans in shared `docs/` files.
-2. Keep `AGENTS.md` and `CLAUDE.md` as short entry points to those files.
-3. Put tool-specific rules, permissions, and skill wrappers in tool directories.
-4. Remove personal paths and replace example commands only with verified ones.
-5. Verify scientific constants and heuristics before treating them as rules.
-6. Give long-running work a plan with an explicit status and narrow permissions.
-
-The rest of this chapter builds these layers in that order. First, create the
-tool-neutral project record. Next, configure each agent to find and follow that
-record. Finally, treat session context as a convenience rather than evidence.
 
 ## Project Record
 
@@ -280,8 +224,8 @@ the run:
 
 Do not ask an LLM agent to infer missing provenance after the run. Capture it
 when the experiment starts. Link runs from the relevant plan, and write supported
-conclusions or negative results
-to `docs/findings/`. Keep raw logs, checkpoints, and large outputs in their
+conclusions or negative results to `docs/findings/`. Keep raw logs, checkpoints,
+and large outputs in their
 documented data locations rather than committing them to `docs/`. An agent hook
 may load current task context, while experiment wrappers should record execution
 metadata independently of any LLM agent.
@@ -301,14 +245,14 @@ controls enforced by the runtime or operating system.
 
 Each LLM-agent tool may have a preferred instruction file. Use that file as a
 thin entry point containing information the LLM agent needs in nearly every
-session. For Claude Code this is `CLAUDE.md` or `.claude/CLAUDE.md`; Codex uses
+session. For Claude Code, this is `CLAUDE.md` or `.claude/CLAUDE.md`; Codex uses
 `AGENTS.md`; GitHub Copilot can use `.github/copilot-instructions.md`. Other
 LLM-agent tools may use another format.
 
 | Tool           | Repository entry point                 | More specific guidance                              |
 | -------------- | -------------------------------------- | --------------------------------------------------- |
-| Claude Code    | `CLAUDE.md` or `.claude/CLAUDE.md` | Nested`CLAUDE.md` files and `.claude/rules/`    |
-| Codex          | `AGENTS.md`                          | Nested`AGENTS.md` or `AGENTS.override.md` files |
+| Claude Code    | `CLAUDE.md` or `.claude/CLAUDE.md` | Nested `CLAUDE.md` files and `.claude/rules/`    |
+| Codex          | `AGENTS.md`                          | Nested `AGENTS.md` or `AGENTS.override.md` files |
 | GitHub Copilot | `.github/copilot-instructions.md`    | `.github/instructions/*.instructions.md`          |
 
 Claude Code and Codex both combine instructions according to their own discovery
@@ -393,7 +337,7 @@ paths:
 - Run the validation commands in the repository-root instruction file.
 ```
 
-The shared example rules already separate:
+The shared examples already separate the rules for:
 
 - [testing](../examples/ai_coding_examples/docs/rules/testing.md);
 - [formatting](../examples/ai_coding_examples/docs/rules/formatting.md);
@@ -528,8 +472,8 @@ tool-specific continuation features.
 
 Use multiple agents only when tasks can proceed independently with clear
 ownership; one agent may handle several roles sequentially. For concurrent
-tasks, use separate Git worktrees. Call a review independent only when the
-reviewer did not perform the work being reviewed.
+tasks, use separate Git worktrees. Describe a review as independent only when
+the reviewer did not perform the work being reviewed.
 
 ## Session Workflow
 
@@ -594,12 +538,14 @@ Validate software behavior and scientific meaning separately:
 - data provenance, leakage, units, metrics, baselines, and interpretation.
 
 The LLM agent must report observed command results rather than claiming a
-command was run. Generated scientific explanations and chemical assignments remain
-hypotheses until supported by repository evidence or an authoritative source.
+command was run. Generated scientific explanations and chemical assignments
+remain hypotheses until supported by repository evidence or an authoritative
+source.
 
 ### 6. Update the Plan
 
-Before ending the session, update the plan and link any experiment records, including:
+Before ending the session, update the plan with the following information and
+links to any experiment records:
 
 - current status and what changed;
 - steps followed or revised and why;
@@ -737,14 +683,16 @@ Keep status and progress in the plan itself.
 
 ### 4. Connect the Agent to the Record
 
-For Codex, save the [tool-specific entry-point example](#tool-specific-entry-points) as
-`AGENTS.md` at the project root. For Claude Code, save it as root `CLAUDE.md`.
+For Codex, save the
+[tool-specific entry-point example](#tool-specific-entry-points) as `AGENTS.md`
+at the project root. For Claude Code, save it as `CLAUDE.md` at the project root.
 If you use both, keep both short and point them to the same shared files. Merge
 with existing instructions instead of overwriting them. See the
 [Codex instruction guide](https://learn.chatgpt.com/docs/agent-configuration/agents-md)
 and [Claude project-memory guide](https://code.claude.com/docs/en/memory).
 
-Open a fresh agent session with the sample project root as its working directory. Send:
+Open a fresh agent session with the sample project root as its working directory.
+Then send:
 
 ```text
 Read the repository instructions, docs/architecture.md,
@@ -783,8 +731,8 @@ Review the diff and actual test output. Have the agent update
 `docs/plans/duplicate-sample-ids.md` using the [handoff template](#7-hand-off).
 Keep the plan IN PROGRESS or BLOCKED if verification or review is incomplete.
 Once reviewed and complete, mark the plan COMPLETED. Commit the reviewed code,
-tests, and records together using
-your normal Git workflow so another checkout can receive them.
+tests, and records together using your normal Git workflow so another checkout
+can receive them.
 
 Start a fresh session and send:
 
@@ -829,8 +777,8 @@ A research skill should specify:
 - permissions, outputs, and plan updates; and
 - validation and stopping conditions.
 
-For the sample project, create `docs/knowledge/validate-manifest.md` after the first
-task has established a procedure worth repeating:
+For the sample project, create `docs/knowledge/validate-manifest.md` after the
+first task has established a procedure worth repeating:
 
 ```markdown
 # Validate a manifest change
@@ -875,8 +823,8 @@ Read docs/knowledge/validate-manifest.md from the repository root and follow it.
 Use the plan named in the request under docs/plans/ for task-specific inputs.
 If no task is specified, ask for the intended validation change before editing.
 Update the plan's status and evidence after the attempt, including failed
-validation. Promote a
-conclusion to docs/findings/ only after the relevant validation succeeds.
+validation. Promote a conclusion to docs/findings/ only after the relevant
+validation succeeds.
 ```
 
 Invoke it with `$validate-manifest` in Codex or `/validate-manifest` in Claude
@@ -907,10 +855,10 @@ Use the tool's own inspection features for the implementation details:
 
 | Concern                       | Claude Code                    | Codex                                                                                              |
 | ----------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------- |
-| Instructions and local memory | Inspect with`/memory`        | Check the applicable`AGENTS.md` chain; inspect local memories with `/memories` where supported |
-| Skills                        | Inspect with`/skills`        | Inspect with`/skills` or explicitly invoke `$<skill-name>`                                     |
-| Permissions                   | Inspect with`/permissions`   | Review sandbox and approval settings, plus any applicable`.rules` files                          |
-| Configuration                 | Use`/doctor` and `/status` | Review the active Codex client configuration and repository instructions                           |
+| Instructions and local memory | Inspect with `/memory`        | Check the applicable `AGENTS.md` chain; inspect local memories with `/memories` where supported |
+| Skills                        | Inspect with `/skills`        | Inspect with `/skills` or explicitly invoke `$<skill-name>`                                     |
+| Permissions                   | Inspect with `/permissions`   | Review sandbox and approval settings, plus any applicable `.rules` files                          |
+| Configuration                 | Use `/doctor` and `/status` | Review the active Codex client configuration and repository instructions                           |
 
 For the sample project, use the fresh-session check in setup step 6 as the first
 audit: can the agent locate the duplicate-ID plan, explain exact string matching,
