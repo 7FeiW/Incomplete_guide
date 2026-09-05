@@ -96,33 +96,28 @@ tree, and linked experiment records.
 
 ##### Experiment Records
 
-An experiment record should contain enough information to reproduce or explain
-the run:
+Use a version-controlled configuration file as the main description of a run.
+It should capture parameters, command-line options, random seeds, and other
+settings needed to repeat the experiment. The experiment record should link that
+configuration to the code and environment versions, input-data provenance, run
+status, and output location.
 
-- code revision and dirty-working-tree status;
-- environment or lock-file identity;
-- dataset version, manifest, and provenance;
-- complete configuration and command-line arguments;
-- random seeds and determinism settings;
-- hardware, accelerator, and scheduler allocation;
-- start time, completion status, and exit reason;
-- log, checkpoint, and result locations; and
-- metrics with their definitions and aggregation method.
+Keep raw results outside `docs/` and usually outside the Git repository. They may
+live in an artifact store, experiment-tracking system, or other remote service;
+record a stable path or identifier without storing credentials.
 
-Capture provenance when the experiment starts rather than asking an agent to
-infer it later. Link runs from the relevant plan, keep large outputs outside
-`docs/`, and record supported conclusions in `docs/findings/`.
+Do not pass complete raw datasets, logs, or result collections directly to an
+LLM. Build version-controlled tools or scripts that load, validate, and
+summarize the raw outputs as a researcher would. Humans and agents can then work
+from the same compact summaries, metrics, and figures. Provide only the minimal
+diagnostic excerpts needed for a specific task while the complete raw results
+remain in their documented storage location.
 
 ### Agent Guidance
 
-Agent guidance tells a particular tool where to find the project record and how
-to operate. Keep this layer concise and separate advisory instructions from
-controls enforced by the runtime or operating system.
-
-#### Tool-Specific Entry Points
-
-Each LLM-agent tool may have a preferred instruction file. Use that file as a
-thin entry point containing information the LLM agent needs in nearly every
+Agent guidance tells an LLM agent where to find the project record and how to
+operate. Each LLM-agent tool may have a preferred instruction file. Use that file
+as a thin entry point containing information the LLM agent needs in nearly every
 session. For Claude Code, this is `CLAUDE.md` or `.claude/CLAUDE.md`; Codex uses
 `AGENTS.md`; GitHub Copilot can use `.github/copilot-instructions.md`. Other
 LLM-agent tools may use another format.
@@ -137,19 +132,22 @@ Claude Code and Codex both combine instructions according to their own discovery
 rules. Do not assume that nesting, precedence, or import syntax is identical.
 Verify the behavior in the tool's current documentation.
 
-The entry point should contain:
+The entry point should directly state:
 
-- the project's purpose and main scientific task;
-- the canonical documentation paths;
+- the project's purpose and main scientific task; and
+- a small set of universal workflow rules for agents.
+
+For the following information, the entry point may either provide a concise
+summary or point to the canonical file or directory:
+
+- project documentation;
 - the supported environment and routine validation commands;
-- important architectural boundaries;
-- the location and policy for data, configurations, and results; and
-- a small set of universal workflow rules.
+- important architectural boundaries; and
+- locations and policies for data, configurations, and results.
 
-Prefer links or imports to shared documentation over copied content. A
-tool-specific entry should say where authoritative knowledge lives and when the
-LLM agent must read it. If a fact would also help another LLM agent or a human
-collaborator, put the fact in `docs/` first.
+Keep detailed or frequently changing information in the shared project record.
+The entry point should tell the agent where the authoritative information lives
+and when to read it, rather than duplicate it.
 
 #### Scoped Instructions
 
@@ -304,7 +302,7 @@ Plan and repository:
 - docs/plans/duplicate-sample-ids.md: <status, evidence, and next action>.
 ```
 
-## Step-by-Step Setup
+## Step-by-Step Setup Walkthrough
 
 This walkthrough puts the preceding model and session lifecycle into practice.
 The goal is to let a fresh agent continue the duplicate-ID task from repository
