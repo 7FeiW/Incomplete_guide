@@ -52,19 +52,24 @@ Both an LLM agent and a human need information to perform each task well. This i
    shared record.
 
 ```mermaid
-flowchart LR
-    H[Human goal and review] --> A[LLM agent]
-    R[(Project record<br/>version-controlled)] --> A
-    G[Agent guidance] --> A
-    C[Local context<br/>temporary] --> A
-    A --> W[Work and validation]
-    W --> H
-    W --> R
+flowchart TB
+    subgraph Context[Context available to the agent]
+        R["Project record<br/>Shared, version-controlled files"]
+        G["Agent guidance<br/>Instructions and pointers"]
+        C["Local context<br/>Temporary session information"]
+    end
+
+    R --> A["Agent work and validation"]
+    G --> A
+    C --> A
+    H["Human-defined task"] --> A
+    A --> V["Human review of changes and evidence"]
+    V --> U["Update the project record<br/>Progress, evidence, and next action"]
 ```
 
-**Figure 1.** The agent uses all three context layers, but verified progress and
-evidence return to the shared project record. Human review remains part of the
-workflow.
+**Figure 1.** Read from top to bottom: the agent uses three sources of context to
+perform a human-defined task. Review and record updates prepare the next session.
+The final update goes into the same project record shown at the top.
 
 ### Project Record
 
@@ -129,21 +134,24 @@ diagnostic excerpts needed for a specific task while the complete raw results
 remain in their documented storage location.
 
 ```mermaid
-flowchart LR
-    C[Version-controlled configuration] --> E[Experiment]
-    P[Code, environment, and input provenance] --> E
-    E --> R[(Raw results<br/>external storage)]
-    R --> S[Version-controlled analysis scripts]
-    S --> M[Summaries, metrics, and figures]
-    M --> A[Agent-assisted analysis]
-    M --> H[Human review]
-    A --> H
-    H --> F[Supported findings]
+flowchart TB
+    subgraph Inputs[Recorded experiment inputs]
+        C["Version-controlled configuration"]
+        P["Code and environment versions<br/>Input-data provenance"]
+    end
+
+    C --> E["Run the experiment"]
+    P --> E
+    E --> R["Raw results<br/>Local or remote storage outside docs/"]
+    R --> S["Analyze with version-controlled scripts"]
+    S --> M["Compact summaries, metrics, and figures"]
+    M --> H["Human analysis and review<br/>With agent assistance as needed"]
+    H --> F["Record supported findings<br/>Link to results and analysis"]
 ```
 
-**Figure 2.** Raw results stay in their documented storage location.
-Version-controlled analysis scripts produce compact evidence that agents and
-humans can inspect consistently.
+**Figure 2.** Read from top to bottom: recorded inputs define the run, and scripts
+turn stored outputs into compact evidence for analysis and review. Raw results
+remain in their storage location; supported findings enter the project record.
 
 ### Agent Guidance
 
