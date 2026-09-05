@@ -164,6 +164,28 @@ runtime, operating system, sandbox, or continuous integration (CI) when an
 action must be blocked. Use hooks or CI for deterministic checks, and keep
 permissions narrow.
 
+##### Hooks
+
+A hook is a command or script configured to run at a specific event in an
+agent's workflow, such as after a file edit or before a task ends. An instruction
+asks the model to perform an action; a hook runs the configured action whenever
+the supported event occurs. Hook events, inputs, and failure behavior depend on
+the agent client, so verify them in its current documentation.
+
+Hooks can:
+
+- format or lint changed files after an edit;
+- validate a configuration or data schema before an experiment starts;
+- record a Git revision, configuration identifier, and output location for a
+  run; or
+- check that required tests and plan updates exist before a handoff.
+
+Keep hooks fast, narrowly scoped, and safe to run more than once. Treat file
+paths and other event data as untrusted input, and make failures return a clear
+message. Use an explicit repository command or CI for expensive test suites and
+external actions. A hook is automation, not a security boundary or a substitute
+for human review.
+
 Maintain one canonical rule for each concern:
 
 | Concern                        | Preferred source          |
