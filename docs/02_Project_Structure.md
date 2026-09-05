@@ -120,12 +120,10 @@ my_project/
 ├── docs/                 # Project knowledge and research records
 │   ├── README.md         # Index of the project documentation
 │   ├── architecture.md  # Components, interfaces, and data flow
-│   ├── plans/           # Task and experiment plans, progress, and next checks
+│   ├── plans/           # Task and experiment plans, status, progress, and next checks
 │   ├── findings/        # Supported observations, negative results, and conclusions
 │   ├── knowledge/       # Methods, terminology, and reusable procedures
-│   ├── rules/           # Agreed scientific and engineering constraints
-│   └── state/
-│       └── project-state.md # Current priorities, blockers, and links to active plans
+│   └── rules/           # Agreed scientific and engineering constraints
 ├── scripts/
 ├── preprocess_scripts/
 │   ├── 01_extract_data.py
@@ -151,7 +149,7 @@ Research work needs a record of what was planned, what was tried, and what the e
 
 For example, `docs/plans/compare-preprocessing.md` could describe a preprocessing comparison: its question, proposed experiments, completion criteria, progress, and next checks. Record decisions and their reasons in the relevant plan. After evaluating the runs, save supported observations and limitations in `docs/findings/preprocessing-comparison.md`, linking to the plan, code revision, configurations, and run outputs. Label untested ideas as hypotheses, and retain negative results when they inform future work.
 
-Keep these Markdown records in Git and update their status and date when the work changes. Use `docs/state/project-state.md` as a short index of active work, and link established methods or architectural decisions from `docs/knowledge/` or `docs/architecture.md`. Keep each explanation in one place and link to it. Store raw logs, datasets, and checkpoints in the data and output locations described below, with references from the findings.
+Keep these Markdown records in Git and update their status and date when the work changes. Keep each plan's status, progress, blockers, and next action in that plan; retain completed or abandoned plans with their outcomes and reasons for stopping. Link established methods or architectural decisions from `docs/knowledge/` or `docs/architecture.md`. Keep each explanation in one place and link to it. Store raw logs, datasets, and checkpoints in the data and output locations described below, with references from the findings.
 
 See [Project Record](15_Agentic_Workflow.md#project-record) for the detailed convention and plan template. This organization also works for projects developed without coding agents.
 

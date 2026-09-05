@@ -1,4 +1,4 @@
-# Agentic Research Workflow: Knowledge, Rules, and State
+# Agentic Research Workflow: Knowledge, Rules, and Plans
 
 This workflow lets **large language model (LLM) agents** continue work across
 sessions while keeping a human in control. Version-controlled documentation
@@ -11,15 +11,16 @@ An agent needs three kinds of information:
 2. **Rules:** instructions for how work must be performed and which actions are
    prohibited. Some rules and engineering choices exist specifically to reduce
    the impact of LLM errors and fabricated claims.
-3. **State:** what has already happened, what is currently in progress, and what
-   remains to be verified.
+3. **Plans:** task objectives, intended steps, current status, completed work,
+   and what remains to be verified.
 
 These concerns need different storage. Tool-specific instruction files become
 unwieldy when they contain everything, while chat history is not a durable
 project record.
 
-Keep durable knowledge and state **tool-neutral**. Store architecture, decisions,
-findings, plans, and task state in ordinary project files. Tool-specific files
+Keep durable knowledge and plans **tool-neutral**. Store architecture, decisions,
+findings, and plans with their status and evidence in ordinary project files.
+Tool-specific files
 should point to that shared record, not replace it.
 
 This reduces repeated prompting and gives agents stable facts. Keep the record
@@ -29,7 +30,7 @@ This chapter follows one sample project, which trains
 image classifiers from sample manifests. The task is to reject duplicate sample
 IDs before constructing a dataset, continuing the example in
 [chapter 14](14_Programming_with_LLM_Agents.md#task-requests).
-The setup, state records, prompts, and reusable workflow below all use this task.
+The setup, plans, prompts, and reusable workflow below all use this task.
 
 The workflow applies across LLM agents. The supplementary
 [shared documentation examples](../examples/ai_coding_examples/docs/) contain
@@ -63,7 +64,7 @@ to the sample project, not to this documentation repository.
 The guide stores shared example documents under
 `examples/ai_coding_examples/docs/`; in your project, the equivalent location is
 `docs/`. The shared example folder has `findings/`, `knowledge/`, `plans/`,
-`rules/`, and `state/` directories. It includes architecture and rules examples
+and `rules/` directories. It includes architecture and rules examples
 plus a [sample duplicate-ID plan](../examples/ai_coding_examples/docs/plans/duplicate-sample-ids.md)
 for this chapter's image-classifier task. Use the templates below to populate
 the other directories as work proceeds.
@@ -103,7 +104,7 @@ failure and resolve it before attributing failures to the duplicate-ID change.
 
 ### 2. Write the Shared Knowledge and Rules
 
-Create `docs/`, `docs/rules/`, `docs/plans/`, `docs/state/`, and `docs/knowledge/`
+Create `docs/`, `docs/rules/`, `docs/plans/`, and `docs/knowledge/`
 in your editor.
 Create `docs/architecture.md` with the following starting content, checking each
 statement against the code first:
@@ -137,35 +138,21 @@ rule for sample identity. Settle the equivalent decision with the project owner
 before implementation. Add links to these two files and the verified setup
 commands from step 1 to the project's `README.md`.
 
-### 3. Create the First Task Record
+### 3. Create the First Plan
 
 Here, **duplicate sample IDs** means that multiple manifest rows share the same
 `sample_id`; see the [sample project example](14_Programming_with_LLM_Agents.md#sample-project).
 `duplicate-sample-ids.md` names the document tracking this task's plan, progress,
 and validation results. It is not a dataset or a Python script.
 
-Save the [task-state template below](#task-state) as
+Save the [plan template below](#task-plans) as
 `docs/plans/duplicate-sample-ids.md`. Replace its date placeholder and record the
 revision, working-tree status, and test output from step 1. Leave unperformed
 work marked as pending.
 
-Create `docs/state/project-state.md` as the short entry point to that plan:
-
-```markdown
-# Project state
-
-## Active work
-
-- [Reject duplicate sample IDs](../plans/duplicate-sample-ids.md): baseline recorded;
-  regression test and implementation pending.
-
-## Next action
-
-Read the plan and data-validation rules, then propose the regression cases.
-```
-
-If the baseline failed, replace the status and next action with the actual blocker.
-The index points to the evidence in the plan; it does not duplicate test logs.
+If the baseline failed, record the blocker and next action in the plan. Add a
+link to the plan from the project's `README.md` so a fresh session can find it.
+Keep status and progress in the plan itself.
 
 ### 4. Connect the Agent to the Record
 
@@ -180,7 +167,7 @@ Open a fresh agent session with the sample project root as its working directory
 
 ```text
 Read the repository instructions, docs/architecture.md,
-docs/rules/data-validation.md, docs/state/project-state.md, and its linked plan.
+docs/rules/data-validation.md, and docs/plans/duplicate-sample-ids.md.
 Inspect src/project/dataset.py, tests/test_dataset.py, and git status.
 Summarize the duplicate-ID task, validation commands, and permitted changes.
 Cite the files you read and flag any mismatch. Do not edit files yet.
@@ -212,17 +199,17 @@ including failures and checks you could not run. Leave changes uncommitted.
 ### 6. Record and Test the Handoff
 
 Review the diff and actual test output. Have the agent update
-`docs/plans/duplicate-sample-ids.md` and the active-work index, using the
-[handoff template](#7-hand-off). Keep the task active if verification or review
-is incomplete. Once reviewed and complete, mark the plan complete and remove it
-from the active list. Commit the reviewed code, tests, and records together using
+`docs/plans/duplicate-sample-ids.md` using the [handoff template](#7-hand-off).
+Keep the plan IN PROGRESS or BLOCKED if verification or review is incomplete.
+Once reviewed and complete, mark the plan COMPLETED. Commit the reviewed code,
+tests, and records together using
 your normal Git workflow so another checkout can receive them.
 
 Start a fresh session and send:
 
 ```text
-Read the repository instructions and docs/state/project-state.md, then read
-docs/plans/duplicate-sample-ids.md. Compare the recorded state with Git and the
+Read the repository instructions and docs/plans/duplicate-sample-ids.md.
+Compare the recorded progress and evidence with Git and the
 current implementation. Report what was verified, what remains unresolved,
 and the next action, citing evidence. Do not edit files.
 ```
@@ -244,7 +231,7 @@ Organize agent context into three layers:
 
 | Layer                    | Purpose                                  | Examples                                           |
 | ------------------------ | ---------------------------------------- | -------------------------------------------------- |
-| **Project record** | Shared knowledge and durable state       | `docs/`, Git, experiment records                 |
+| **Project record** | Shared knowledge and plans       | `docs/`, Git, experiment records                 |
 | **Agent guidance** | How an agent finds information and works | `AGENTS.md`, `CLAUDE.md`, scoped rules, skills |
 | **Local context**  | Temporary task context                   | Chat history, local memory, working notes          |
 
@@ -253,7 +240,7 @@ record rather than duplicate it. Local context can help an agent continue, but
 it is not a durable or shared record.
 
 The human defines the goal. The agent reads the record, performs bounded work,
-and writes back verified state. The human reviews the result.
+and updates the plan with verified progress. The human reviews the result.
 
 ```mermaid
 %%{init: {"themeVariables": {"fontSize": "20px"}, "flowchart": {"nodeSpacing": 35, "rankSpacing": 55}}}%%
@@ -261,7 +248,7 @@ flowchart TB
     H[Human task and acceptance criteria] --> A
     G[Agent guidance] --> A
     C[Local context] --> A
-    R[(Project record)] -->|knowledge and current state| A
+    R[(Project record)] -->|knowledge and plans| A
 
     subgraph LLM[LLM agent]
         direction LR
@@ -273,7 +260,7 @@ flowchart TB
     W -->|produces| V[Validation evidence]
     V --> D
     D -->|result and evidence| Q[Human review]
-    D -->|record state and provisional conclusions| R
+    D -->|update plans and provisional conclusions| R
     Q -->|approve or revise conclusions| R
 
     classDef standard fill:#f8fafc,stroke:#64748b,color:#0f172a,stroke-width:1.5px,font-size:20px
@@ -287,11 +274,12 @@ flowchart TB
 
 **Figure 1.** The agent receives the task, project record, guidance, and local
 context as inputs. After doing and validating the work, it reports the result
-and records the observed state. Conclusions remain provisional until a human
+and records observed progress in the plan. Conclusions remain provisional until
+a human
 reviews and approves or revises them.
 
 A simple test is whether another LLM agent can continue by reading the repository.
-If not, the necessary knowledge or state should be written to `docs/` or another
+If not, write the missing knowledge or plan updates to `docs/` or another
 documented project store.
 
 Tool-specific examples appear only where implementations differ.
@@ -307,8 +295,6 @@ sample-project/
 ├── CLAUDE.md
 ├── docs/
 │   ├── architecture.md
-│   ├── state/
-│   │   └── project-state.md
 │   ├── knowledge/
 │   │   └── validate-manifest.md
 │   ├── findings/
@@ -324,12 +310,12 @@ sample-project/
 
 When adapting the included example:
 
-1. Keep durable knowledge, findings, rules, plans, and state in shared `docs/` files.
+1. Keep durable knowledge, findings, rules, and plans in shared `docs/` files.
 2. Keep `AGENTS.md` and `CLAUDE.md` as short entry points to those files.
 3. Put tool-specific rules, permissions, and skill wrappers in tool directories.
 4. Remove personal paths and replace example commands only with verified ones.
 5. Verify scientific constants and heuristics before treating them as rules.
-6. Give long-running work a task-state record and narrow permissions.
+6. Give long-running work a plan with an explicit status and narrow permissions.
 
 The rest of this chapter builds these layers in that order. First, create the
 tool-neutral project record. Next, configure each agent to find and follow that
@@ -338,19 +324,18 @@ record. Finally, treat session context as a convenience rather than evidence.
 ## Project Record
 
 The `docs/` directory is the tool-neutral project record. Its files separate
-stable project knowledge from changing plans, state, and findings:
+stable project knowledge from changing plans and findings:
 
 | Path                      | Contents                                                               |
 | ------------------------- | ---------------------------------------------------------------------- |
 | `docs/architecture.md`  | Components, entry points, interfaces, and data flow                    |
-| `docs/state/project-state.md` | Current priorities, active work, blockers, and links to detailed plans |
 | `docs/knowledge/`       | Project explanations and reusable procedures for development, experiments, and operations |
 | `docs/findings/`        | Verified observations, measurements, negative results, and conclusions |
-| `docs/plans/`           | Plans and state records for bounded tasks or investigations            |
+| `docs/plans/`           | Task objectives, steps, status, progress, blockers, and validation evidence            |
 | `docs/rules/`           | Shared scientific, data-handling, and engineering constraints          |
 
 These documents change at different rates. Architecture and shared rules may
-remain stable for months, while project state or an active plan may change
+remain stable for months, while an active plan may change
 several times in one day. Keep each fact in one canonical location and link to
 it from the other documents.
 
@@ -381,40 +366,47 @@ illustrates an architecture inventory. In a real project, verify it against the
 repository and update it when files move. A stale inventory is worse than a
 shorter document that identifies only stable boundaries and entry points.
 
-### Task and Experiment State
+### Plans and Experiment Records
 
-State records where the work stands. Research projects need more than chat
-history because code, data, experiments, and interpretations evolve at different
-rates.
+A plan is the durable record for a task or investigation, from proposal through
+completion or abandonment. Keep its objective, steps, status, progress, evidence,
+open questions, and next action together in `docs/plans/`. Update that document
+as work proceeds; no separate task-state file or project-state index is needed.
 
-#### Types of State
+#### Task Plans
 
-1. **Repository state** is the current Git revision, branch, working-tree diff,
-   and staged changes.
-2. **Task state** records the objective, the plan, completed work, open
-   questions, and next checks.
-3. **Experiment state** records configurations, input identity, environment,
-   execution status, logs, checkpoints, metrics, and failures.
-4. **Conversation state** is the agent session transcript and loaded context.
+Use a status banner and an updated date on each plan. For example:
 
-Repository, task, and experiment state are ground truth that every agent should
-read fresh rather than recall from private memory. Store durable records in
-tool-neutral formats and documented locations so another LLM agent can take over.
-Only committed, versioned parts are durable, while an uncommitted diff or a
-running experiment is current but still provisional.
+| Status | Meaning |
+| --- | --- |
+| PROPOSED | Work is defined but has not started. |
+| IN PROGRESS | Work is underway, including validation or review. |
+| BLOCKED | Work cannot proceed until a named dependency or question is resolved. |
+| COMPLETED | Acceptance criteria, required checks, and review are satisfied. |
+| ABANDONED | Work stopped without completion; record why and any useful results. |
+| SUPERSEDED | Another plan replaces this one; link to its successor. |
 
-#### Task State
+Change the status as circumstances change. A blocked plan can return to
+IN PROGRESS once its blocker is resolved. Preserve completed, abandoned, and
+superseded plans so later work can recover decisions and avoid repeating failed
+approaches. Record the reason when reopening a plan.
 
-Use `docs/state/project-state.md` as a concise index of current work rather than a
-complete history. For work that spans sessions, create a version-controlled
-record under `docs/plans/` and link it from `docs/state/project-state.md`. A useful
-plan format is the following initial record for the sample project. Replace angle-
-bracket placeholders with observed values; they are not example test results:
+Link plans from the project's `README.md` for navigation and specify the relevant
+plan in task requests. Read each plan's banner to identify current work; keep
+status, priorities, and blockers in the plans themselves.
+
+On resumption, compare the plan with the current Git revision, working-tree diff,
+and linked experiment records. The plan records observed evidence; it does not
+replace checking the code or a running job. Keep durable records in tool-neutral
+formats and documented locations so another agent can take over.
+
+Use the following initial plan for the sample project. Replace angle-bracket
+placeholders with observed values; they are not example test results:
 
 ```markdown
-# Dataset validation state
+# Plan: Reject duplicate sample IDs
 
-> **Status:** ACTIVE
+> **Status:** PROPOSED
 > **Updated:** <YYYY-MM-DD>
 
 ## Objective
@@ -430,16 +422,16 @@ manifest schema.
 - Baseline working tree: <git status --short output, or clean>.
 - Baseline focused tests: <command, exit code, and observed summary>.
 
-## Plan
+## Approach
 
 - Report all duplicate IDs in one error.
 - Do not read sample contents during manifest validation.
 
 ## Completed
 
-- Shared architecture, rules, and task index created.
+- Shared architecture and rules created; baseline recorded above.
 
-## Current state
+## Progress
 
 - Regression test and implementation pending; no fix has been verified.
 
@@ -458,11 +450,11 @@ manifest schema.
 
 Write facts as facts and unresolved ideas as questions or hypotheses. Update the
 plan at meaningful checkpoints, not after every small tool call. When work ends,
-record the final validation result, link any durable conclusion under
-`docs/findings/`, and remove the plan from the active list in
-`docs/state/project-state.md`. Keep the plan when its history remains useful.
+update its status, record the final validation result or reason for stopping,
+and link any durable conclusion under `docs/findings/`. Retain the plan and its
+evidence even when the work is abandoned or superseded.
 
-#### Experiment State
+#### Experiment Records
 
 An experiment record should contain enough information to reproduce or explain
 the run:
@@ -478,14 +470,14 @@ the run:
 - metrics with their definitions and aggregation method.
 
 Do not ask an LLM agent to infer missing provenance after the run. Capture it
-when the experiment starts. Link active runs from `docs/state/project-state.md` when
-they affect current work, and write supported conclusions or negative results
+when the experiment starts. Link runs from the relevant plan, and write supported
+conclusions or negative results
 to `docs/findings/`. Keep raw logs, checkpoints, and large outputs in their
 documented data locations rather than committing them to `docs/`. An agent hook
 may load current task context, while experiment wrappers should record execution
 metadata independently of any LLM agent.
 
-For the sample project, the duplicate-ID fix needs a task record and test evidence,
+For the sample project, the duplicate-ID fix needs a plan and test evidence,
 but no training run. If you later retrain using the validated manifest, record
 its identity and the code revision containing the fix with that run. Passing
 validation tests alone does not establish improved classifier performance.
@@ -539,7 +531,7 @@ This project trains image classifiers from sample manifests.
 ## Canonical knowledge
 
 - Architecture and entry points: [docs/architecture.md](docs/architecture.md)
-- Active work and plans: [docs/state/project-state.md](docs/state/project-state.md)
+- Plans and their statuses: [docs/plans/](docs/plans/)
 - Shared constraints: [manifest rules](docs/rules/data-validation.md)
 
 ## Environment and validation
@@ -551,7 +543,7 @@ This project trains image classifiers from sample manifests.
 
 ## Workflow
 
-- Read architecture, shared constraints, project state, and the active plan
+- Read architecture, shared constraints, and the relevant plan
   before editing. Read docs/knowledge/validate-manifest.md when it exists and
   the task concerns manifest validation.
 - State assumptions and distinguish evidence from hypotheses.
@@ -699,7 +691,8 @@ Local memory is appropriate for:
 - a local debugging observation that has not yet been confirmed; or
 - a personal preference about how results are displayed.
 
-Move team knowledge, decisions, workarounds, and task state into the repository.
+Move team knowledge, decisions, and workarounds into shared documentation, and
+record task progress in the relevant plan.
 Use `/memory` in Claude Code or `/memories` in supporting Codex clients to review
 local memory. Do not write shared workflows to a user's absolute memory path;
 that storage is non-portable and owned by the individual agent installation.
@@ -710,9 +703,9 @@ Transcripts help continue interrupted work but may be stale. Start resumed work
 by checking:
 
 ```text
-1. Read the current task-state document.
+1. Read the current task plan.
 2. Inspect git status and the relevant diff.
-3. Compare the repository with assumptions in the task state.
+3. Compare the repository with assumptions in the plan.
 4. Report any mismatch before making changes.
 ```
 
@@ -731,18 +724,18 @@ reviewer did not perform the work being reviewed.
 
 ## Session Workflow
 
-The following lifecycle keeps knowledge, rules, and state synchronized.
+The following lifecycle keeps knowledge, rules, and plans synchronized.
 
 ### 1. Orient
 
-The LLM agent should read the relevant instructions and durable state before
-planning:
+The LLM agent should read the relevant instructions and existing plan before
+proposing changes:
 
 ```text
-Read the repository's agent instructions, docs/state/project-state.md,
-docs/plans/duplicate-sample-ids.md, and docs/rules/data-validation.md.
+Read the repository's agent instructions, docs/plans/duplicate-sample-ids.md,
+and docs/rules/data-validation.md.
 Inspect git status and the existing implementation. Summarize the current state,
-identify conflicts with the state document, and do not edit files yet.
+identify conflicts with the plan, and do not edit files yet.
 ```
 
 The user verifies that the LLM agent found the correct environment, files, and
@@ -795,12 +788,12 @@ The LLM agent must report observed command results rather than claiming a
 command was run. Generated scientific explanations and chemical assignments remain
 hypotheses until supported by repository evidence or an authoritative source.
 
-### 6. Update State
+### 6. Update the Plan
 
-Before ending the session, update the relevant task or experiment record with:
+Before ending the session, update the plan and link any experiment records, including:
 
-- what changed;
-- the plan followed and why;
+- current status and what changed;
+- steps followed or revised and why;
 - validation that passed or failed;
 - unresolved questions;
 - working-tree or artifact locations; and
@@ -827,10 +820,9 @@ Verified:
 Not verified:
 - <remaining checks or unresolved questions, or none>.
 
-State:
+Plan and repository:
 - Git revision and working tree: <current revision and uncommitted changes>.
 - docs/plans/duplicate-sample-ids.md: <status, evidence, and next action>.
-- docs/state/project-state.md: <active entry updated, or removed after completion>.
 ```
 
 ## Reusable Workflows
@@ -852,7 +844,7 @@ A research skill should specify:
 - authoritative project files and data sources;
 - preconditions and steps;
 - evidence required for each classification or conclusion;
-- permissions, outputs, and state updates; and
+- permissions, outputs, and plan updates; and
 - validation and stopping conditions.
 
 For the sample project, create `docs/knowledge/validate-manifest.md` after the first
@@ -863,7 +855,7 @@ task has established a procedure worth repeating:
 
 ## Inputs
 
-- The requested behavior and active plan linked from ../state/project-state.md.
+- The requested behavior and relevant plan in ../plans/ (named in the request).
 - The current implementation in src/project/dataset.py (from repository root).
 - The shared constraints in ../rules/data-validation.md.
 
@@ -878,8 +870,9 @@ task has established a procedure worth repeating:
 
 ## Outputs and stopping conditions
 
-- Produce a reviewable code/test diff and an updated task record.
-- If a check fails or cannot run, record the blocker and leave the task active.
+- Produce a reviewable code/test diff and an updated plan.
+- If a check fails or cannot run, record the blocker and mark the plan BLOCKED
+  if work cannot proceed.
 - Do not modify research datasets or start training as part of this procedure.
 ```
 
@@ -897,9 +890,10 @@ description: Use when implementing or reviewing sample-manifest validation chang
 # Validate a sample-manifest change
 
 Read docs/knowledge/validate-manifest.md from the repository root and follow it.
-Use the active plan linked from docs/state/project-state.md for task-specific inputs.
+Use the plan named in the request under docs/plans/ for task-specific inputs.
 If no task is specified, ask for the intended validation change before editing.
-Update task state after the attempt, including failed validation. Promote a
+Update the plan's status and evidence after the attempt, including failed
+validation. Promote a
 conclusion to docs/findings/ only after the relevant validation succeeds.
 ```
 
@@ -921,7 +915,7 @@ Audit the same layers regardless of which LLM agent is used:
 | ------------ | ------------------------------------------------------------------------------------- |
 | Instructions | Which repository and user instruction files were loaded, in what order?               |
 | Knowledge    | Does every required fact resolve to a current, shared source?                         |
-| State        | Can a new human or agent identify the current goal, evidence, and next action?        |
+| Plans        | Can a new human or agent identify each task's status, goal, evidence, and next action?        |
 | Skills       | Which reusable workflows are discoverable, and are their inputs and outputs explicit? |
 | Permissions  | Which actions are allowed, prompted, sandboxed, or forbidden?                         |
 | Automation   | Which hooks, scripts, and CI checks can change or validate work?                      |
@@ -945,7 +939,7 @@ Audit the workflow periodically:
 
 - remove stale or duplicated knowledge;
 - promote useful local memory into version-controlled documentation;
-- close or update abandoned task-state records;
+- mark stopped plans ABANDONED or SUPERSEDED and record the reason;
 - verify that documented commands still run;
 - test permission rules and hooks in a safe environment;
 - review skills for excessive permissions and stale paths; and

@@ -33,16 +33,14 @@ sample-project/
     ├── rules/
     │   └── data-validation.md       # Agreed manifest-validation constraints
     ├── plans/
-    │   └── duplicate-sample-ids.md  # Task scope, progress, and validation evidence
-    ├── state/
-    │   └── project-state.md         # Active-work index and next action
+    │   └── duplicate-sample-ids.md  # Task scope, status, progress, and validation evidence
     ├── knowledge/                  # Reusable procedures as they are established
     └── findings/                   # Supported conclusions as work proceeds
 ```
 
 The guide supplies this architecture and the
 [sample duplicate-ID plan](plans/duplicate-sample-ids.md). Create the validation
-rules and project-state index using the chapter 15 templates. The other files in
+rules using the chapter 15 template. The other files in
 this example directory's `rules/` folder originate from a mass-spectrometry
 project and need adaptation before use here.
 
@@ -97,11 +95,11 @@ for focused tests, the full suite, and lint checks. Record the actual commands,
 exit codes, and results in the plan. No application tests have been run in this
 documentation repository.
 
-## Task state and reproducibility
+## Plans and reproducibility
 
 Keep changing progress and test evidence in the
-[duplicate-ID plan](plans/duplicate-sample-ids.md), with an active-work link in
-the target project's `docs/state/project-state.md`. Record the code revision,
+[duplicate-ID plan](plans/duplicate-sample-ids.md), together with its status and
+next action. Record the code revision,
 working-tree changes, and environment or lock-file identity before implementation.
 
 Use synthetic test inputs without modifying research datasets or starting

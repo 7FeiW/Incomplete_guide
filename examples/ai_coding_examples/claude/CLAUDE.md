@@ -48,13 +48,26 @@ Transform tasks into verifiable goals:
 - "Refactor X" → "Ensure tests pass before and after"
 
 For multi-step tasks, state a brief plan:
-```
+
+```text
 1. [Step] → verify: [check]
 2. [Step] → verify: [check]
 3. [Step] → verify: [check]
 ```
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+
+For work that spans sessions, keep one plan in `docs/plans/` relative to the
+target project root. Read the relevant plan before resuming work and compare
+its recorded evidence with the current code and Git diff.
+
+- Keep the objective, steps, progress, blockers, validation evidence, and next
+  action in that plan.
+- Update its status and date at meaningful checkpoints. Use `PROPOSED`,
+  `IN PROGRESS`, `BLOCKED`, `COMPLETED`, `ABANDONED`, or `SUPERSEDED`.
+- Mark it `COMPLETED` only when acceptance criteria, required checks, and review
+  are satisfied. Record why work was abandoned or link the superseding plan.
+- Retain finished and stopped plans. Do not maintain a separate state document.
 
 ---
 

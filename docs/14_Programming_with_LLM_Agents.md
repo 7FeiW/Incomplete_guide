@@ -14,8 +14,7 @@ This chapter follows the sample project used in chapter 15: an image-classifier
 project whose dataset constructor needs to reject duplicate sample IDs. The
 examples take this bounded task from delegation through validation. The
 next chapter, [Agentic Research Workflow](15_Agentic_Workflow.md), explains the
-complementary repository architecture for carrying knowledge, rules, and work
-state across tools and sessions.
+complementary repository architecture for carrying knowledge, rules, and plans across tools and sessions.
 
 Agents are easiest to trust on focused tasks with results you can check. Let
 them investigate and implement bounded changes; do not hand them responsibility
@@ -119,7 +118,7 @@ for the layout, environment setup, and shared instruction files.
 The accompanying [shared documentation examples](../examples/ai_coding_examples/docs/)
 live outside the agent-specific folders. In the sample project, use `docs/rules/`
 for constraints, `docs/knowledge/` for explanations and procedures,
-`docs/plans/` for task plans, `docs/state/` for current work, and `docs/findings/`
+`docs/plans/` for plans with their status and progress, and `docs/findings/`
 for supported conclusions. The included architecture and sample plan use this
 image-classifier project. The supplementary rules come from a mass-spectrometry
 project; adapt their content before using them here.
@@ -180,7 +179,7 @@ Use the Python environment specified by the project and documented in README.md.
 Install development dependencies with `uv sync --dev`.
 
 Read the relevant shared rules in docs/rules/ before editing. When present,
-read docs/state/project-state.md and its linked plan for the current task.
+read the current task's plan in docs/plans/, including its status and evidence.
 Use docs/knowledge/ for procedures and docs/findings/ for supported conclusions.
 
 Run these checks after changing Python code:
@@ -526,8 +525,8 @@ Before relying on a server:
 This chapter covers one task at a time: choosing a level of delegation, framing
 the request, inspecting the proposed work, and validating the result. Chapter
 15, [Agentic Research Workflow](15_Agentic_Workflow.md), covers the system around
-those tasks: durable project knowledge, instruction files, permissions, task and
-experiment state, reusable skills, and handoffs between sessions or tools.
+those tasks: durable project knowledge, instruction files, permissions, plans and
+experiment records, reusable skills, and handoffs between sessions or tools.
 
 Continue with the same duplicate-ID task in
 [chapter 15's setup walkthrough](15_Agentic_Workflow.md#step-by-step-setup).

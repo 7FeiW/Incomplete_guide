@@ -6,8 +6,8 @@
 
 This plan follows the image-classifier example in
 [chapter 14](../../../../docs/14_Programming_with_LLM_Agents.md#sample-project)
-and the task-record workflow in
-[chapter 15](../../../../docs/15_Agentic_Workflow.md#task-state).
+and the plan workflow in
+[chapter 15](../../../../docs/15_Agentic_Workflow.md#task-plans).
 The Python paths below belong to that illustrative project; its source code and
 environment are not included in this documentation repository. The neighboring
 [architecture example](../architecture.md) describes the same sample project;
@@ -37,8 +37,7 @@ All paths in this table are relative to the target Python project's root.
 | `src/project/dataset.py` | Inspect the validation path, then add the duplicate-ID check. |
 | `tests/test_dataset.py` | Add regression cases and checks for preserved behavior. |
 | `docs/rules/data-validation.md` | Read the agreed constraints created in chapter 15's setup. |
-| `docs/plans/duplicate-sample-ids.md` | Save this plan and update its evidence and next action. |
-| `docs/state/project-state.md` | Link this task and keep its status current. |
+| `docs/plans/duplicate-sample-ids.md` | Save this plan and update its status, evidence, and next action. |
 
 Before editing, read the target repository's instructions, architecture, and
 environment setup. Verify the listed paths and constructor behavior against the
@@ -77,8 +76,8 @@ on the error's ID list unless the target project's contract requires one.
    in the configured target project environment, from its root. Those commands
    assume uv, pytest, and Ruff are already configured as described in the guide.
 5. Review the diff against the acceptance criteria. Record actual commands,
-   exit codes, result summaries, and remaining limitations below. Update the
-   active-work index with the next action.
+   exit codes, result summaries, and remaining limitations below. Update this
+   plan's status and next action.
 
 ## Risks and open questions
 
@@ -91,7 +90,7 @@ on the error's ID list unless the target project's contract requires one.
 - Rejecting previously accepted manifests is intentional here. Report affected
   callers without automatically repairing or deduplicating their data.
 
-## Evidence and current state
+## Progress and evidence
 
 | Record | Current value |
 | --- | --- |
@@ -113,7 +112,13 @@ improved classifier performance.
 Next action: inspect the target project and record its baseline, then confirm
 the regression cases against its validation contract.
 
-Mark the task complete only after the acceptance criteria, required checks, and
+Change the banner from PROPOSED to IN PROGRESS when work starts and update its
+date at meaningful checkpoints. Keep progress, blockers, evidence, and the next
+action in this file throughout the task's lifecycle.
+
+Mark the plan COMPLETED only after the acceptance criteria, required checks, and
 review are satisfied. Record the final revision or uncommitted diff, unresolved
-limitations, and outcome here; remove the completed task from the active-work
-index. Retain the plan so a fresh session can recover the evidence.
+limitations, and outcome here. If work stops without completion, mark the plan
+ABANDONED and record why; use BLOCKED for a dependency that prevents progress,
+or SUPERSEDED with a link to a replacement plan. Retain the plan so a fresh
+session can recover the evidence.

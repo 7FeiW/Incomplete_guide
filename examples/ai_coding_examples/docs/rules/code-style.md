@@ -1,3 +1,5 @@
+# Code Style and Documentation Rules
+
 ## Documentation Placement
 
 - **Docstrings**: In-code documentation using Google-style docstrings (see formatting.md)
@@ -17,7 +19,7 @@ matching its kind:
 | `docs/guides/` | How to run something | `run_inference.md` |
 | `docs/reference/` | How the system works today | `feature_set_audit.md` |
 | `docs/findings/` | A measurement and its conclusion | `ce_extent_headroom_finding.md` |
-| `docs/plans/` | Something proposed, in progress, or stopped | `model_improvement_plan.md` |
+| `docs/plans/` | Task objectives, steps, status, progress, evidence, and next action | `model_improvement_plan.md` |
 | `docs/notes/` | Scratch and literature notes | `lz_molecular_generation.md` |
 | `docs/figures/` | PNGs referenced by docs | — |
 
@@ -32,20 +34,28 @@ Insert directly under the H1, before any other content:
 ```markdown
 # Some Plan
 
-> **Status:** ACTIVE &nbsp;·&nbsp; **Updated:** 2026-08-02
+> **Status:** IN PROGRESS · **Updated:** 2026-09-04
 >
 > One line on where this stands and what happens next.
 ```
 
-Valid statuses: `GUIDE`, `REFERENCE`, `ACTIVE`, `PROPOSED`, `LANDED`, `FINDING`, `CLOSED`,
-`CLOSED NULL`, `SUPERSEDED`, `STOPPED`, `CURATED ANALYSIS`. Update the banner whenever the doc's
-conclusion changes — a stale `ACTIVE` on a dead line is worse than no banner.
+For plans, use `PROPOSED`, `IN PROGRESS`, `BLOCKED`, `COMPLETED`, `ABANDONED`, or
+`SUPERSEDED`, as defined in [chapter 15's plan lifecycle](../../../../docs/15_Agentic_Workflow.md#task-plans).
+Update the banner and date when work changes. Keep progress, blockers, validation
+evidence, and the next action in the same plan; do not create a separate state
+document or copy those details into an index.
+
+Other document kinds can use labels such as `GUIDE`, `REFERENCE`, `FINDING`, or
+`CURATED ANALYSIS` to identify their purpose.
 
 ### Closed and negative results are kept, not deleted
 
-A plan that failed stays in `docs/plans/` marked `CLOSED NULL` / `STOPPED` / `SUPERSEDED`, with the
-reason it stopped. These prevent re-running a line that was already measured. Do not archive or
-delete them.
+Keep plans in `docs/plans/` after work ends. Use `COMPLETED` when the acceptance
+criteria, required checks, and review are satisfied, including an investigation
+that produces a supported negative result. Use `ABANDONED` when work stops before
+completion, or `SUPERSEDED` when another plan replaces it. Record the outcome or
+reason for stopping and link any successor. Preserve the evidence so future work
+does not repeat an already tested approach.
 
 ### When adding, moving, or renaming a doc
 
