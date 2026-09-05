@@ -51,29 +51,6 @@ Both an LLM agent and a human need information to perform each task well. This i
    memory. Local context can help an agent continue, but it is not a durable or
    shared record.
 
-For ease of access, keep shared records outside tool-owned directories. A
-repository used with Claude Code and Codex might grow from the minimal setup
-into the following structure:
-
-```text
-sample-project/
-├── AGENTS.md
-├── CLAUDE.md
-├── docs/
-│   ├── architecture.md
-│   ├── knowledge/
-│   │   └── validate-manifest.md
-│   ├── findings/
-│   ├── plans/
-│   │   └── duplicate-sample-ids.md
-│   └── rules/
-│       └── data-validation.md
-├── .claude/
-│   └── skills/
-└── .agents/
-    └── skills/
-```
-
 ### Project Record
 
 The `docs/` directory is the tool-neutral project record. Its files separate
@@ -87,31 +64,10 @@ stable project knowledge from changing plans and findings:
 | `docs/plans/`          | Task objectives, steps, status, progress, blockers, and validation evidence               |
 | `docs/rules/`          | Shared scientific, data-handling, and engineering constraints                             |
 
-These documents change at different rates. Architecture and shared rules may
-remain stable for months, while an active plan may change
-several times in one day. Keep each fact in one canonical location and link to
-it from the other documents.
-
-#### Shared Knowledge
-
-Project knowledge includes architecture, terminology, data contracts,
-experimental assumptions, verified findings, reusable procedures, and rules.
-Place it according to its purpose instead of the agent that will read it.
-
-##### Project Documentation
-
-Use `docs/architecture.md` for the stable map of the codebase. Put repeatable
-procedures in `docs/knowledge/`, supported conclusions in `docs/findings/`, and
-shared constraints in `docs/rules/`. A rule should cite the architecture,
-finding, policy, or decision that justifies it when that evidence is not obvious.
-Use `README.md` for setup and navigation rather than duplicating detailed
-project knowledge there.
-
-These files are the shared interface between humans and LLM agents. They do
-not depend on one vendor's memory format, installation, or session history.
-Update them when the underlying fact changes, and link to the canonical document
-instead of copying the same explanation into `CLAUDE.md`, `AGENTS.md`, Copilot
-instructions, and several agent memories.
+Keep each fact in one canonical file and link to it elsewhere. Use `README.md`
+for setup and navigation, and use `docs/` for detailed project knowledge. This
+keeps the record accessible to humans and agents without tying it to one tool's
+memory format.
 
 #### Plans and Experiment Records
 
@@ -133,25 +89,10 @@ Use a status banner and an updated date on each plan. Choose from these statuses
 | ABANDONED   | Work stopped without completion; record why and any useful results.   |
 | SUPERSEDED  | Another plan replaces this one; link to its successor.                |
 
-Change the status as circumstances change. A blocked plan can return to
-IN PROGRESS once its blocker is resolved. Preserve completed, abandoned, and
-superseded plans so later work can recover decisions and avoid repeating failed
-approaches. Record the reason when reopening a plan.
-
-Link plans from the project's `README.md` for navigation and specify the relevant
-plan in task requests. Read each plan's banner to identify current work; keep
-status, priorities, and blockers in the plans themselves.
-
-On resumption, compare the plan with the current Git revision, working-tree diff,
-and linked experiment records. The plan records observed evidence; it does not
-replace checking the code or a running job. Keep durable records in tool-neutral
-formats and documented locations so another agent can take over.
-
-Write facts as facts and unresolved ideas as questions or hypotheses. Update the
-plan at meaningful checkpoints, not after every small tool call. When work ends,
-update its status, record the final validation result or reason for stopping,
-and link any durable conclusion under `docs/findings/`. Retain the plan and its
-evidence even when the work is abandoned or superseded.
+Update the plan at meaningful checkpoints. Distinguish facts from unresolved
+questions, record validation evidence, and preserve stopped plans with their
+reasons. On resumption, compare the plan with the current Git revision, working
+tree, and linked experiment records.
 
 ##### Experiment Records
 
@@ -168,13 +109,9 @@ the run:
 - log, checkpoint, and result locations; and
 - metrics with their definitions and aggregation method.
 
-Do not ask an LLM agent to infer missing provenance after the run. Capture it
-when the experiment starts. Link runs from the relevant plan, and write supported
-conclusions or negative results to `docs/findings/`. Keep raw logs, checkpoints,
-and large outputs in their
-documented data locations rather than committing them to `docs/`. An agent hook
-may load current task context, while experiment wrappers should record execution
-metadata independently of any LLM agent.
+Capture provenance when the experiment starts rather than asking an agent to
+infer it later. Link runs from the relevant plan, keep large outputs outside
+`docs/`, and record supported conclusions in `docs/findings/`.
 
 ### Agent Guidance
 
@@ -214,151 +151,22 @@ tool-specific entry should say where authoritative knowledge lives and when the
 LLM agent must read it. If a fact would also help another LLM agent or a human
 collaborator, put the fact in `docs/` first.
 
-For the setup walkthrough, save this at the repository root as `AGENTS.md` or
-`CLAUDE.md`, according to the agent you use:
-
-```markdown
-# Project context
-
-This project trains image classifiers from sample manifests.
-
-## Canonical knowledge
-
-- Architecture and entry points: [docs/architecture.md](docs/architecture.md)
-- Plans and their statuses: [docs/plans/](docs/plans/)
-- Shared constraints: [manifest rules](docs/rules/data-validation.md)
-
-## Environment and validation
-
-- Use the uv project environment; setup is documented in README.md.
-- Focused tests: `uv run pytest tests/test_dataset.py -q`
-- Full tests: `uv run pytest tests -q`
-- Lint for this task: `uv run ruff check src/project/dataset.py tests/test_dataset.py`
-
-## Workflow
-
-- Read architecture, shared constraints, and the relevant plan
-  before editing. Read docs/knowledge/validate-manifest.md when it exists and
-  the task concerns manifest validation.
-- State assumptions and distinguish evidence from hypotheses.
-- Make only changes required by the task.
-- Do not commit, submit cluster jobs, or modify datasets unless requested.
-```
-
-The included [CLAUDE.md](../examples/ai_coding_examples/claude/CLAUDE.md)
-provides a good behavioral core that can also be adapted to `AGENTS.md`: think
-before acting, prefer simplicity, make surgical changes, and define verifiable
-success criteria. Add repository facts to that core, but keep long procedures
-elsewhere.
-
-Claude Code loads `CLAUDE.md`, while Codex constructs an instruction chain from
-applicable `AGENTS.md` files before it starts work. In both cases, concise and
-specific instructions are easier to maintain than a long handbook. See the
-[Claude memory guide](https://code.claude.com/docs/en/memory) and
-[Codex `AGENTS.md` guide](https://learn.chatgpt.com/docs/agent-configuration/agents-md).
-
 #### Scoped Instructions
 
-Use the agent's scoped-instruction mechanism for language-, directory-, or
-task-specific knowledge. In Claude Code, place topic files under
-`.claude/rules/`. A rule without path frontmatter loads in every session; a
-path-scoped rule loads when Claude works with matching files.
-
-```markdown
----
-paths:
-  - "src/**/*.py"
-  - "tests/**/*.py"
----
-
-# Python rules
-
-- Read docs/rules/data-validation.md before changing manifest validation.
-- Keep synthetic manifest cases in tests/test_dataset.py.
-- Run the validation commands in the repository-root instruction file.
-```
-
-The shared examples already separate the rules for:
-
-- [testing](../examples/ai_coding_examples/docs/rules/testing.md);
-- [formatting](../examples/ai_coding_examples/docs/rules/formatting.md);
-- [imports](../examples/ai_coding_examples/docs/rules/import-conventions.md); and
-- [environment selection](../examples/ai_coding_examples/docs/rules/environment.md).
-
-Keep these canonical documents under `docs/rules/`. When Claude needs scoped
-guidance, put a short entry under `.claude/rules/` that directs it to the relevant
-shared document, as in the snippet above. Other agents should read the same
-shared rules through their own entry points.
-
-For Codex, place shared guidance in the repository-root `AGENTS.md` and add a
-nested `AGENTS.md` only when a directory needs more specific instructions. Use
-`AGENTS.override.md` when the local guidance should replace the regular file at
-that directory level. For example:
-
-```text
-project-root/
-├── AGENTS.md
-├── src/
-│   └── AGENTS.md
-└── experiments/
-    └── AGENTS.override.md
-```
-
-Codex reads from the project root toward the current working directory, so the
-more specific file appears later in its instruction chain. Codex `.rules` files
-serve a different purpose: they control which commands may run outside the
-sandbox and should not be used as substitutes for project knowledge.
+Use scoped instructions only for language-, directory-, or task-specific rules.
+Claude Code uses `.claude/rules/`; Codex uses nested `AGENTS.md` files and
+`AGENTS.override.md`. Keep shared constraints in `docs/rules/` and make scoped
+files point to them. Codex `.rules` files control command permissions and are not
+substitutes for project knowledge.
 
 #### Advisory and Enforced Rules
 
-Rules answer how an LLM agent should work. Separate guidance that requires
-judgment from controls that must apply regardless of the model's interpretation.
+Instructions guide model behavior but do not enforce hard restrictions. Use the
+runtime, operating system, sandbox, or continuous integration (CI) when an
+action must be blocked. Use hooks or CI for deterministic checks, and keep
+permissions narrow.
 
-##### Behavioral Rules
-
-Use the tool-specific instruction entry point and scoped instruction files for
-rules such as:
-
-- explain assumptions before implementing ambiguous scientific behavior;
-- preserve existing interfaces unless a migration is requested;
-- avoid unrelated formatting and refactoring;
-- write a regression test before fixing a reproducible bug;
-- distinguish measured results from interpretations; and
-- report which validation commands were actually run.
-
-The example's
-[git workflow rule](../examples/ai_coding_examples/docs/rules/git-workflow.md)
-uses this approach to keep commits under human control. This is particularly
-useful when Git revisions are used as experiment provenance.
-
-##### Enforced Rules
-
-An instruction such as "never read `.env`" is a request to the model. If the
-action must be blocked, use the LLM-agent runtime, operating system, sandbox, or
-CI to enforce it.
-
-- In Claude Code, configure allow, ask, and deny permissions in
-  `.claude/settings.json`, and review the result with `/permissions`.
-- In Codex, use its sandbox and approval settings. Experimental Codex `.rules`
-  files can control which matching commands may run outside the sandbox.
-- For every tool, retain operating-system permissions, secret management, and
-  CI protection as independent security boundaries.
-
-Keep allow rules narrow because they remove per-use prompts or sandbox
-restrictions. Verify current behavior in the
-[Claude Code permission documentation](https://code.claude.com/docs/en/permissions)
-or [Codex rules documentation](https://learn.chatgpt.com/docs/agent-configuration/rules).
-
-Use a hook when an action must run at a lifecycle event, such as formatting
-after an edit. Unlike instructions, hooks are deterministic. Keep them fast,
-idempotent, and safe with untrusted input. If the agent has no suitable hook,
-use a repository script, pre-commit check, or CI. See the
-[Claude Code hooks guide](https://code.claude.com/docs/en/hooks-guide).
-
-##### Rule Consistency
-
-Conflicting rules make agent behavior unpredictable. Maintain one canonical
-rule for each concern:
+Maintain one canonical rule for each concern:
 
 | Concern                        | Preferred source          |
 | ------------------------------ | ------------------------- |
@@ -368,10 +176,7 @@ rule for each concern:
 | Deterministic lifecycle action | Hook                      |
 | Multi-step task procedure      | Skill                     |
 
-When a rule changes, search all instruction files and remove obsolete copies.
-Rules should describe the target repository's actual configuration. For example,
-do not state that Black, isort, and Ruff are all required unless their settings
-and validation commands agree in the repository.
+When a rule changes, remove obsolete copies from other instruction files.
 
 ### Local Context
 
@@ -379,22 +184,13 @@ Chat history and agent-local memory can make a session convenient to resume, but
 they may be stale, incomplete, or machine-specific. They are caches, not a
 reproducible project record.
 
-Local memory is appropriate for:
-
-- a command that is repeatedly useful on one workstation;
-- a local debugging observation that has not yet been confirmed; or
-- a personal preference about how results are displayed.
-
-Move team knowledge, decisions, and workarounds into shared documentation, and
-record task progress in the relevant plan.
-Use `/memory` in Claude Code or `/memories` in supporting Codex clients to review
-local memory. Do not write shared workflows to a user's absolute memory path;
-that storage is non-portable and owned by the individual agent installation.
+Use local context for machine-specific commands, unconfirmed observations, and
+personal preferences. Move shared knowledge, decisions, workarounds, and task
+progress into the project record.
 
 #### Evidence-Based Resumption
 
-Transcripts help continue interrupted work but may be stale. Start resumed work
-by checking:
+Transcripts may be stale. Resume work from repository evidence:
 
 ```text
 1. Read the current task plan.
@@ -402,19 +198,6 @@ by checking:
 3. Compare the repository with assumptions in the plan.
 4. Report any mismatch before making changes.
 ```
-
-For this task, read `docs/plans/duplicate-sample-ids.md` even if local memory says
-the fix is done. If the record says tests are pending, check the current code and
-run the documented checks before marking them passed.
-
-See the Claude [session guide](https://code.claude.com/docs/en/sessions) and
-Codex [memory guide](https://learn.chatgpt.com/docs/customization/memories) for
-tool-specific continuation features.
-
-Use multiple agents only when tasks can proceed independently with clear
-ownership; one agent may handle several roles sequentially. For concurrent
-tasks, use separate Git worktrees. Describe a review as independent only when
-the reviewer did not perform the work being reviewed.
 
 ## Session Workflow
 
@@ -669,13 +452,37 @@ Keep status and progress in the plan itself.
 
 ### 4. Connect the Agent to the Record
 
-For Codex, save the
-[tool-specific entry-point example](#tool-specific-entry-points) as `AGENTS.md`
-at the project root. For Claude Code, save it as `CLAUDE.md` at the project root.
-If you use both, keep both short and point them to the same shared files. Merge
-with existing instructions instead of overwriting them. See the
+For Codex, save the following template as `AGENTS.md` at the project root. For
+Claude Code, save it as `CLAUDE.md`. If you use both, point them to the same
+shared files. Merge with existing instructions instead of overwriting them. See the
 [Codex instruction guide](https://learn.chatgpt.com/docs/agent-configuration/agents-md)
 and [Claude project-memory guide](https://code.claude.com/docs/en/memory).
+
+```markdown
+# Project context
+
+This project trains image classifiers from sample manifests.
+
+## Canonical knowledge
+
+- Architecture and entry points: [docs/architecture.md](docs/architecture.md)
+- Plans and their statuses: [docs/plans/](docs/plans/)
+- Shared constraints: [manifest rules](docs/rules/data-validation.md)
+
+## Environment and validation
+
+- Use the uv project environment; setup is documented in README.md.
+- Focused tests: `uv run pytest tests/test_dataset.py -q`
+- Full tests: `uv run pytest tests -q`
+- Lint for this task: `uv run ruff check src/project/dataset.py tests/test_dataset.py`
+
+## Workflow
+
+- Read the architecture, shared constraints, and relevant plan before editing.
+- State assumptions and distinguish evidence from hypotheses.
+- Make only changes required by the task.
+- Do not commit, submit cluster jobs, or modify datasets unless requested.
+```
 
 Open a fresh agent session with the sample project root as its working directory.
 Then send:
