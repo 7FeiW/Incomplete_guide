@@ -22,8 +22,8 @@ official documentation for the agent being configured.
    - [Project Record](#project-record)
    - [Agent Guidance](#agent-guidance)
    - [Local Context](#local-context)
-2. [Session Workflow](#session-workflow)
-3. [Step-by-Step Setup](#step-by-step-setup)
+2. [Step-by-Step Setup](#step-by-step-setup)
+3. [An Agent-Assisted Task Example](#an-agent-assisted-task-example)
 4. [Reusable Workflows](#reusable-workflows)
 5. [System Audit](#system-audit)
 6. [Further Reading](#further-reading)
@@ -50,6 +50,26 @@ Both an LLM agent and a human need information to perform each task well. This i
 3. **Local context:** Temporary task context, such as chat history and local
    memory. Local context can help an agent continue, but it is not a durable or
    shared record.
+
+```mermaid
+flowchart TB
+    subgraph Context[Context available to the agent]
+        R["Project record<br/>Shared, version-controlled files"]
+        G["Agent guidance<br/>Instructions and pointers"]
+        C["Local context<br/>Temporary session information"]
+    end
+
+    R --> A["Agent work and validation"]
+    G --> A
+    C --> A
+    H["Human-defined task"] --> A
+    A --> V["Human review of changes and evidence"]
+    V --> U["Update the project record<br/>Progress, evidence, and next action"]
+```
+
+**Figure 1.** Read from top to bottom: the agent uses three sources of context to
+perform a human-defined task. Review and record updates prepare the next session.
+The final update goes into the same project record shown at the top.
 
 ### Project Record
 
@@ -96,33 +116,48 @@ tree, and linked experiment records.
 
 ##### Experiment Records
 
-An experiment record should contain enough information to reproduce or explain
-the run:
+Use a version-controlled configuration file as the main description of a run.
+It should capture parameters, command-line options, random seeds, and other
+settings needed to repeat the experiment. The experiment record should link that
+configuration to the code and environment versions, input-data provenance, run
+status, and output location.
 
-- code revision and dirty-working-tree status;
-- environment or lock-file identity;
-- dataset version, manifest, and provenance;
-- complete configuration and command-line arguments;
-- random seeds and determinism settings;
-- hardware, accelerator, and scheduler allocation;
-- start time, completion status, and exit reason;
-- log, checkpoint, and result locations; and
-- metrics with their definitions and aggregation method.
+Keep raw results outside `docs/` and usually outside the Git repository. They may
+live in an artifact store, experiment-tracking system, or other remote service;
+record a stable path or identifier without storing credentials.
 
-Capture provenance when the experiment starts rather than asking an agent to
-infer it later. Link runs from the relevant plan, keep large outputs outside
-`docs/`, and record supported conclusions in `docs/findings/`.
+Do not pass complete raw datasets, logs, or result collections directly to an
+LLM. Build version-controlled tools or scripts that load, validate, and
+summarize the raw outputs as a researcher would. Humans and agents can then work
+from the same compact summaries, metrics, and figures. Provide only the minimal
+diagnostic excerpts needed for a specific task while the complete raw results
+remain in their documented storage location.
+
+```mermaid
+flowchart TB
+    subgraph Inputs[Recorded experiment inputs]
+        C["Version-controlled configuration"]
+        P["Code and environment versions<br/>Input-data provenance"]
+    end
+
+    C --> E["Run the experiment"]
+    P --> E
+    E --> R["Raw results<br/>Local or remote storage outside docs/"]
+    R --> S["Analyze with version-controlled scripts"]
+    S --> M["Compact summaries, metrics, and figures"]
+    M --> H["Human analysis and review<br/>With agent assistance as needed"]
+    H --> F["Record supported findings<br/>Link to results and analysis"]
+```
+
+**Figure 2.** Read from top to bottom: recorded inputs define the run, and scripts
+turn stored outputs into compact evidence for analysis and review. Raw results
+remain in their storage location; supported findings enter the project record.
 
 ### Agent Guidance
 
-Agent guidance tells a particular tool where to find the project record and how
-to operate. Keep this layer concise and separate advisory instructions from
-controls enforced by the runtime or operating system.
-
-#### Tool-Specific Entry Points
-
-Each LLM-agent tool may have a preferred instruction file. Use that file as a
-thin entry point containing information the LLM agent needs in nearly every
+Agent guidance tells an LLM agent where to find the project record and how to
+operate. Each LLM-agent tool may have a preferred instruction file. Use that file
+as a thin entry point containing information the LLM agent needs in nearly every
 session. For Claude Code, this is `CLAUDE.md` or `.claude/CLAUDE.md`; Codex uses
 `AGENTS.md`; GitHub Copilot can use `.github/copilot-instructions.md`. Other
 LLM-agent tools may use another format.
@@ -137,19 +172,22 @@ Claude Code and Codex both combine instructions according to their own discovery
 rules. Do not assume that nesting, precedence, or import syntax is identical.
 Verify the behavior in the tool's current documentation.
 
-The entry point should contain:
+The entry point should directly state:
 
-- the project's purpose and main scientific task;
-- the canonical documentation paths;
+- the project's purpose and main scientific task; and
+- a small set of universal workflow rules for agents.
+
+For the following information, the entry point may either provide a concise
+summary or point to the canonical file or directory:
+
+- project documentation;
 - the supported environment and routine validation commands;
-- important architectural boundaries;
-- the location and policy for data, configurations, and results; and
-- a small set of universal workflow rules.
+- important architectural boundaries; and
+- locations and policies for data, configurations, and results.
 
-Prefer links or imports to shared documentation over copied content. A
-tool-specific entry should say where authoritative knowledge lives and when the
-LLM agent must read it. If a fact would also help another LLM agent or a human
-collaborator, put the fact in `docs/` first.
+Keep detailed or frequently changing information in the shared project record.
+The entry point should tell the agent where the authoritative information lives
+and when to read it, rather than duplicate it.
 
 #### Scoped Instructions
 
@@ -166,17 +204,28 @@ runtime, operating system, sandbox, or continuous integration (CI) when an
 action must be blocked. Use hooks or CI for deterministic checks, and keep
 permissions narrow.
 
-Maintain one canonical rule for each concern:
+##### Hooks
 
-| Concern                        | Preferred source          |
-| ------------------------------ | ------------------------- |
-| Universal project workflow     | Tool-specific entry point |
-| Python or directory convention | Path-scoped rule          |
-| Hard tool or file restriction  | Permission setting        |
-| Deterministic lifecycle action | Hook                      |
-| Multi-step task procedure      | Skill                     |
+A hook is a command or script configured to run at a specific event in an
+agent's workflow, such as after a file edit or before a task ends. An instruction
+asks the model to perform an action; a hook runs the configured action whenever
+the supported event occurs. Hook events, inputs, and failure behavior depend on
+the agent client, so verify them in its current documentation.
 
-When a rule changes, remove obsolete copies from other instruction files.
+Hooks can:
+
+- format or lint changed files after an edit;
+- validate a configuration or data schema before an experiment starts;
+- record a Git revision, configuration identifier, and output location for a
+  run; or
+- check that required tests and plan updates exist before a handoff.
+
+Keep hooks fast, narrowly scoped, and safe to run more than once. Treat file
+paths and other event data as untrusted input, and make failures return a clear
+message. Use an explicit repository command or CI for expensive test suites and
+external actions. A hook is automation, not a security boundary or a substitute
+for human review.
+
 
 #### Extra Coding Rules for LLM Agents
 
@@ -217,118 +266,13 @@ Transcripts may be stale. Resume work from repository evidence:
 4. Report any mismatch before making changes.
 ```
 
-## Session Workflow
-
-The following lifecycle keeps knowledge, rules, and plans synchronized.
-
-### 1. Orient
-
-The LLM agent should read the relevant instructions and existing plan before
-proposing changes:
-
-```text
-Read the repository's agent instructions, docs/plans/duplicate-sample-ids.md,
-and docs/rules/data-validation.md.
-Inspect git status and the existing implementation. Summarize the current state,
-identify conflicts with the plan, and do not edit files yet.
-```
-
-The user verifies that the LLM agent found the correct environment, files, and
-task.
-
-### 2. Define
-
-Convert the request into observable success criteria:
-
-```text
-Objective: reject duplicate sample IDs before dataset construction.
-
-Constraints:
-- Preserve the public Dataset constructor and manifest schema.
-- Do not change dataset splitting.
-- Report all duplicates in one error.
-- Use the exact string comparison defined in docs/rules/data-validation.md.
-- Do not read image contents during manifest validation.
-
-Verification:
-- A regression test fails before the fix and passes afterward.
-- Focused and complete test suites pass.
-- The final diff contains no unrelated changes.
-```
-
-Ambiguous scientific choices remain open questions until a person or repository
-source resolves them.
-
-### 3. Plan
-
-For a multi-file or scientifically consequential task, enter Plan mode or ask
-for a read-only plan. The plan should name files, risks, expected state changes,
-and checks. Store the accepted plan when the work will span sessions or involve
-other collaborators.
-
-### 4. Implement
-
-Make the smallest change that produces a testable result. After each meaningful
-increment, inspect the diff and run the narrowest relevant check. Do not combine
-a scientific change, dependency upgrade, and broad refactor into one increment.
-
-### 5. Validate
-
-Validate software behavior and scientific meaning separately:
-
-- tests, linting, types, error paths, and compatibility;
-- data provenance, leakage, units, metrics, baselines, and interpretation.
-
-The LLM agent must report observed command results rather than claiming a
-command was run. Generated scientific explanations and chemical assignments
-remain hypotheses until supported by repository evidence or an authoritative
-source.
-
-### 6. Update the Plan
-
-Before ending the session, update the plan with the following information and
-links to any experiment records:
-
-- current status and what changed;
-- steps followed or revised and why;
-- validation that passed or failed;
-- unresolved questions;
-- working-tree or artifact locations; and
-- the next concrete action.
-
-Do not store ephemeral narration or the entire chat transcript. Preserve only
-information another person or fresh session needs to continue correctly.
-
-### 7. Hand Off
-
-A useful handoff is short and evidence-based. Fill in this template from the
-actual diff and command output; leave checks marked as not run when appropriate:
-
-```text
-Changed:
-- src/project/dataset.py: <actual implementation change>.
-- tests/test_dataset.py: <actual regression cases added>.
-
-Verified:
-- Focused tests: <command, exit code, and observed summary, or not run>.
-- Full tests: <command, exit code, and observed summary, or not run>.
-- Ruff: <command, exit code, and observed summary, or not run>.
-
-Not verified:
-- <remaining checks or unresolved questions, or none>.
-
-Plan and repository:
-- Git revision and working tree: <current revision and uncommitted changes>.
-- docs/plans/duplicate-sample-ids.md: <status, evidence, and next action>.
-```
-
 ## Step-by-Step Setup
 
-This walkthrough puts the preceding model and session lifecycle into practice.
-The goal is to let a fresh agent continue the duplicate-ID task from repository
-files. It sets up the workflow around an existing Python project; it does not
-create the classifier or install an agent client. The example paths below belong
-to the sample project, not to this documentation repository.
+This walkthrough puts the preceding model into practice by preparing an existing
+Python project for agent-assisted work. The goal is to let a fresh agent recover
+the duplicate-ID task from repository files. It does not create the classifier
+or install an agent client. The example paths below belong to the sample project,
+not to this documentation repository.
 
 The guide stores shared example documents under
 `examples/ai_coding_examples/docs/`; in your project, the equivalent location is
@@ -502,6 +446,16 @@ This project trains image classifiers from sample manifests.
 - Do not commit, submit cluster jobs, or modify datasets unless requested.
 ```
 
+The project record and agent entry point are now ready. Continue with
+[An Agent-Assisted Task Example](#an-agent-assisted-task-example) to run and hand
+off the duplicate-ID task.
+
+## An Agent-Assisted Task Example
+
+The following lifecycle keeps knowledge, rules, and plans synchronized.
+
+### 1. Orient
+
 Open a fresh agent session with the sample project root as its working directory.
 Then send:
 
@@ -513,18 +467,47 @@ Summarize the duplicate-ID task, validation commands, and permitted changes.
 Cite the files you read and flag any mismatch. Do not edit files yet.
 ```
 
-Check the response against the files. A Markdown link alone is not evidence that
+Check the response against the files; a Markdown link alone is not evidence that
 the agent read its target. Correct missing context before starting the task.
 Review the client's active permissions as described under
-[Advisory and Enforced Rules](#advisory-and-enforced-rules); this task needs local
-code edits and tests, with synthetic inputs.
+[Advisory and Enforced Rules](#advisory-and-enforced-rules). This task needs local
+code edits and tests using synthetic inputs.
 
-### 5. Run One Bounded Task
+### 2. Define
 
-Use the prompts in [Session Workflow](#session-workflow) to define, plan, and
-implement the duplicate-ID change. The expected cases are unique IDs, one repeated
-ID, and multiple distinct repeated IDs. Include a check that validation does not
-read image contents and that valid rows retain their order and split assignments.
+Convert the request into observable success criteria:
+
+```text
+Objective: reject duplicate sample IDs before dataset construction.
+
+Constraints:
+- Preserve the public Dataset constructor and manifest schema.
+- Do not change dataset splitting.
+- Report all duplicates in one error.
+- Use the exact string comparison defined in docs/rules/data-validation.md.
+- Do not read image contents during manifest validation.
+
+Verification:
+- A regression test fails before the fix and passes afterward.
+- Focused and complete test suites pass.
+- The final diff contains no unrelated changes.
+```
+
+Ambiguous scientific choices remain open questions until a person or repository
+source resolves them.
+
+### 3. Plan
+
+For a multi-file or scientifically consequential task, enter Plan mode or ask
+for a read-only plan. The plan should name files, risks, expected state changes,
+and checks. Store the accepted plan when the work will span sessions or involve
+other collaborators.
+
+### 4. Implement
+
+Make the smallest change that produces a testable result. After each meaningful
+increment, inspect the diff and run the narrowest relevant check. Do not combine
+a scientific change, dependency upgrade, and broad refactor into one increment.
 
 After reviewing the plan, send:
 
@@ -536,35 +519,72 @@ the plan. Preserve unrelated changes. Update the plan with observed results,
 including failures and checks you could not run. Leave changes uncommitted.
 ```
 
-### 6. Record and Test the Handoff
+### 5. Validate
 
-Review the diff and actual test output. Have the agent update
-`docs/plans/duplicate-sample-ids.md` using the [handoff template](#7-hand-off).
-Keep the plan IN PROGRESS or BLOCKED if verification or review is incomplete.
-Once reviewed and complete, mark the plan COMPLETED. Commit the reviewed code,
-tests, and records together using your normal Git workflow so another checkout
-can receive them.
+Validate software behavior and scientific meaning separately:
+
+- tests, linting, types, error paths, and compatibility;
+- data provenance, leakage, units, metrics, baselines, and interpretation.
+
+The LLM agent must report observed command results rather than claiming a
+command was run. Generated scientific explanations and chemical assignments
+remain hypotheses until supported by repository evidence or an authoritative
+source.
+
+### 6. Update the Plan
+
+Before ending the session, update the plan with the following information and
+links to any experiment records:
+
+- current status and what changed;
+- steps followed or revised and why;
+- validation that passed or failed;
+- unresolved questions;
+- working-tree or artifact locations; and
+- the next concrete action.
+
+Do not store ephemeral narration or the entire chat transcript. Preserve only
+information another person or fresh session needs to continue correctly.
+
+### 7. Hand Off
+
+A useful handoff is short and evidence-based. Fill in this template from the
+actual diff and command output; leave checks marked as not run when appropriate:
+
+```text
+Changed:
+- src/project/dataset.py: <actual implementation change>.
+- tests/test_dataset.py: <actual regression cases added>.
+
+Verified:
+- Focused tests: <command, exit code, and observed summary, or not run>.
+- Full tests: <command, exit code, and observed summary, or not run>.
+- Ruff: <command, exit code, and observed summary, or not run>.
+
+Not verified:
+- <remaining checks or unresolved questions, or none>.
+
+Plan and repository:
+- Git revision and working tree: <current revision and uncommitted changes>.
+- docs/plans/duplicate-sample-ids.md: <status, evidence, and next action>.
+```
+
+Review the diff and actual test output. Keep the plan IN PROGRESS or BLOCKED if
+verification or review is incomplete. Once reviewed and complete, mark the plan
+COMPLETED and commit the reviewed code, tests, and records using the project's
+normal Git workflow.
 
 Start a fresh session and send:
 
 ```text
 Read the repository instructions and docs/plans/duplicate-sample-ids.md.
-Compare the recorded progress and evidence with Git and the
-current implementation. Report what was verified, what remains unresolved,
-and the next action, citing evidence. Do not edit files.
+Compare the recorded progress and evidence with Git and the current
+implementation. Report what was verified, what remains unresolved, and the next
+action, citing evidence. Do not edit files.
 ```
 
-The setup works when the new session can recover the task and its evidence
-without your previous chat. Fix missing or stale records if it cannot.
-
-### 7. Add Reuse When Needed
-
-After completing the task, use [Reusable Workflows](#reusable-workflows) to save
-the procedure as `docs/knowledge/validate-manifest.md`. Add a tool-specific skill
-wrapper only if this procedure recurs. Create `docs/findings/` when there is a
-supported conclusion to preserve, and experiment records when actual runs begin.
-The next section explains how to turn a repeated procedure into a reusable
-workflow.
+The handoff works when the new session can recover the task and its evidence
+without the previous chat. Fix missing or stale records if it cannot.
 
 ## Reusable Workflows
 
