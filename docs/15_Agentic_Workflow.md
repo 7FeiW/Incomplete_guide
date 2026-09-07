@@ -178,6 +178,24 @@ Maintain one canonical rule for each concern:
 
 When a rule changes, remove obsolete copies from other instruction files.
 
+#### Extra Coding Rules for LLM Agents
+
+Include explicit rules for **flat logic** and **ownership** in the shared coding
+guidance. These give reviewers concrete criteria for checking generated code:
+
+- Prefer a visible sequence of meaningful steps, named intermediate results,
+  and early exits over deep nesting, long call chains, or forwarding helpers.
+  Preserve useful function boundaries rather than growing one large function.
+- Identify which component owns each behavior, which functions may mutate data,
+  and who must release resources. Extend the existing owner through its interface
+  rather than duplicating logic or changing another component's internal state.
+
+The [shared code-style example](../examples/ai_coding_examples/docs/rules/code-style.md#flat-logic-and-short-call-paths)
+contains adaptable instructions for both concerns. Keep the detailed rules in
+your project's canonical coding guide and have agent entry points refer to it.
+Record the actual component responsibilities in `docs/architecture.md`; rules
+explain how to respect ownership, while architecture identifies the owners.
+
 ### Local Context
 
 Chat history and agent-local memory can make a session convenient to resume, but

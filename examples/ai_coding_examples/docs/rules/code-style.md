@@ -80,6 +80,49 @@ does not repeat an already tested approach.
 - **Imports**: Organize imports in three groups (separated by blank lines): (1) Python standard library, (2) third-party packages, (3) local package imports. Within each group, sort imports alphabetically by library name
 - **Indentation**: Use spaces (not tabs); use 4 spaces per indentation level (PEP 8 standard)
 
+### Flat Logic and Short Call Paths
+
+- Keep the main workflow readable from top to bottom. Use guard clauses (early
+  returns or exceptions for invalid inputs) to avoid deeply nested branches.
+- Break long chained or nested calls into named intermediate steps when they
+  hide transformations, failure points, or side effects. Each name should explain
+  what that step produces.
+- Avoid chains of forwarding helpers that only pass arguments to the next helper.
+  Let one orchestration function show the sequence of meaningful operations.
+- Keep helpers that encapsulate a coherent operation, shared behavior, or a useful
+  interface boundary. Flattening logic does not mean putting everything in one
+  large function or duplicating existing logic.
+
+For example, prefer named steps such as `rows = read_manifest(path)`,
+`validate_sample_ids(rows)`, and `dataset = Dataset(rows)` over hiding the whole
+workflow inside nested calls. These names illustrate the structure; use the
+project's actual interfaces and preserve the existing validation boundary.
+
+### Explicit Ownership
+
+Ownership means the component responsible for a behavior, a mutable value, or a
+resource's lifetime. Before editing, identify the existing owner from the code
+and architecture documentation; do not invent a second owner for convenience.
+
+- **Behavior**: Keep each validation rule, configuration decision, and state
+  transition in its owning component. Call that implementation instead of copying
+  it into callers. For example, if dataset construction owns sample-ID validation,
+  other entry points should use that boundary rather than add separate checks.
+- **Mutable data**: State whether a function mutates its inputs or returns new
+  values. Treat caller-owned inputs as read-only unless the interface explicitly
+  permits mutation. Do not modify shared configuration or cached data implicitly.
+- **Resources**: The component that opens a file, connection, or worker pool must
+  arrange its cleanup, including on failure, unless ownership is explicitly
+  transferred. A helper that borrows a resource must not close it. Prefer context
+  managers when the resource supports them.
+- **Boundaries**: Pass dependencies and results explicitly. Avoid reaching through
+  several objects to change another component's internal state; use its public
+  interface. Document ownership transfers and the caller's resulting obligations.
+- **Changes**: Preserve established ownership during a bounded fix. If ownership
+  must move, explain why and update the affected callers, documentation, and tests
+  together. If the owner cannot be established, record the ambiguity before making
+  a change that depends on it.
+
 ## Important Constraints
 
 ⚠️ **Never modify**:
