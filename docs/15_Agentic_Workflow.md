@@ -209,8 +209,34 @@ permissions narrow.
 A hook is a command or script configured to run at a specific event in an
 agent's workflow, such as after a file edit or before a task ends. An instruction
 asks the model to perform an action; a hook runs the configured action whenever
-the supported event occurs. Hook events, inputs, and failure behavior depend on
-the agent client, so verify them in its current documentation.
+the supported event occurs. [Claude Code](https://code.claude.com/docs/en/hooks-guide)
+and [GitHub Copilot CLI and cloud agent](https://docs.github.com/en/copilot/concepts/agents/hooks)
+provide lifecycle hooks, although their event names, inputs, and failure behavior
+differ. Verify the details in the current documentation for the client and
+surface being configured.
+
+Because **an LLM may overlook or misapply an instruction**, Claude Code can use
+a hook to inject a short reminder into the model's context at session start or
+prompt submission. This makes delivery of the reminder repeatable, but it does
+not make the model's compliance deterministic. Both Claude Code and the
+supported GitHub Copilot surfaces can run command hooks around lifecycle events.
+For a machine-checkable requirement, use a command hook at the earliest
+supported event to validate the proposed action or repository state and block
+progress when the check fails. For example, a pre-action hook can reject an edit
+to a protected file, while a pre-handoff hook can require a successful
+validation command.
+
+Claude Code also supports prompt- and agent-based hooks for checks that require
+judgment. These create an additional LLM review step and can return feedback or
+block an event, but they remain model-dependent. Prefer a deterministic command
+hook when a script can express the rule, and use sandbox, permission, or
+operating-system controls when the action itself must be impossible.
+
+The Codex documentation linked in this chapter does not currently document an
+equivalent repository lifecycle-hook interface. For Codex, keep guidance in
+`AGENTS.md`, use command rules and sandbox permissions for tool access, and put
+deterministic repository checks in explicit scripts or CI. Recheck the official
+documentation before assuming this limitation applies to a later client version.
 
 Hooks can:
 
