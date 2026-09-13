@@ -3,7 +3,11 @@
 ## What is this
 
 This is repository of documents for Python-based computational research. This is a incomplete guide (and very working in progress) for python research codebase from research scientist and programer's perspective.
-s
+
+To use this guide with a coding agent, give Codex or Claude Code a URL or a
+document file from the guide. Ask it to inspect your codebase and adapt the
+relevant guidance to your project's needs, then review the proposed changes.
+
 ## Docs
 
 Below are the documents in the `docs/` folder (click to open):
