@@ -296,7 +296,7 @@ Always consult the cluster's user guide — site-specific instructions override 
 
 - "No wheel available" → try `conda install` (if available) or install system build tools (`build-essential`, compilers).
 - Mixing `pip` and `conda` gave strange errors → recreate the environment and install conda packages first, then pip packages.
-- SSL / proxy / offline issues → configure `pip` with a trusted-host or use an internal index mirror.
+- SSL or proxy certificate errors: configure the organization's approved certificate bundle with `--cert <certificate-bundle.pem>` or `PIP_CERT`, or use an approved HTTPS package mirror. Replace the placeholder with the bundle's path. Avoid using `--trusted-host` as a routine fix: it permits connections without valid HTTPS verification. See [pip's certificate guidance](https://pip.pypa.io/en/stable/topics/https-certificates/) and [the trusted-host option](https://pip.pypa.io/en/stable/cli/pip/#cmdoption-trusted-host). For offline installation, obtain the required packages through the site's documented process; changing certificate settings does not provide network access.
 - PATH issues where scripts aren't found → ensure the environment's `bin`/`Scripts` directory is on `PATH` after activation.
 
 ---

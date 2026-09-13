@@ -10,8 +10,9 @@ The workflow applies across LLM agents. The supplementary
 [shared documentation examples](../examples/ai_coding_examples/docs/) contain
 the image-classifier architecture and sample plan, plus rules from a Python
 mass-spectrometry project that need adaptation before use here. Agent-specific
-examples remain in [claude/](../examples/ai_coding_examples/claude/) and
-[copilot/](../examples/ai_coding_examples/copilot/).
+examples remain in [claude/](../examples/ai_coding_examples/claude/).
+For a Copilot entry-point template, see the
+[Copilot example in chapter 14](14_Programming_with_LLM_Agents.md#copilot-example).
 
 LLM-agent products change frequently. Verify tool-specific feature details in the
 official documentation for the agent being configured.
@@ -302,8 +303,9 @@ not to this documentation repository.
 
 The guide stores shared example documents under
 `examples/ai_coding_examples/docs/`; in your project, the equivalent location is
-`docs/`. The shared example folder has `findings/`, `knowledge/`, `plans/`,
-and `rules/` directories. It includes architecture and rules examples
+`docs/`. The shared example folder contains `plans/` and `rules/`
+directories. Create `findings/` and `knowledge/` in your project when needed.
+It includes architecture and rules examples
 plus a [sample duplicate-ID plan](../examples/ai_coding_examples/docs/plans/duplicate-sample-ids.md)
 for this chapter's image-classifier task. Use the templates below to populate
 the other directories as work proceeds.

@@ -175,7 +175,7 @@ with open('config-defaults.yaml', 'r') as f:
     defaults = yaml.safe_load(f)
 
 # Load experiment-specific overrides
-with open('config-experiment1.yaml', 'r') as f:
+with open('config-exp-1.yaml', 'r') as f:
     overrides = yaml.safe_load(f)
 
 # Merge configs

@@ -59,7 +59,7 @@ does not repeat an already tested approach.
 
 ### When adding, moving, or renaming a doc
 
-1. Add a row for it in [docs/README.md](../../docs/README.md) — every doc must be indexed.
+1. Add a row for it in the target project's `docs/README.md` — every doc must be indexed. Create that index when adopting this convention; it is not included in these example files.
 2. Update any `docs/<path>.md` references in `src/`, `tests/`, `scripts/`, `config/`, `slurm_scripts/`,
    and `INSTALL.md`. Search **both** `*.yaml` and `*.yml`, plus `*.sh` and `*.pyx`.
 3. Check relative links inside the doc itself — a link out of `docs/` needs `../../`, and a link to

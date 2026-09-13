@@ -1,8 +1,16 @@
+# Analyze a Chemical Subclass in Negative Mode
+
 Analyze the DAG miss rate for the chemical subclass: **$ARGUMENTS** ([M-H]- negative mode)
 
 This is part of an ongoing investigation of `dag_missing_by_class_m-h.txt` — a file
 reporting BFS fragmentation DAG miss rates by ClassyFire subclass (FT instrument, [M-H]-,
 min_intensity=0.05, min_spectra=20). Your job is to diagnose WHY the peaks are missing.
+
+This command is a project-specific template. The referenced fragmentation
+code and datasets are not included in this guide. Verify the project's current
+implementation and data provenance before drawing conclusions. Load pickle
+files only from trusted project sources. Treat the categories below as
+hypotheses until supported by spectra and code evidence.
 
 ---
 
@@ -25,7 +33,7 @@ print(subclass_mols.to_string())
 ```
 
 Note any halogens (F, Cl, Br, I) and acidic groups (COOH, SO3H, PO4, phenol OH) in SMILES.
-Note permanent anions (sulfonate, phosphonate zwitterions) — BFS cannot model these.
+Check charged functional groups against the generator's supported ionization assumptions.
 
 ## Step 3 — Check tar coverage
 
@@ -52,46 +60,49 @@ for mid in missing:
 
 ## Step 4 — Classify the top category A m/z bins
 
-Apply these diagnostic rules (negative mode):
+Use the bins to select candidates for investigation. Establish each explanation
+from the corresponding molecule, spectrum, and current fragmentation code:
 
-**Rule 1 — Halide/chalcogenide mass defect (.9 bins):**
-- m/z bins with .9 fractional part → Cl⁻ (34.969), Br⁻ (78.918), or halide-retaining anion fragments
-- Root cause: **Direct anion fragmentation (halide-retaining)**
+- **Possible halogen-containing fragment:** Check the precursor composition,
+  candidate formula, exact mass, and isotope pattern. A fractional m/z bin alone
+  is insufficient evidence for a formula or fragmentation mechanism.
+- **Possible missing pathway or depth limit:** Trace a proposed neutral-loss or
+  cleavage sequence against the generator's allowed operations and depth.
+  Several missing peaks do not by themselves establish a cascade-depth failure.
+- **Possible model underprediction:** For category B, verify the fragment exists
+  in the generated directed acyclic graph (DAG), then compare observed and
+  predicted intensity under the same matching and normalization rules.
+- **Possible data or coverage issue:** Check missing graph files, precursor
+  charge, isotope selection, and isolation metadata before classifying a peak
+  as contamination or noise. Confirm how the current code handles missing graphs.
 
-**Rule 2 — Neutral loss series (negative mode):**
-- CO₂ loss: [M−H−44]⁻ → carboxylic acids, acyl glucuronides
-- SO₃ loss: [M−H−80]⁻ → sulfates, sulfonates
-- H₂O loss: [M−H−18]⁻ → hydroxyl-bearing acids
-- HF loss: [M−H−20]⁻ → fluorinated compounds
-- If these appear as prominent category A peaks at [M−H−Δ]⁻, root cause: **Cascade depth** (neutral loss
-  followed by further ring cleavage requires >3 bond cuts total)
+### Formula sanity checks
 
-**Rule 3 — Carboxylate/phenolate anion series:**
-- Fatty acid carboxylates [CₙH₂ₙ₋₁O₂]⁻: e.g., 255.2 (palmitate), 281.2 (oleate), 283.2 (stearate)
-- Phenolate [C₆H₅O]⁻: 93.0; chlorophenolate: 127.0, 128.9
-- Deprotonated aromatics: 113.0=[C₆H₅O₂]⁻ (catecholate), 179.0=[C₆H₇O₆]⁻
-- These are direct one-cut fragments: if absent from DAG, check if H-transfer range covers them;
-  if in DAG but model ≈0, root cause: **Model weakness**
+The following are **calculated nominal mass-to-charge ratios (m/z)** for singly
+charged ions using the common isotopes. They are not observed peaks or exact
+mass assignments, and are not instructions for rounding a project's m/z bins.
 
-**Rule 4 — Category B dominance:**
-- If category B entries have higher n_spectra or intensity than category A:
-  Root cause: **Model weakness** (fragments ARE in DAG but model predicts ≈0)
+| Candidate formula | Nominal m/z |
+| --- | ---: |
+| [C₆H₅O]⁻ | 93 |
+| [C₆H₅O₂]⁻ | 109 |
+| [C₆H₇O₆]⁻ | 175 |
+| [H₂PO₄]⁻ | 97 |
+| [PO₃]⁻, also the composition after H₂O loss from [H₂PO₄]⁻ | 79 |
 
-**Rule 5 — Low n or fractional m/z bins:**
-- If category A bins have low n (< 5 spectra) or fractional m/z bins (e.g., 60.7, 53.6):
-  These are noise bins from spectra of mols not in tar (pre-fix artifact)
+These nominal sums use ¹²C, ¹H, ¹⁶O, and ³¹P from the CIAAW isotope tables for
+[carbon](https://www.ciaaw.org/carbon.htm),
+[hydrogen](https://www.ciaaw.org/hydrogen.htm),
+[oxygen](https://www.ciaaw.org/oxygen.htm), and
+[phosphorus](https://www.ciaaw.org/phosphorus.htm).
+For example, [H₂PO₄]⁻ has nominal m/z 2 + 31 + 4 × 16 = 97;
+a peak near 153 cannot be assigned that formula. Exact-mass comparisons must
+also account for charge, isotope choice, and the instrument's mass tolerance.
 
-**Rule 6 — Precursor m/z exceeded:**
-- Any category A peak at m/z HIGHER than [M−H]⁻ precursor is a data quality artifact
-  (co-isolated contamination)
+Do not assign a confirmed root cause from an aggregate bin alone. If evidence
+is insufficient, record the candidate explanation and the next verification step.
 
-**Rule 7 — Phosphate/sulfate head group series (lipids):**
-- Glycerophospholipids in neg mode: 152.9=[H₂PO₄]⁻, 78.9=[PO₃]⁻, 96.9=[H₂PO₄−H₂O]⁻,
-  255.2/281.2/283.2 (acyl chains), 153.0 (glycerophosphate)
-- If several of these absent together: root cause is **Cascade depth** (head group requires
-  multi-step cleavage from intact glycerophospholipid)
-
-## Step 5 — Verify a key peak assignment (if unclear)
+## Step 5 — Verify a key peak assignment
 
 For the highest-intensity category A peak, check actual spectra:
 ```python
@@ -109,14 +120,16 @@ for _, row in spectra.head(5).iterrows():
     if near.any():
         print(f"mol_id={row['mol_id']}, CE={row.get('ce', '?')}: m/z={mzs[near]}, int={ints[near]}")
 ```
-The exact m/z value reveals the elemental formula (mass defect fingerprint).
+Use the measured m/z to check candidate formulas within a documented mass
+tolerance. Record competing assignments and verify against the precursor
+composition and supporting spectral evidence before selecting a formula.
 
 ## Step 6 — Write the findings
 
 Output a section in this format (this will be appended to `docs/missing_peak_findings_m-h.md`
 before the Summary section):
 
-```
+```markdown
 ## [Subclass Name] (n=XXX, DAG miss rate=XX.X%)
 
 **N mols; M in tar.** [One sentence on what these molecules are structurally.]
@@ -135,7 +148,7 @@ before the Summary section):
 
 ### Root cause
 
-**[Primary root cause].**
+**[Supported root cause, or unresolved hypothesis].**
 
 [2-4 sentences explaining the mechanism. Reference confirmed m/z assignments where possible.
 If cascade depth, name the neutral loss sequence and the number of bond cuts required.
@@ -145,18 +158,18 @@ If model weakness, name the specific fragment and its DAG intensity vs predicted
 ```
 
 Then output a one-line summary table row:
-```
+```markdown
 | [Subclass] | [n] | [miss%] | [root cause summary] |
 ```
 
 ---
 
-## Root cause taxonomy (for your final classification):
+## Root cause taxonomy (use only when supported):
 
-1. **Artifact** — mols not in tar inflated category A (pre-fix bug; now moot for current analysis)
+1. **Artifact** — an identified analysis or graph-coverage defect, verified against the current implementation.
 2. **Data quality** — contaminated spectra, CE=nan, co-isolated compounds (precursor m/z exceeded)
 3. **Cascade depth** — fragment requires >3 sequential bond cuts from [M-H]-
 4. **Direct anion** — halide/chalcogenide-retaining anions (.9 mass defect bins)
 5. **Rearrangement** — H/methyl migration, retro-Diels-Alder, McLafferty before bond cut
 6. **Model weakness** — fragment IS in DAG but model predicts ≈0
-7. **Permanent anion** — sulfonate/phosphonate zwitterions; entire ionization model is wrong
+7. **Ionization-model limitation** — the verified charge state or fragmentation behavior is outside the generator's supported assumptions.

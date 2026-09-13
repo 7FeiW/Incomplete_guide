@@ -21,7 +21,7 @@ branch pointer, or discards working-tree state.
 
 Leave the changes in the working tree and say what changed:
 
-```
+```text
 Wrote docs/foo_plan.md (new) and edited scripts/eval/bar.py — left uncommitted.
 ```
 

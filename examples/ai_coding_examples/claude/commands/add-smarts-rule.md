@@ -1,3 +1,5 @@
+# Add a SMARTS Fragmentation Rule
+
 Add a new SMARTS fragmentation rule for: **$ARGUMENTS**
 
 If `$ARGUMENTS` starts with `nl:` (e.g. `nl:c2h2_loss`), follow the **NL Rule workflow** below.
@@ -5,7 +7,7 @@ Otherwise follow the **FRAG Rule workflow** for a `SmartsFragRule` (ring-cut sca
 
 ---
 
-# NL RULE WORKFLOW (`nl:` prefix)
+## NL RULE WORKFLOW (`nl:` prefix)
 
 Use this path for `NeutralLossRule` entries in `NL_RULES` — rearrangements that expel a
 neutral fragment and form a new bond (SO₂ extrusion, CO loss, C₂H₂ loss, etc.).
@@ -21,7 +23,7 @@ NeutralLossRule(
 )
 ```
 
-## NL Step 1 — Identify the reaction and neutral mass
+### NL Step 1 — Identify the reaction and neutral mass
 
 Name the reaction mechanism (e.g. "aryl sulfonate SO₂ loss", "PAH C₂H₂ extrusion").
 Compute the exact monoisotopic mass of the neutral fragment:
@@ -39,7 +41,7 @@ Compute the exact monoisotopic mass of the neutral fragment:
 
 Cross-check: search NIST23 or confirmed_records for the expected [M-neutral]± peak.
 
-## NL Step 2 — Identify the functional group SMARTS
+### NL Step 2 — Identify the functional group SMARTS
 
 Write a SMARTS pattern matching the substructure that undergoes the reaction.
 Mark the **leaving atoms** with map numbers — these become `nl_map_nums`.
@@ -52,7 +54,7 @@ Key constraints:
 - `+0` charge constraint if needed to exclude charged atoms
 - The pattern must not match the neutral-loss atoms themselves as anchors
 
-## NL Step 3 — Validate the SMARTS
+### NL Step 3 — Validate the SMARTS
 
 ```python
 import sys; sys.path.insert(0, "src")
@@ -68,12 +70,16 @@ for smi in ["TARGET_SMILES_1", "TARGET_SMILES_2"]:
     assert mol.HasSubstructMatch(patt), f"No match on {smi}"
     print(f"Matches on {smi}: {len(mol.GetSubstructMatches(patt))}")
 
+# Retain a positive control for the atom-mapping check below.
+positive_mol = mol
+
 # Negative controls — should NOT match
 for neg_smi in ["c1ccccc1", "c1ccc2ccccc2c1"]:
     mol = Chem.MolFromSmiles(neg_smi)
     assert not mol.HasSubstructMatch(patt), f"False positive on {neg_smi}"
 
-# Show which atoms are the leaving group
+# Show which atoms are the leaving group on the positive control.
+mol = positive_mol
 match = mol.GetSubstructMatches(patt)[0]
 q_idx_to_map = {i: patt.GetAtomWithIdx(i).GetAtomMapNum()
                 for i in range(patt.GetNumAtoms())
@@ -85,7 +91,7 @@ print("Leaving atom indices:", nl_atoms)
 print("Leaving atoms:", [mol.GetAtomWithIdx(i).GetSymbol() for i in nl_atoms])
 ```
 
-## NL Step 4 — Verify end-to-end via `_apply_nl_prepass`
+### NL Step 4 — Verify end-to-end via `_apply_nl_prepass`
 
 ```python
 from fragnnet.frag.smarts_prepass import NL_RULES, _apply_nl_prepass
@@ -102,7 +108,7 @@ for prod_mask, rule_idx in results:
     print(f"  rule={NL_RULES[rule_idx].name}  retained={retained}  lost={lost}")
 ```
 
-## NL Step 5 — Add the rule to `smarts_prepass.py`
+### NL Step 5 — Add the rule to `smarts_prepass.py`
 
 Append to `NL_RULES` in `src/fragnnet/frag/smarts_prepass.py`:
 
@@ -119,7 +125,7 @@ NeutralLossRule(
 ),
 ```
 
-## NL Step 6 — Write tests
+### NL Step 6 — Write tests
 
 Add a new test class to `tests/test_nl_prepass.py` (create if it doesn't exist).
 Minimum 6 tests:
@@ -172,20 +178,20 @@ class TestRuleNameNL:
 
 Run: `conda run -n <project>-gpu pytest tests/test_nl_prepass.py -v`
 
-## NL Step 7 — Update memory
+### NL Step 7 — Update memory
 
 Update `MEMORY.md` and add `memory/nl_rule_<name>.md`.
 
 ---
 
-# FRAG RULE WORKFLOW (no prefix — ring-cut scaffold rules)
+## FRAG RULE WORKFLOW (no prefix — ring-cut scaffold rules)
 
 This is the original path for `SmartsFragRule` entries in `FRAG_RULES`.
 Use this for multi-ring-cut fragments that baseline BFS cannot reach within max_depth=3.
 
 ---
 
-## Context
+### Context
 
 **Key files:**
 - `src/fragnnet/frag/smarts_prepass.py` — `FRAG_RULES` list, add new `SmartsFragRule` here
@@ -215,7 +221,7 @@ byte-key of the atom mask. The rule fires on ALL molecules matching the SMARTS, 
 
 ---
 
-## Step 1 — Characterize the scaffold (if $ARGUMENTS is a name, not SMILES)
+### Step 1 — Characterize the scaffold (if $ARGUMENTS is a name, not SMILES)
 
 If $ARGUMENTS is a scaffold name (e.g. "xanthone", "morphinan"), look up its Murcko SMILES:
 
@@ -235,7 +241,7 @@ Identify:
 
 ---
 
-## Step 2 — Confirm there are useful mbfs-only fragments
+### Step 2 — Confirm there are useful mbfs-only fragments
 
 Pre-computed baseline and mbfs DAGs for all NIST20 molecules are stored as
 `data/frag/nist20_ma_mi_d3_h4_isoFalse_smpFalse/dags/{mol_id}.pkl.bz2` and
@@ -334,7 +340,7 @@ cannot be covered by a SMARTS prepass rule.
 
 ---
 
-## Step 3 — Map the SMARTS atom numbering
+### Step 3 — Map the SMARTS atom numbering
 
 Print the ring system of the representative molecule to assign SMARTS map numbers:
 
@@ -366,7 +372,7 @@ Draw a map number → atom assignment table before writing the SMARTS string.
 
 ---
 
-## Step 4 — Write and validate the SMARTS
+### Step 4 — Write and validate the SMARTS
 
 Draft the SMARTS, then validate it matches the target scaffold and NOT unrelated molecules:
 
@@ -399,7 +405,7 @@ Check that the cut bond pairs resolve to actual ring bonds in the target molecul
 
 ---
 
-## Step 5 — Verify the rule fires correctly end-to-end
+### Step 5 — Verify the rule fires correctly end-to-end
 
 ```python
 from fragnnet.frag.smarts_prepass import FRAG_RULES, _apply_smarts_prepass
@@ -424,7 +430,7 @@ assert dag_pp["dag_num_nodes"] > dag_no_pp["dag_num_nodes"], "Rule added no new 
 
 ---
 
-## Step 6 — Add the rule to `smarts_prepass.py`
+### Step 6 — Add the rule to `smarts_prepass.py`
 
 Edit `src/fragnnet/frag/smarts_prepass.py`, appending to `FRAG_RULES` after the last existing rule:
 
@@ -446,7 +452,7 @@ SmartsFragRule(
 
 ---
 
-## Step 7 — Write tests
+### Step 7 — Write tests
 
 Add a new test class to `tests/test_smarts_prepass_inject.py`. Minimum 8 tests:
 
@@ -493,7 +499,7 @@ All tests must pass. The total count should increase from the previous number.
 
 ---
 
-## Step 8 — Update memory
+### Step 8 — Update memory
 
 After all tests pass, update the memory file at
 `MEMORY.md` (see the memory system's index conventions)

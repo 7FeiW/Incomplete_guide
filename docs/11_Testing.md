@@ -18,14 +18,16 @@ References:
 - [Packaging Python Projects tutorial](https://packaging.python.org/en/latest/tutorials/packaging-projects/)
 - [PyPA sample project](https://github.com/pypa/sampleproject)
 
-Build Source Package:
+From the Python project's root, activate its development environment. The
+project must have valid package metadata and build configuration, as described
+in [Python Environments and Packaging](04_Python_Env.md#pyprojecttoml-vs-requirementstxt).
+Install the build frontend and create both a source distribution and a wheel
+in `dist/` (Bash or PowerShell):
 
 ```bash
-python setup.py sdist
+python -m pip install build
+python -m build
 ```
 
-Build Binary Package (Optional):
-
-```bash
-python setup.py bdist_wheel
-```
+These commands build the configured Python project, not this documentation
+repository. See [PyPA's replacement for setup.py commands](https://packaging.python.org/en/latest/discussions/setup-py-deprecated/#what-commands-should-be-used-instead).

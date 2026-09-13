@@ -1,8 +1,16 @@
+# Analyze a Chemical Subclass in Positive Mode
+
 Analyze the DAG miss rate for the chemical subclass: **$ARGUMENTS**
 
 This is part of an ongoing investigation of `dag_missing_by_class_m+h.txt` — a file
 reporting BFS fragmentation DAG miss rates by ClassyFire subclass (FT instrument, [M+H]+,
 min_intensity=0.05, min_spectra=20). Your job is to diagnose WHY the peaks are missing.
+
+This command is a project-specific template. The referenced fragmentation
+code and datasets are not included in this guide. Verify the project's current
+implementation and data provenance before drawing conclusions. Load pickle
+files only from trusted project sources. Treat the categories below as
+hypotheses until supported by spectra and code evidence.
 
 ---
 
@@ -24,8 +32,9 @@ print(f"{len(subclass_mols)} mols found")
 print(subclass_mols.to_string())
 ```
 
-Note any halogens (F, Cl, Br, I, S) in SMILES — these are the source of direct-cation gaps.
-Note permanent cations (N+, I+ salts) — BFS cannot model these at all.
+Note halogens (F, Cl, Br, I) and sulfur separately in SMILES; investigate their
+fragmentation behavior before assigning a cause.
+Check charged functional groups against the generator's supported ionization assumptions.
 
 ## Step 3 — Check tar coverage
 
@@ -40,8 +49,8 @@ print(f"In tar: {len(subclass_mol_ids - missing)}/{len(subclass_mol_ids)}")
 print(f"Missing from tar: {missing}")
 ```
 
-Mols not in tar → their spectra are **skipped** (dag_mzs=None → continue) due to the bug fix.
-They do NOT inflate category A counts. But if many spectra come from missing mols, note it.
+Inspect how the current analysis handles molecules absent from the archive;
+record whether their spectra are skipped or included before interpreting counts.
 
 To check how many spectra come from missing mols:
 ```python
@@ -55,32 +64,26 @@ for mid in missing:
 
 ## Step 4 — Classify the top category A m/z bins
 
-Apply these diagnostic rules:
+Use the bins to select candidates for investigation. Establish each explanation
+from the corresponding molecule, spectrum, and current fragmentation code:
 
-**Rule 1 — Halide mass defect (.9 bins):**
-- Any m/z bin with .9 fractional part → Br (offset +0.918), Cl (+0.969), or I (+0.904) direct cation
-- These are fragments that RETAIN the halogen and carry the charge: BFS cannot model them
-- Root cause: **Direct cation fragmentation (halide-retaining)**
+- **Possible halogen-containing fragment:** Check the precursor composition,
+  candidate formula, exact mass, and isotope pattern. A fractional m/z bin alone
+  is insufficient evidence for a formula or fragmentation mechanism.
+- **Possible missing pathway or depth limit:** Trace a proposed neutral-loss or
+  cleavage sequence against the generator's allowed operations and depth.
+  Several missing peaks do not by themselves establish a cascade-depth failure.
+- **Possible model underprediction:** For category B, verify the fragment exists
+  in the generated directed acyclic graph (DAG), then compare observed and
+  predicted intensity under the same matching and normalization rules.
+- **Possible data or coverage issue:** Check missing graph files, precursor
+  charge, isotope selection, and isolation metadata before classifying a peak
+  as contamination or noise. Confirm how the current code handles missing graphs.
 
-**Rule 2 — Aromatic cation cascade series:**
-- C₅–C₁₃ series: 65.0=[C₅H₅]⁺, 67.1=[C₅H₇]⁺, 77.0=[C₆H₅]⁺, 79.1, 91.1=[C₇H₇]⁺ (tropylium),
-  93.1, 105.0=[C₈H₉]⁺, 115.1=[C₉H₇]⁺, 128.1=[C₁₀H₈]⁺, 129.1=[C₁₀H₉]⁺, 141.1, 155.1
-- If 3+ of these appear together in category A, especially with large ring systems in the mols:
-  Root cause: **Cascade depth (≥4 sequential bond cuts + aromatization)**
+Do not assign a confirmed root cause from an aggregate bin alone. If evidence
+is insufficient, record the candidate explanation and the next verification step.
 
-**Rule 3 — Category B dominance:**
-- If category B entries have higher n_spectra or intensity than category A:
-  Root cause: **Model weakness** (fragments ARE in DAG but model predicts ≈0)
-
-**Rule 4 — Low n or all mols absent from tar:**
-- If category A bins have low n (< 5 spectra) or fractional m/z bins (e.g., 60.7, 53.6):
-  These are likely noise bins from spectra of mols not in tar (pre-fix artifact)
-
-**Rule 5 — Precursor m/z exceeded:**
-- Any category A peak at m/z HIGHER than the [M+H]⁺ precursor is a data quality artifact
-  (co-isolated compound contaminating the MS2 isolation window)
-
-## Step 5 — Verify a key peak assignment (if unclear)
+## Step 5 — Verify a key peak assignment
 
 For the highest-intensity category A peak, check actual spectra:
 ```python
@@ -99,14 +102,16 @@ for _, row in spectra.head(5).iterrows():
     if near.any():
         print(f"mol_id={row['mol_id']}, CE={row.get('ce', '?')}: m/z={mzs[near]}, int={ints[near]}")
 ```
-The exact m/z value reveals the elemental formula (mass defect fingerprint).
+Use the measured m/z to check candidate formulas within a documented mass
+tolerance. Record competing assignments and verify against the precursor
+composition and supporting spectral evidence before selecting a formula.
 
 ## Step 6 — Write the findings
 
 Output a section in this format (this will be appended to `docs/missing_peak_findings.md`
 before the Summary section):
 
-```
+```markdown
 ## [Subclass Name] (n=XXX, DAG miss rate=XX.X%)
 
 **N mols; M in tar.** [One sentence on what these molecules are structurally.]
@@ -125,7 +130,7 @@ before the Summary section):
 
 ### Root cause
 
-**[Primary root cause].**
+**[Supported root cause, or unresolved hypothesis].**
 
 [2-4 sentences explaining the mechanism. Reference confirmed m/z assignments where possible.
 If the dominant root cause is cascade depth, name the specific ring system and the cascade pathway.
@@ -135,18 +140,18 @@ If model weakness, name the specific fragment and its DAG intensity vs predicted
 ```
 
 Then output a one-line summary table row:
-```
+```markdown
 | [Subclass] | [n] | [miss%] | [root cause summary] |
 ```
 
 ---
 
-## Root cause taxonomy (for your final classification):
+## Root cause taxonomy (use only when supported):
 
-1. **Artifact** — mols not in tar inflated category A (pre-fix bug; now moot for current analysis)
+1. **Artifact** — an identified analysis or graph-coverage defect, verified against the current implementation.
 2. **Data quality** — contaminated spectra, CE=nan, co-isolated compounds (precursor m/z exceeded)
 3. **Cascade depth** — fragment requires >3 sequential bond cuts from [M+H]+
 4. **Direct cation** — halide/chalcogenide-retaining cations (.9 mass defect bins)
 5. **Rearrangement** — methyl/H migration before bond cut (e.g., TMS⁺, McLafferty)
 6. **Model weakness** — fragment IS in DAG but model predicts ≈0
-7. **Permanent cation** — quaternary N⁺ or I⁺ salts; entire ionization model is wrong
+7. **Ionization-model limitation** — the verified charge state or fragmentation behavior is outside the generator's supported assumptions.

@@ -1,6 +1,18 @@
 # Using Apptainer on Compute Canada
 
-This guide covers practical workflows for using **Apptainer** (formerly Singularity) on Compute Canada clusters (Cedar, Béluga, Graham, Narval, Niagara). It focuses on containerizing research workflows, GPU applications, and running reproducible experiments on HPC infrastructure.
+This guide covers practical workflows for using **Apptainer** on Digital Research
+Alliance of Canada systems (historically Compute Canada). It focuses on
+containerizing research workflows, GPU applications, and running experiments
+on high-performance computing (HPC) infrastructure.
+
+The commands target Bash on Linux. Run job scripts from the target Python
+project's root. Replace the synthetic allocation `def-advisor`, paths, GPU types,
+and resource requests with values supported by your cluster. Set `PROJECT` and
+`SCRATCH` to your actual storage locations if they are not already defined.
+Create any `logs/` directory before submitting a script that writes there.
+Submitting with `sbatch` or requesting `salloc` consumes your compute allocation.
+Pinned image and package versions below are illustrative historical examples;
+no container build or GPU validation record is included here.
 
 ## Table of Contents
 
@@ -69,13 +81,13 @@ This guide covers practical workflows for using **Apptainer** (formerly Singular
 
 **Benefits**:
 1. **Reproducibility**: Package entire software stack (Python, CUDA, libraries) in one file
-2. **Portability**: Same container runs on Cedar, Béluga, Graham, Narval
+2. **Portability**: Reuse an image across hosts with compatible architecture, drivers, and runtime settings
 3. **Dependency management**: Avoid module conflicts and version issues
-4. **GPU support**: Direct access to cluster GPUs without driver conflicts
+4. **GPU support**: Access allocated GPUs when host drivers support the container workload
 5. **Custom environments**: Install any software without admin rights
 6. **Collaboration**: Share exact environments with collaborators
-7. **Bypass HPC restrictions**: Install packages freely (no `--no-index` limitations)
-8. **GPU compatibility**: Isolate from H100:20G vs H100:30G driver variations
+7. **Dependency preparation**: Build required packages into an image in a site-approved environment
+8. **GPU compatibility**: Record and check image, host driver, and GPU requirements together
 
 **Use cases**:
 - Deep learning with specific PyTorch/TensorFlow versions
@@ -110,22 +122,28 @@ apptainer build mycontainer.sif docker://pytorch/pytorch:2.0.0-cuda11.7-cudnn8-r
 
 ## Compute Canada Cluster Overview
 
-**Available clusters**:
+**Cluster and storage guidance reviewed: 2026-09-12.**
 
-| Cluster | Location | Best For | GPU Types |
-|---------|----------|----------|-----------|
-| **Cedar** | Simon Fraser | General purpose, GPUs | P100, V100 |
-| **Béluga** | McGill, ÉTS, Polytechnique | CPU-intensive, some GPUs | V100 |
-| **Graham** | Waterloo | General purpose, GPUs | P100, V100 |
-| **Narval** | ÉTS | Large memory, GPUs | A100 |
-| **Niagara** | Toronto | Large parallel jobs | No GPUs |
+Use the [Alliance service status](https://status.alliancecan.ca/) and the selected
+cluster's documentation to choose an available system and GPU type. Graham's
+compute service [retired on September 15, 2025](https://status.alliancecan.ca/view_incident?incident=1409);
+its retirement notice directs users to Nibi or another current cluster.
+Historical cluster and GPU lists should not be used as submission instructions.
 
-**Storage**:
-- **Home** (`$HOME`): 50 GB, backed up, slow I/O (for code, scripts)
-- **Project** (`$PROJECT`): Shared, backed up, medium I/O (for data, containers)
-- **Scratch** (`$SCRATCH`): Fast, NOT backed up, purged after 60 days (for temporary data)
+Plan storage by purpose, then verify the site's quotas, backups, retention, and
+access rules:
 
-**Important**: Store `.sif` container files in `$PROJECT` or `$HOME`, NOT `$SCRATCH` (auto-deleted).
+- **Home**: Small source files, configuration, and scripts.
+- **Project storage**: Shared datasets, preserved containers, and durable outputs
+  where the site's policy supports that use.
+- **Scratch**: Temporary working data and staged images; preserve important files
+  elsewhere before they become eligible for cleanup.
+
+Keep the authoritative SIF image and its checksum in a documented durable
+location. A temporary copy on scratch may be useful for a run. Do not assume a
+universal quota or a fixed 60-day retention period.
+
+<!-- TODO: Verify storage quotas, backup coverage, purge criteria, and permitted build locations against the selected Alliance cluster's current documentation. -->
 
 ---
 
@@ -138,17 +156,14 @@ On Compute Canada, Apptainer is available as a module:
 module spider apptainer
 
 # Load Apptainer
-module load apptainer/1.1.8
+module load apptainer
 
 # Verify installation
 apptainer --version
 ```
 
-**Add to your `.bashrc`** for automatic loading:
-```bash
-echo "module load apptainer/1.1.8" >> ~/.bashrc
-source ~/.bashrc
-```
+Load the selected module explicitly in each job script. Record the version
+reported by `apptainer --version` with the run.
 
 ---
 
@@ -266,7 +281,7 @@ From: python:3.10-slim
 
 **Build it**:
 ```bash
-# On Compute Canada, use --fakeroot (no root needed)
+# Use a Linux build host where the site permits and supports fakeroot
 apptainer build --fakeroot python_sci.sif python_sci.def
 ```
 
@@ -302,7 +317,6 @@ From: pytorch/pytorch:2.0.0-cuda11.7-cudnn8-runtime
 
 %environment
     export PYTHONUNBUFFERED=1
-    export CUDA_VISIBLE_DEVICES=0
 
 %runscript
     exec python "$@"
@@ -394,10 +408,10 @@ From: ubuntu:22.04
 
 ## Building for GPU Applications
 
-**Important**: Match CUDA version to cluster GPUs:
-- Cedar/Graham P100/V100: CUDA 11.x
-- Narval A100: CUDA 11.x or 12.x
-- Béluga V100: CUDA 11.x
+Check both the host NVIDIA driver and the GPU architecture against the CUDA and
+framework requirements in the image. A container shares the host's kernel
+driver; packaging CUDA libraries does not remove that compatibility requirement.
+See [Apptainer GPU requirements](https://apptainer.org/docs/user/latest/gpu.html#requirements).
 
 ### GPU-Enabled PyTorch
 
@@ -419,12 +433,9 @@ From: nvidia/cuda:11.7.1-cudnn8-runtime-ubuntu22.04
         torchaudio==2.0.0+cu117 \
         --extra-index-url https://download.pytorch.org/whl/cu117
 
-%environment
-    export CUDA_VISIBLE_DEVICES=0
-
 %test
-    # Verify CUDA is available
-    python3 -c "import torch; assert torch.cuda.is_available()"
+    # Check the import without requiring a GPU on the build host.
+    python3 -c "import torch; print(torch.__version__)"
 
 %labels
     Author ml@researcher.ca
@@ -505,17 +516,20 @@ From: pytorch/pytorch:2.0.0-cuda11.7-cudnn8-runtime
 salloc --account=def-advisor --gres=gpu:1 --cpus-per-task=4 --mem=32G --time=3:00:00
 
 # Load Apptainer
-module load apptainer/1.1.8
+module load apptainer
 
 # Run interactive shell
 apptainer shell --nv /project/def-advisor/containers/pytorch.sif
 
-# Inside container
-python
->>> import torch
->>> torch.cuda.is_available()
-True
 ```
+
+Inside the container shell, check whether PyTorch can access the allocated GPU:
+
+```bash
+python -c "import torch; print(torch.cuda.is_available())"
+```
+
+If this prints `False`, resolve GPU access before starting training.
 
 ### Run Script Interactively
 
@@ -527,6 +541,11 @@ apptainer exec --nv /project/def-advisor/containers/pytorch.sif python train.py
 ---
 
 ## Running Batch Jobs with SLURM
+
+The Bash scripts below use `set -euo pipefail` so failed simple commands and
+pipelines stop the script before its completion message. Preserve nonzero
+application exit codes when adding conditionals or recovery logic; SLURM records
+[the batch script's exit status](https://slurm.schedmd.com/job_exit_code.html).
 
 ### Example 1: Basic Python Job
 
@@ -540,15 +559,17 @@ apptainer exec --nv /project/def-advisor/containers/pytorch.sif python train.py
 #SBATCH --job-name=analysis
 #SBATCH --output=%x-%j.out
 
+set -euo pipefail
+
 # Load Apptainer
-module load apptainer/1.1.8
+module load apptainer
 
 # Set paths
 CONTAINER=/project/def-advisor/containers/python_sci.sif
 SCRIPT=$HOME/projects/analysis/process_data.py
 
 # Run script in container
-apptainer exec $CONTAINER python $SCRIPT --input $1 --output $2
+apptainer exec "$CONTAINER" python "$SCRIPT" --input "${1:?Input path required}" --output "${2:?Output path required}"
 
 echo "Job completed at $(date)"
 ```
@@ -575,8 +596,10 @@ sbatch run_analysis.sh input.csv output.csv
 #SBATCH --output=logs/%x-%j.out
 #SBATCH --error=logs/%x-%j.err
 
+set -euo pipefail
+
 # Load modules
-module load apptainer/1.1.8
+module load apptainer
 
 # Set environment variables
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
@@ -592,8 +615,8 @@ BIND_DIRS="$WORK_DIR:/workspace,$DATA_DIR:/data"
 # Run training
 apptainer exec \
     --nv \
-    --bind $BIND_DIRS \
-    $CONTAINER \
+    --bind "$BIND_DIRS" \
+    "$CONTAINER" \
     python /workspace/train.py \
         --data-dir /data \
         --epochs 100 \
@@ -626,8 +649,10 @@ sbatch train_model.sh
 #SBATCH --job-name=ddp_training
 #SBATCH --output=logs/%x-%j.out
 
+set -euo pipefail
+
 # Load modules
-module load apptainer/1.1.8
+module load apptainer
 
 # Set environment for distributed training
 export MASTER_ADDR=$(hostname)
@@ -641,8 +666,8 @@ WORK_DIR=$HOME/projects/transformer_training
 # Run with torchrun
 apptainer exec \
     --nv \
-    --bind $WORK_DIR:/workspace \
-    $CONTAINER \
+    --bind "$WORK_DIR:/workspace" \
+    "$CONTAINER" \
     torchrun \
         --nproc_per_node=4 \
         --nnodes=1 \
@@ -685,13 +710,23 @@ apptainer exec --nv container.sif python -c "import tensorflow as tf; print(tf.c
 
 ### Selecting Specific GPUs
 
-```bash
-# Use first GPU only
-CUDA_VISIBLE_DEVICES=0 apptainer exec --nv container.sif python train.py
+Let SLURM set GPU visibility for the allocation. Do not bake
+`CUDA_VISIBLE_DEVICES=0` into a definition file or replace the allocated devices
+with hard-coded host GPU numbers. Container-defined values override ordinary
+host values; see [Apptainer environment precedence](https://apptainer.org/docs/user/latest/environment_and_metadata.html#environment-from-the-host).
 
-# Use GPUs 2 and 3
-CUDA_VISIBLE_DEVICES=2,3 apptainer exec --nv container.sif python train.py
+If an image already defines GPU visibility, explicitly pass the scheduler's
+value in the allocated Bash session:
+
+```bash
+: "${CUDA_VISIBLE_DEVICES:?Check the scheduler GPU allocation before running}"
+export APPTAINERENV_CUDA_VISIBLE_DEVICES="$CUDA_VISIBLE_DEVICES"
+apptainer exec --nv container.sif python train.py
 ```
+
+For multi-GPU work, verify that the visible device count matches the worker
+count. If the scheduler does not set this variable, use the site's documented
+GPU-isolation procedure instead of guessing device identifiers.
 
 ---
 
@@ -737,8 +772,8 @@ BIND_DIRS="$PROJECT_DATA:/data,$SCRATCH_OUTPUT:/output,$HOME_CODE:/code"
 # Run with binds
 apptainer exec \
     --nv \
-    --bind $BIND_DIRS \
-    $CONTAINER \
+    --bind "$BIND_DIRS" \
+    "$CONTAINER" \
     python /code/train.py \
         --data /data \
         --output /output
@@ -752,14 +787,16 @@ apptainer exec \
 
 ### Container Storage Location
 
-**Store containers in `$PROJECT`** (shared, backed up):
+**Keep the authoritative image in durable storage**, such as a project directory
+whose backup and retention policy you have checked. Set `PROJECT` accordingly:
 ```bash
 mkdir -p $PROJECT/containers
 cd $PROJECT/containers
 apptainer pull pytorch.sif docker://pytorch/pytorch:2.0.0-cuda11.7-cudnn8-runtime
 ```
 
-**NOT in `$SCRATCH`** (auto-deleted after 60 days!)
+A copy on scratch may be used during a job; it should not be the only copy.
+Scratch cleanup criteria and retention periods are site-specific.
 
 ### Data Organization
 
@@ -781,7 +818,7 @@ $PROJECT/def-advisor/
 └── results/                  # Important results
 
 $SCRATCH/
-└── tmp_experiment_001/       # Temporary data (deleted after 60 days)
+└── tmp_experiment_001/       # Temporary data; follow site retention policy
     ├── checkpoints/
     └── logs/
 ```
@@ -1026,7 +1063,9 @@ if __name__ == '__main__':
 #SBATCH --time=3:00:00
 #SBATCH --output=logs/train-%j.out
 
-module load apptainer/1.1.8
+set -euo pipefail
+
+module load apptainer
 
 CONTAINER=$PROJECT/containers/pytorch_training.sif
 DATA_DIR=$PROJECT/datasets/mnist
@@ -1037,7 +1076,7 @@ mkdir -p $OUTPUT_DIR
 apptainer exec \
     --nv \
     --bind $DATA_DIR:/data,$OUTPUT_DIR:/output \
-    $CONTAINER \
+    "$CONTAINER" \
     python train_model.py
 ```
 
@@ -1049,9 +1088,9 @@ apptainer exec \
 
 Apptainer solves two critical challenges when running LLMs on Compute Canada clusters:
 
-1. **Python Package Limitations**: HPC systems often restrict `pip install` with `--no-index` flags, preventing installation of newer packages. Apptainer containers bypass this completely by packaging all dependencies inside the container.
+1. **Dependency preparation**: Install required packages while building the image in a site-approved environment with the necessary package access. A container does not provide network access or override cluster policy.
 
-2. **GPU Compatibility Issues**: Different H100 GPU variants (H100:20G vs H100:30G) can cause driver/CUDA version conflicts. Apptainer containers include the exact CUDA/cuDNN versions needed, isolating you from cluster-level GPU driver variations.
+2. **GPU compatibility**: Record the CUDA libraries in the image and verify support by the host driver and GPU architecture. Memory capacity and partitioning also affect whether a workload fits. See [Apptainer GPU requirements](https://apptainer.org/docs/user/latest/gpu.html#requirements).
 
 This is particularly important for LLM frameworks (vLLM, Transformers, Flash Attention) which have strict CUDA version requirements and frequent updates.
 
@@ -1096,7 +1135,7 @@ From: verlai/verl:app-verl0.5-transformers4.55.4-vllm0.10.0-mcore0.13.0-te2.2
 # On a compute node with internet (not login node)
 salloc --time=1:00:00 --mem=16G --cpus-per-task=4
 
-module load apptainer/1.1.8
+module load apptainer
 
 apptainer build vllm_inference.sif vllm_inference.def
 ```
@@ -1108,12 +1147,17 @@ apptainer build vllm_inference.sif vllm_inference.def
   - **Megatron-Core 0.13.0**: Tensor/pipeline parallelism for multi-GPU
   - **TransformerEngine 2.2**: FP8 quantization for H100 GPUs
 
-This combination is tested to work together, avoiding version conflicts common with manual installs on HPC.
+The image tag identifies the intended stack, but this guide includes no build
+or compatibility test record for the modified image. Build and validate it on
+the intended hardware before using it for experiments.
 
 ---
 
 **Inference script**: `run_inference.py`
 ```python
+import argparse
+from pathlib import Path
+
 import torch
 from vllm import LLM, SamplingParams
 
@@ -1122,14 +1166,20 @@ def run_inference(model_name, prompts):
     Run LLM inference with vLLM optimizations.
 
     Args:
-        model_name: HuggingFace model ID or local path
+        model_name: Local model directory inside the container
         prompts: List of input prompts
     """
-    # Initialize LLM with vLLM
+    if not Path(model_name).is_dir():
+        raise FileNotFoundError(f"Local model directory not found: {model_name}")
+    gpu_count = torch.cuda.device_count()
+    if gpu_count == 0:
+        raise RuntimeError("This example requires an allocated NVIDIA GPU")
+
+    # Initialize LLM with the allocated GPUs.
     llm = LLM(
         model=model_name,
-        tensor_parallel_size=torch.cuda.device_count(),  # Use all GPUs
-        dtype="auto",  # Auto-detect best dtype (fp16/bf16/fp8)
+        tensor_parallel_size=gpu_count,  # Use visible allocated GPUs
+        dtype="auto",  # Use the dtype selected by vLLM for this model
         max_model_len=4096,  # Context length
         gpu_memory_utilization=0.9  # Use 90% of GPU memory
     )
@@ -1152,13 +1202,15 @@ def run_inference(model_name, prompts):
         print(f"Generated: {generated_text}\n")
 
 if __name__ == "__main__":
-    model_name = "/scratch/models/Meta-Llama-3-8B-Instruct"
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model", required=True, help="Local model directory inside the container")
+    args = parser.parse_args()
     prompts = [
         "Explain quantum computing in simple terms:",
         "Write a Python function to compute fibonacci numbers:"
     ]
 
-    run_inference(model_name, prompts)
+    run_inference(args.model, prompts)
 ```
 
 ---
@@ -1173,19 +1225,21 @@ if __name__ == "__main__":
 #SBATCH --time=2:00:00
 #SBATCH --output=logs/inference-%j.out
 
-module load apptainer/1.1.8
+set -euo pipefail
+
+module load apptainer
 
 # Paths
 CONTAINER=$PROJECT/containers/vllm_inference.sif
-MODEL_DIR=$SCRATCH/models
+MODEL_DIR=$SCRATCH/models/Meta-Llama-3-8B-Instruct
 WORK_DIR=$HOME/projects/llm_inference
 
 # Run inference
 apptainer exec \
     --nv \
-    --bind $MODEL_DIR:/scratch/models,$WORK_DIR:/workspace \
-    $CONTAINER \
-    python /workspace/run_inference.py
+    --bind "$MODEL_DIR:/models/model:ro,$WORK_DIR:/workspace" \
+    "$CONTAINER" \
+    python /workspace/run_inference.py --model /models/model
 ```
 
 ---
@@ -1194,13 +1248,16 @@ apptainer exec \
 ```bash
 #!/bin/bash
 #SBATCH --account=def-advisor
+#SBATCH --nodes=1
 #SBATCH --gres=gpu:h100:4          # 4x H100 GPUs for large models
 #SBATCH --cpus-per-task=32
 #SBATCH --mem=256G
 #SBATCH --time=4:00:00
 #SBATCH --output=logs/inference_multi-%j.out
 
-module load apptainer/1.1.8
+set -euo pipefail
+
+module load apptainer
 
 # Paths
 CONTAINER=$PROJECT/containers/vllm_inference.sif
@@ -1210,13 +1267,13 @@ WORK_DIR=$HOME/projects/llm_inference
 # Multi-GPU inference with tensor parallelism
 apptainer exec \
     --nv \
-    --bind $MODEL_DIR:/scratch/models,$WORK_DIR:/workspace \
-    $CONTAINER \
-    python /workspace/run_inference.py
+    --bind "$MODEL_DIR:/models/model:ro,$WORK_DIR:/workspace" \
+    "$CONTAINER" \
+    python /workspace/run_inference.py --model /models/model
 ```
 
 **Key parameters for multi-GPU**:
-- `tensor_parallel_size=4` in the script splits model across 4 GPUs
+- The script sets `tensor_parallel_size` from the visible GPU count (four for this allocation).
 - vLLM automatically handles tensor sharding (no manual code needed)
 - Requires GPUs to be on the same node (use `--nodes=1`)
 
@@ -1224,99 +1281,30 @@ apptainer exec \
 
 #### Fine-tuning LLMs with LoRA
 
-**Use case**: Fine-tune large language models efficiently using LoRA (Low-Rank Adaptation).
+Low-Rank Adaptation (LoRA) trains added adapter parameters while keeping the
+base model weights frozen. This section is a workflow outline. It does not
+provide a runnable training script or submission job.
 
-**Fine-tuning script**: `finetune_lora.py`
-```python
-import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
-from peft import LoraConfig, get_peft_model, TaskType
-from datasets import load_dataset
+Use the [PEFT quicktour](https://huggingface.co/docs/peft/quicktour) and
+[Transformers causal language modeling guide](https://huggingface.co/docs/transformers/tasks/language_modeling)
+as implementation references for the versions installed in your training image:
 
-def finetune_with_lora(model_name, dataset_name, output_dir):
-    """
-    Fine-tune LLM with LoRA for parameter-efficient training.
-    """
-    # Load base model and tokenizer
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name,
-        torch_dtype=torch.bfloat16,
-        device_map="auto"
-    )
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
+1. Choose a base model and tokenizer, record their revisions, and prepare a
+   dataset with separate training and validation splits.
+2. Tokenize and construct the intended training labels, including padding and
+   masking rules. Inspect a small batch before running a full job.
+3. Configure the adapter for the model's actual layer names and verify which
+   parameters are trainable.
+4. Run a real training loop or `Trainer.train()`; record optimizer steps, loss,
+   and held-out evaluation. Validate the setup on a small dataset first.
+5. Save the trained adapter, tokenizer, configuration, and base-model revision.
+   Reload the adapter in a fresh process and check its behavior before marking
+   the run complete.
 
-    # Configure LoRA
-    lora_config = LoraConfig(
-        task_type=TaskType.CAUSAL_LM,
-        r=16,  # LoRA rank
-        lora_alpha=32,  # LoRA scaling
-        lora_dropout=0.1,
-        target_modules=["q_proj", "v_proj"]  # Apply LoRA to attention layers
-    )
-
-    # Wrap model with LoRA
-    model = get_peft_model(model, lora_config)
-    model.print_trainable_parameters()  # Shows only ~1% of params are trainable
-
-    # Load dataset
-    dataset = load_dataset(dataset_name)
-
-    # Training arguments
-    training_args = TrainingArguments(
-        output_dir=output_dir,
-        per_device_train_batch_size=4,
-        gradient_accumulation_steps=4,
-        num_train_epochs=3,
-        learning_rate=2e-4,
-        fp16=False,
-        bf16=True,  # Use bfloat16 for H100
-        logging_steps=10,
-        save_strategy="epoch"
-    )
-
-    # Train (using Trainer from transformers)
-    # ... training loop here ...
-
-    # Save LoRA adapter (only a few MB!)
-    model.save_pretrained(f"{output_dir}/lora_adapter")
-
-if __name__ == "__main__":
-    finetune_with_lora(
-        model_name="/scratch/models/Meta-Llama-3-8B",
-        dataset_name="tatsu-lab/alpaca",
-        output_dir="/scratch/llm_finetuned"
-    )
-```
-
-**SLURM job for LoRA fine-tuning**:
-```bash
-#!/bin/bash
-#SBATCH --account=def-advisor
-#SBATCH --gres=gpu:h100:2
-#SBATCH --cpus-per-task=16
-#SBATCH --mem=128G
-#SBATCH --time=12:00:00
-
-module load apptainer/1.1.8
-
-CONTAINER=$PROJECT/containers/vllm_inference.sif
-MODEL_DIR=$SCRATCH/models
-OUTPUT_DIR=$SCRATCH/llm_finetuned
-
-mkdir -p $OUTPUT_DIR
-
-apptainer exec \
-    --nv \
-    --bind $MODEL_DIR:/scratch/models,$OUTPUT_DIR:/scratch/llm_finetuned \
-    $CONTAINER \
-    python finetune_lora.py
-```
-
-**Why LoRA is ideal for HPC**:
-- Reduces trainable parameters from billions to millions (~1% of model size)
-- Fits large models (70B+) on fewer GPUs
-- Adapter weights are only a few MB, easy to share and version control
-- Multiple LoRA adapters can share the same base model
+Creating a PEFT model and calling `save_pretrained()` alone saves an initialized
+adapter without training it. Adapter size and GPU requirements depend on the
+model, rank, target layers, precision, and batch size; measure them before
+requesting a cluster allocation.
 
 ---
 
@@ -1348,27 +1336,23 @@ apptainer exec \
 
 ---
 
-**Issue: CUDA version mismatch between H100:20G and H100:30G**
+**Issue: CUDA or GPU compatibility errors**
 
-**Symptoms**:
-```text
-CUDA error: invalid device function
-NCCL error: unhandled cuda error
-```
+Check the allocated device, host driver, and framework build together. An
+`invalid device function` error or an NCCL error alone does not identify a
+single cause. Confirm that the framework supports the GPU architecture, that
+the host driver supports the required CUDA runtime, and that the workload fits
+the allocated memory. Use the [Apptainer GPU troubleshooting guide](https://apptainer.org/docs/user/latest/gpu.html#troubleshooting).
 
-**Solution**: This is why Apptainer is valuable! The container includes compatible CUDA libraries:
-- Base image has CUDA 11.7 (compatible with both H100 variants)
-- Container's CUDA libraries take precedence over system CUDA
-- No need to match exact cluster CUDA version
+Inside a GPU allocation, record:
 
-**Verification**:
 ```bash
-# Check CUDA version inside container
-apptainer exec --nv $CONTAINER nvcc --version
-
-# Check PyTorch CUDA version
-apptainer exec --nv $CONTAINER python -c "import torch; print(torch.version.cuda)"
+nvidia-smi
+apptainer exec --nv "$CONTAINER" python -c "import torch; print(torch.version.cuda); print(torch.cuda.device_count())"
 ```
+
+A CUDA runtime image may not contain the `nvcc` compiler. Installing a different
+container cannot replace the host kernel driver.
 
 ---
 
@@ -1387,7 +1371,7 @@ ERROR: No matching distribution found for flash-attn (from --no-index)
     pip install --no-cache-dir flash-attn==2.5.0 --no-build-isolation
 ```
 
-**Why this works**: Container builds run in isolated environments without HPC `pip` restrictions. Once built, all packages are frozen in the `.sif` file.
+**Build prerequisites**: The build host must have permitted network or package-mirror access and the compilers and dependencies required by the package. A build does not bypass firewall, proxy, or site restrictions. The resulting SIF preserves the files installed during that build.
 
 ---
 
@@ -1404,11 +1388,8 @@ FileNotFoundError: Model '/scratch/models/llama3' not found
 apptainer exec \
     --nv \
     --bind $SCRATCH/models:/models \
-    $CONTAINER \
-    python run_inference.py
-
-# Update script to use bound path
-model_name = "/models/llama3"  # Not /scratch/models/llama3
+    "$CONTAINER" \
+    python run_inference.py --model /models/llama3
 ```
 
 **Debugging binds**:
@@ -1473,7 +1454,9 @@ if __name__ == '__main__':
 #SBATCH --mem=4G
 #SBATCH --time=1:00:00
 
-module load apptainer/1.1.8
+set -euo pipefail
+
+module load apptainer
 
 CONTAINER=$PROJECT/containers/biopython.sif
 INPUT=$PROJECT/sequences/input.fasta

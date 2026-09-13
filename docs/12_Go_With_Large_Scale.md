@@ -361,69 +361,73 @@ Load model once → process 100 inputs → write output → exit
 
 ### Choosing the right time slot (Compute Canada / SLURM)
 
-Compute Canada partitions jobs into standard time buckets. Understanding how these slots interact is important for both queue wait time and compute efficiency.
+Choose the wall-time request from measured runtime, startup overhead, and a
+margin for variation. Permitted limits, priority, and accounting rules depend on
+the cluster and allocation. A one-hour request does not guarantee the highest
+priority, and a three-hour request does not inherently start sooner.
+[SLURM backfill scheduling](https://slurm.schedmd.com/sched_config.html#backfill-scheduling)
+can start a lower-priority job when it fits without delaying a higher-priority
+job. Accurate time estimates help the scheduler find those opportunities.
 
-| Time slot | Wall time | Notes |
-|-----------|-----------|-------|
-| `1:00:00` | 1 hour | Highest priority, shortest queue |
-| `3:00:00` | 3 hours | Most versatile; often shorter queue than expected |
-| `12:00:00` | 12 hours | Medium jobs |
-| `24:00:00` | 24 hours | Long jobs |
-| `72:00:00` | 72 hours | Longest, lowest priority |
-
-**Key rule**: A shorter job can backfill into a slot reserved for a longer job (e.g., a 1-hour job may run in the 3-hour queue), but a longer job cannot run in a shorter slot. This means **3-hour slots often have shorter wait times than 1-hour slots during peak usage**.
+<!-- TODO: Verify current Alliance partition limits and accounting policies against the selected cluster's documentation before adding site-specific numbers. -->
 
 #### Step 1 — Measure startup overhead before designing jobs
 
-Run the initialization phase interactively before deciding on job size:
-
-```bash
-salloc --account=def-advisor --gres=gpu:1 --cpus-per-task=4 --mem=32G --time=0:30:00
-
-time apptainer exec --nv $CONTAINER python -c "
-from transformers import AutoModelForCausalLM
-model = AutoModelForCausalLM.from_pretrained('/scratch/models/llama3-8b')
-print('Model loaded')
-"
-# e.g. real 0m10m35s → startup overhead is ~10 min
-```
-
-Use the result to choose a minimum job size:
-
-| Startup overhead | Minimum recommended job time |
-|-----------------|-------------------------------|
-| < 1 min | 1-hour slot is fine |
-| 1–10 min | Use 3-hour slot |
-| > 10 min | Use 12-hour or longer slot |
+Measure startup and representative inputs inside a compute allocation using the
+same model, container, storage, and hardware planned for the full run. Record
+variation between inputs and time spent saving results. Use the cluster's
+instructions to request an interactive allocation; avoid running this benchmark
+on a login node.
 
 #### Step 2 — Calculate compute efficiency
 
+For a sequential batch that loads its model once, use:
+
 ```text
-efficiency = actual_compute_time / total_wall_time
-           = (wall_time - startup_overhead) / wall_time
+elapsed_time = startup_time + items_per_job * time_per_item
+compute_fraction = (items_per_job * time_per_item) / elapsed_time
 ```
 
-**Bad design** — many tiny jobs with heavy startup:
-- 1,000 jobs × 15 min each, startup = 10 min per job
-- Actual compute per job: 5 min → **efficiency: 33 %**
-- Minimum billing is 1 h per job → 1,000 × 60 min = 60,000 min billed
+The following arithmetic example assumes 10 minutes of startup, 5 minutes per
+item, and no other overhead. These are illustrative values, not measurements or
+billing rules.
 
-**Better design** — batched jobs:
-- 10 jobs × 3 hours each, startup = 10 min per job
-- Each job processes 100 items × 5 min = 500 min compute → **efficiency: ~93 %**
-- Billed: 10 × 180 min = 1,800 min
+| Items per job | Elapsed time | Compute fraction | Fits a 180-minute limit? |
+| --- | ---: | ---: | --- |
+| 1 | 15 minutes | 33.3% | Yes, but startup dominates |
+| 32 | 170 minutes | 94.1% | Yes, with 10 minutes remaining |
+| 100 | 510 minutes | 98.0% | No |
+
+Batching amortizes startup; it does not reduce the computation required per
+item. Account for preprocessing, output writes, and variation before choosing
+an actual wall-time request. Consult local accounting rules separately.
 
 #### Step 3 — Calculate items per job
 
-```text
-items_per_job = (slot_time_min - startup_min) / time_per_item_min
+Include a margin and round batch capacity down, then round the job count up:
 
-# Example: 3-hour slot, 10 min startup, 5 min per item
-items_per_job = (180 - 10) / 5 = 34 items
-total_jobs    = total_items / 34
+```text
+items_per_job = floor((wall_time - startup_time - margin) / time_per_item)
+total_jobs = ceil(total_items / items_per_job)
+
+# Example, all times in minutes:
+items_per_job = floor((180 - 10 - 10) / 5) = 32
+total_jobs = ceil(1000 / 32) = 32
+# Jobs 0-30 process 32 items each; job 31 processes the remaining 8.
 ```
 
-Then use a SLURM array to dispatch:
+For that example, a Bash submission template follows. It assumes the target
+project already supplies a `batch_process.py` accepting the shown arguments.
+That script must select inputs starting at `job_idx * items_per_job`, cap the
+end at the input count, load the model once, and preserve per-item completion
+records. Adapt `def-advisor` to your allocation and the GPU, memory, CPU, and
+module choices to the selected cluster. This template submits paid or allocated
+compute work when passed to `sbatch`.
+
+From the target project root, save the template as `batch_array.sh`. Export
+`CONTAINER` as the absolute path to your existing SIF image and `RUN_DIR` as a
+new output directory on suitable storage before submitting. Create `logs/`
+in the project root before submission so SLURM can open its output files.
 
 ```bash
 #!/bin/bash
@@ -432,40 +436,35 @@ Then use a SLURM array to dispatch:
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
 #SBATCH --time=3:00:00
-#SBATCH --array=0-9                  # 10 jobs processing 34 items each
+#SBATCH --array=0-31
 #SBATCH --output=logs/job_%A_%a.out
 
-module load apptainer/1.1.8
+set -euo pipefail
+: "${CONTAINER:?Set CONTAINER to an existing SIF image}"
+: "${RUN_DIR:?Set RUN_DIR to a new output directory}"
+module load apptainer
 
+WORK_DIR="$SLURM_SUBMIT_DIR"
+mkdir -p "$RUN_DIR"
 apptainer exec --nv \
-    --bind $SCRATCH:/scratch,$PROJECT:/project \
-    $CONTAINER \
-    python batch_process.py \
-        --input-list $HOME/projects/inputs.txt \
-        --job-idx    $SLURM_ARRAY_TASK_ID \
-        --total-jobs $SLURM_ARRAY_TASK_COUNT \
-        --output     /scratch/results
+    --bind "$WORK_DIR:/workspace,$RUN_DIR:/output" \
+    "$CONTAINER" \
+    python /workspace/batch_process.py \
+        --input-list /workspace/inputs.txt \
+        --job-idx "$SLURM_ARRAY_TASK_ID" \
+        --items-per-job 32 \
+        --output "/output/task_$SLURM_ARRAY_TASK_ID"
 ```
 
 #### Step 4 — Pre-submission checklist
 
-- [ ] Startup overhead measured interactively (not estimated)
-- [ ] Actual compute time is at least **5× the startup overhead**; if not, increase items per job
-- [ ] Correct time slot chosen based on expected runtime
-- [ ] Job array used instead of thousands of individual `sbatch` calls
-- [ ] Each job checkpoints progress (for jobs > 3 h, checkpoint every epoch or fixed interval)
-- [ ] Large datasets are on `$SCRATCH`, not `$PROJECT`
-- [ ] `--mem` matches measured peak usage, not a large round number
-
-#### Rule-of-thumb summary
-
-| Scenario | Recommended approach |
-|----------|---------------------|
-| Many short tasks (< 5 min), model loads in < 1 min | 1-hour array jobs |
-| Model/data loads in 5–15 min, task runs 30–90 min | 3-hour slot, batch multiple items per job |
-| Large model fine-tuning (hours per epoch) | 12 or 24-hour slot with epoch checkpointing |
-| Exploratory / debugging | 1-hour interactive `salloc` |
-| Production sweep (hundreds of configs) | 3-hour array, 30–50 items per job |
+- [ ] Startup and per-item runtime measured on representative hardware and data.
+- [ ] Batch size leaves room for output writes and runtime variation.
+- [ ] Array bounds cover every input once, including the final partial batch.
+- [ ] Each task uses a separate output location and records completed items.
+- [ ] Failed commands return nonzero; interrupted work can be resumed.
+- [ ] Input, output, and checkpoint storage follow the site's retention rules.
+- [ ] Resource requests and wall time are permitted by the selected cluster.
 
 ## Environment and Packaging
 
