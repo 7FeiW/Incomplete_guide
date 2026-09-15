@@ -208,6 +208,74 @@ claims that these skills are installed or published:
 | `author-style` | Reviewed section, agreed style profile, permitted author samples | Natural prose in the author's voice, with scientific meaning preserved and sensitive edits flagged |
 | `reviewer-response` | Reviewer comment, revision record, current diff | Response tied to completed changes; unfinished experiments identified as pending |
 
+### Available Example Skills and Installation
+
+This repository includes four ready-to-adapt, **project-local** Codex and Claude
+Code wrappers in the [agentic writing example](../examples/agentic%20writing/).
+They are examples, not independently validated assessments of a manuscript.
+Each wrapper refers to the example's shared `workflows/` files, so copy and adapt
+those runbooks before using a wrapper in another project.
+
+| Example skill | Purpose | Codex wrapper | Claude Code wrapper |
+| --- | --- | --- | --- |
+| `logic-review` | Find missing premises, unsupported inferences, contradictions, and alternative explanations without editing. | [`logic-review`](../examples/agentic%20writing/.agents/skills/logic-review/SKILL.md) | [`logic-review`](../examples/agentic%20writing/.claude/skills/logic-review/SKILL.md) |
+| `evidence-review` | Check whether supplied evidence and citations support the manuscript's claims; leave unavailable evidence unverified. | [`evidence-review`](../examples/agentic%20writing/.agents/skills/evidence-review/SKILL.md) | [`evidence-review`](../examples/agentic%20writing/.claude/skills/evidence-review/SKILL.md) |
+| `writing-review` | Report clarity, structure, terminology, and flow problems without changing the draft. | [`writing-review`](../examples/agentic%20writing/.agents/skills/writing-review/SKILL.md) | [`writing-review`](../examples/agentic%20writing/.claude/skills/writing-review/SKILL.md) |
+| `author-style` | Review or, when explicitly requested, make small style edits while checking for changes in scientific meaning. | [`author-style`](../examples/agentic%20writing/.agents/skills/author-style/SKILL.md) | [`author-style`](../examples/agentic%20writing/.claude/skills/author-style/SKILL.md) |
+
+To install one of these examples in a manuscript repository, first copy and
+adapt the corresponding runbook in `workflows/` and merge the example's
+`AGENTS.md` or `CLAUDE.md` guidance into the repository's existing instruction
+file. Do not overwrite existing instructions. Then place the wrapper directory
+at `.agents/skills/<skill-name>/` for Codex or
+`.claude/skills/<skill-name>/` for Claude Code. For example, a Codex project
+would contain:
+
+```text
+<project-root>/
+├── AGENTS.md                 # Merge the applicable example guidance.
+├── workflows/
+│   ├── review.md
+│   └── logic-review.md        # Copy and adapt these shared procedures.
+└── .agents/
+    └── skills/
+        └── logic-review/
+            └── SKILL.md      # Copy and adapt the thin wrapper.
+```
+
+From the root of this guide, use the following PowerShell commands only when
+`<project-root>\.agents\skills\logic-review` does not already exist. They create
+the destination skill directory and copy the example; they do not copy the
+required shared workflows or merge instruction files for you.
+
+```powershell
+$projectRoot = '<project-root>'
+$skillTarget = Join-Path $projectRoot '.agents\skills\logic-review'
+
+if (Test-Path -LiteralPath $skillTarget) {
+    throw "Refusing to overwrite existing skill: $skillTarget"
+}
+
+New-Item -ItemType Directory -Path (Split-Path -Parent $skillTarget) -Force
+Copy-Item -Recurse -Path '.\examples\agentic writing\.agents\skills\logic-review' -Destination $skillTarget
+```
+
+Replace `logic-review` consistently to install one of the other example skills.
+Review the copied `SKILL.md` and runbooks for paths, permissions, manuscript
+format, and evidence rules before invoking it. In Codex, use `/skills` to check
+discovery, then invoke `$logic-review` (or another installed name) with a target
+section and draft version. In Claude Code, invoke the corresponding
+`/logic-review` command.
+
+For a reusable external skill, prefer an installable plugin or use Codex's
+`$skill-installer` to inspect curated skills or request a specific repository
+skill. The official documentation describes local discovery, the installer, and
+plugin distribution; the older `openai/skills` catalog is deprecated in favor of
+the current [OpenAI Plugins repository](https://github.com/openai/plugins).
+Treat any external writing skill as untrusted until you have inspected its
+instructions, scripts, data access, and license. Do not install a skill merely
+because its name suggests it can verify citations or scientific correctness.
+
 Start with `citation-audit` and `language-edit` if those are your recurring
 bottlenecks. Keep their procedures in shared Markdown files and use thin
 agent-specific wrappers, following

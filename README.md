@@ -28,3 +28,9 @@ Below are the documents in the `docs/` folder (click to open):
 - [Programming with LLM Agents](docs/14_Programming_with_LLM_Agents.md)
 - [Agentic Research Workflow: Knowledge, Rules, and Plans](docs/15_Agentic_Workflow.md)
 - [Academic Writing with Codex and Claude](docs/16_Academic_Writing_with_LLM_Agents.md)
+
+## Editorial Workflow
+
+This guide uses a lightweight, repository-specific writing workflow for agent
+assistance. See the [editorial instructions](editorial/README.md) for the
+shared rules, source record, and read-only review procedure.
