@@ -6,7 +6,7 @@ description: Review or revise academic prose for natural flow and the agreed aut
 # author-style
 
 Resolve shared paths from the target project root. Read applicable repository
-instructions, `workflows/author-style.md`, and `workflows/review.md`.
+instructions, `manuscript/workflows/author-style.md`, and `manuscript/workflows/review.md`.
 Follow the procedure for the target named in the request. Report missing context
 and evidence actually inspected.
 Read `style.md`; review without editing unless revision is requested. Check meaning after edits.

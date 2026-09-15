@@ -770,3 +770,38 @@ and the [Codex `AGENTS.md` guide](https://learn.chatgpt.com/docs/agent-configura
 - [Extend Claude with skills](https://code.claude.com/docs/en/slash-commands)
 - [Manage Claude Code sessions](https://code.claude.com/docs/en/sessions)
 - [Debug Claude Code configuration](https://code.claude.com/docs/en/debug-your-config)
+
+### Research Background
+
+The workflow in this section is a hand-maintained, static one: the knowledge
+files, plans, and skills are written ahead of time and reused. The papers below
+give the vocabulary for that choice and for the alternatives. Links were checked
+in September 2026.
+
+- Ling Yue et al., [From Static Templates to Dynamic Runtime Graphs: A Survey of
+  Workflow Optimization for LLM Agents](https://arxiv.org/abs/2603.22386),
+  arXiv:2603.22386, 2026 — treats agent workflows as computation graphs and
+  organizes the literature by when the structure is fixed (before deployment
+  versus during a run), what part of the workflow is optimized, and which
+  signals guide the optimization. Read it to place the static setup described
+  here against automatically generated or revised workflows.
+- Shunyu Yao et al., [ReAct: Synergizing Reasoning and Acting in Language
+  Models](https://arxiv.org/abs/2210.03629), ICLR 2023 — interleaves reasoning
+  steps with tool calls so the model can check its own plan against an external
+  source. This is the loop behind the orient-and-validate steps in the task
+  example above.
+- Noah Shinn et al., [Reflexion: Language Agents with Verbal Reinforcement
+  Learning](https://arxiv.org/abs/2303.11366), NeurIPS 2023 — feeds a written
+  summary of a failed attempt back as context for the next attempt, with no
+  weight updates. It is the research version of what the plan file does when it
+  records what was tried and why it failed.
+- Shunyu Yao et al., [Tree of Thoughts: Deliberate Problem Solving with Large
+  Language Models](https://arxiv.org/abs/2305.10601), NeurIPS 2023 — explores
+  several candidate reasoning paths and backtracks instead of committing to the
+  first one. Useful background for why a plan should list open questions and
+  rejected approaches rather than a single line of attack.
+- Asaf Yehudai et al., [Survey on Evaluation of LLM-based
+  Agents](https://arxiv.org/abs/2503.16416), Findings of ACL 2026 — surveys how
+  agent planning, tool use, and memory are measured, and where the benchmarks
+  are still weak (cost, safety, robustness). Read it before trusting a reported
+  agent capability when deciding how much of a task to delegate.

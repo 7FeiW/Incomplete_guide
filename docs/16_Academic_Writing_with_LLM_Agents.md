@@ -10,6 +10,18 @@ research repository. The prompts also work as starting points in a chat interfac
 when you supply the relevant text. File access and available tools depend on the
 client and its permissions; ask the assistant to identify what it actually read.
 
+Published agent systems aim much higher than this. A survey of LLM agents as AI
+scientists catalogs contributions across hypothesis discovery, experiment
+implementation, paper writing, and peer review
+([LLM Agents as AI Scientists](https://openreview.net/forum?id=bfdUWy6rUA));
+Agent Laboratory reports an end-to-end pipeline from literature review through a
+written report ([Schmidgall et al., 2025](https://arxiv.org/pdf/2501.04227));
+and a proposed auto-research framework coordinates agents across eight phases of
+the research lifecycle ([Liu et al., 2025](https://arxiv.org/html/2504.18765v1)).
+Read them for what can be automated. None of them changes who is accountable for
+a claim, which is why this section automates only steps whose output an author
+can check.
+
 Use [guide section 14](14_Programming_with_LLM_Agents.md) for the agent working loop and
 [guide section 15](15_Agentic_Workflow.md) for shared knowledge, rules, and plans. Here,
 the task is turning verified research material into a reviewable manuscript.
@@ -27,6 +39,7 @@ the task is turning verified research material into a reviewable manuscript.
 9. [Draft and Revise in Passes](#draft-and-revise-in-passes)
 10. [Review Figures and Reviewer Responses](#review-figures-and-reviewer-responses)
 11. [Check Before Sharing](#check-before-sharing)
+12. [Further Reading](#further-reading)
 
 ## Choose a Bounded Writing Task
 
@@ -62,10 +75,21 @@ tools; test it on representative material before using it broadly.
 Do not select an "Ultra," "Pro," or maximum-reasoning tier merely because the
 task is a paper. Those labels and controls differ between providers, and more
 reasoning is not automatically better. Instead, choose the least reasoning
-effort that produces an adequately reviewed result for the task. For OpenAI
-models with configurable reasoning, official guidance recommends a balanced
-starting point and increasing the effort only when evaluation shows a measurable
-quality benefit over the additional time and cost.
+effort that produces an adequately reviewed result for the task.
+
+Both providers expose reasoning depth as a named effort setting, and both advise
+starting at the documented default and moving only on evidence. For OpenAI
+models, GPT-5.5 defaults to `medium`, described as the balanced starting point;
+raise it to `high` or `xhigh` only when an evaluation shows a measurable quality
+gain over the added latency and cost. For Claude models, the `effort` parameter
+takes `low`, `medium`, `high`, `xhigh`, or `max`, and both the API and Claude
+Code default to `high`; the guidance is to step down to `medium` or `low` for
+routine work once your own checks show quality holds, and to reserve `xhigh` and
+`max` for long-horizon work that justifies the token cost. In Claude Code,
+`/model` selects the model and the effort selector sets the level. Effort is a
+behavioral signal rather than a fixed token budget, so a level that is too high
+for a bounded task can produce overthinking: in manuscript work that appears as
+unrequested rewriting, invented structure, or speculative scientific commentary.
 
 | Paper task | Starting reasoning effort | Why | When to increase it |
 | --- | --- | --- | --- |
@@ -74,22 +98,94 @@ quality benefit over the additional time and cost.
 | Reconciling a long manuscript with figures, tables, result records, or multiple supplied sources | High, after a representative comparison | The task may require many dependent checks and long-context synthesis. | Use it only when a lower setting demonstrably misses material discrepancies that the higher setting finds. |
 | Formal proof, mathematical derivation, algorithm, or statistical claim review | High only as an additional review pass | These tasks can require multi-step analysis, but a model response is not verification. | Do not increase effort as a substitute for checking the original definitions, calculations, code, and qualified human review. |
 
-For a recurring task, compare the same source packet and rubric at two effort
-levels. Record errors that matter for the manuscript—changed numbers, units,
-uncertainty, citations, or claim scope—alongside latency and cost. Raise the
-setting only if it catches relevant problems reliably enough to justify the
-trade-off. A higher setting does not make unverified sources, incomplete context,
-or an ambiguous writing request reliable.
+For a recurring task, compare the same source packet and review rubric at two
+effort levels, or across two candidate models. Measure the errors that matter
+for the manuscript—changed numbers, units, or uncertainty; unsupported claims;
+missed or altered citations; changed claim scope—alongside editing effort,
+latency, and cost. Raise the setting, or route difficult cases to a more capable
+model, only when that comparison catches relevant problems reliably enough to
+justify the trade-off. A higher setting does not make unverified sources,
+incomplete context, or an ambiguous writing request reliable, and every model
+output still requires the evidence and meaning checks in this section.
 
-For a recurring workflow, compare candidates using the same source packets and
-review rubric. Measure the errors that matter: changed numbers or uncertainty,
-unsupported claims, missed citations, and editing effort. Route difficult cases
-to a more capable model only when that evaluation supports the added time or
-cost. Every model output still requires the evidence and meaning checks in this
-section. Current provider guidance changes; for OpenAI models, consult
+Provider guidance changes. For OpenAI models, consult
 [OpenAI's model-selection guide](https://developers.openai.com/api/docs/guides/model-selection)
-and [current model guidance](https://developers.openai.com/api/docs/guides/latest-model?model=gpt-5.5)
-when matching a model and reasoning effort to a writing task.
+and [current model guidance](https://developers.openai.com/api/docs/guides/latest-model?model=gpt-5.5).
+For Claude models, consult
+[Anthropic's model-selection guide](https://platform.claude.com/docs/en/about-claude/models/choosing-a-model),
+the [effort parameter reference](https://platform.claude.com/docs/en/build-with-claude/effort),
+and [Claude Code model configuration](https://code.claude.com/docs/en/model-config).
+
+### Constrain Overthinking in Manuscript Work
+
+Overthinking is a measured behavior rather than an impression. A benchmark of 53
+models on basic arithmetic found reasoning models producing roughly eighteen
+times more output tokens than standard models while sometimes scoring lower,
+with sharply diminishing returns from larger budgets and contradictions
+accumulating in long chains
+([Srivastava et al., Findings of ACL 2026](https://aclanthology.org/2026.findings-acl.1285/)).
+A structural analysis attributes the pattern to over-verification and
+over-exploration—re-checking a settled sub-result, or opening alternatives the
+task does not need—and proposes defining overthinking by the utility of each
+reasoning step rather than by response length
+([Zhang et al., ACL 2026](https://aclanthology.org/2026.acl-long.773/),
+[DeepMind summary](https://deepmind.google/research/publications/203490/)).
+
+In manuscript work this is harder to notice than in code, because the output
+still reads well. A revision pass hedges a claim the evidence supports, adds a
+limitation the data does not require, replaces the author's term with a more
+common one, restates a number in a way that changes its uncertainty, or rewrites
+a sentence the coauthors already approved. Nothing fails; the meaning moved.
+Asking for more thinking does not prevent this. Structure the request instead.
+
+1. **State the scope and the stopping condition.** "Edit only the paragraph
+   below for grammar and clarity. Do not restructure the section, add or remove
+   citations, or comment on the science."
+2. **Separate drafting from checking.** Ask for the draft, then run a separate
+   review pass with a named question: "Check this paragraph for numbers, units,
+   and uncertainty that disagree with the supplied result records. Report each
+   disagreement with its source line."
+3. **Require an explicit change criterion.** "Preserve the author's wording
+   unless you can quote the sentence and name the specific problem: a grammar
+   error, an undefined term, a claim the supplied evidence does not support, or
+   a conflict with another section. Do not change wording for preference." A
+   review pass without a criterion will produce edits because it was asked for
+   edits.
+4. **Verify outside the model.** Check numbers against the experiment records
+   and figure data, citations against the original sources, and definitions
+   against the methods, as in
+   [Connect Claims to Evidence](#connect-claims-to-evidence). A second model
+   opinion, or the same model agreeing with itself, is not verification.
+5. **Match the effort to the task.** Use the table above, and keep bounded
+   language edits at a low setting. Each additional reasoning token is another
+   opportunity for the model to decide that a correct sentence needs improving.
+6. **Keep the manuscript recoverable.** Commit before a revision pass so every
+   edit is a reviewable diff, and gate anything you cannot undo: "Show the
+   proposed edits as a diff and wait for my confirmation before writing to any
+   file. Do not edit the bibliography, equations, labels, or figure files, and
+   do not run the build or submit anything."
+
+A request carrying these constraints:
+
+```text
+Edit the Results paragraph in manuscript/sections/results.tex for grammar and
+clarity only.
+
+Do not restructure the paragraph, change the order of the findings, add
+citations, or add interpretation. Preserve every number, unit, and uncertainty
+exactly as written, and preserve the terminology in manuscript/style.md.
+
+Keep the author's wording unless you can quote the sentence and name a specific
+problem. Preference is not a reason to change a sentence.
+
+Show the result as a diff with a one-line reason for each change. Do not write
+to any file until I confirm.
+```
+
+The same discipline appears in [Preserve Author Style](#preserve-author-style)
+and [Review with Separate Roles](#review-with-separate-roles): a pass that can
+change anything for any reason will, and the author then has to reconstruct what
+the paragraph originally claimed.
 
 ## Prepare the Manuscript Context
 
@@ -111,6 +207,8 @@ sample-project/
     ├── claims.md
     ├── sources.md
     ├── writing-rules.md
+    ├── style.md
+    ├── workflows/
     ├── sections/
     │   ├── methods.tex
     │   └── results.tex
@@ -121,8 +219,16 @@ This example uses LaTeX for the manuscript: `manuscript/main.tex` is its entry
 point, and `manuscript/sections/` holds included source files. Keep
 `manuscript/README.md` for the target audience, current stage, and documented
 build or export procedure. The Markdown files hold supporting planning and
-evidence records. Keep large outputs and restricted data in their established
-storage locations.
+evidence records, and `manuscript/workflows/` holds the shared runbooks described
+in [Use Focused Writing Skills](#use-focused-writing-skills). Keep large outputs
+and restricted data in their established storage locations.
+
+The directory names are a project choice. Nesting under `manuscript/` suits a
+research repository where code and paper sit side by side. A LaTeX-only project
+whose sources already live at the repository root may prefer a shorter name such
+as `editorial/` for the same runbooks. The rest of this section writes
+`manuscript/workflows/` because the sample layout does; substitute the path your
+project actually uses.
 
 Link to canonical findings and experiment records rather than copying them into
 multiple manuscript notes. An experiment record should identify the code
@@ -152,7 +258,7 @@ ask the agent to read that file before editing:
   venues, or publication years.
 - Ask when scientific content, the intended argument, or the correct technical
   phrasing cannot be established from the repository or supplied evidence.
-- Do not create thesis figures unless the user explicitly overrides this rule.
+- Do not create manuscript figures unless the user explicitly overrides this rule.
   During review-only tasks, report the missing figure without changing the file.
   When an edit requires a figure placeholder, preserve an existing placeholder
   or add a blank figure environment with a descriptive TODO comment, then ask
@@ -231,29 +337,30 @@ a consistent review process. A skill does not provide access to papers or certif
 scientific correctness.
 
 The following names are proposed project skills you can create; they are not
-claims that these skills are installed or published:
+claims that these skills are installed or published. Seven of them ship as
+adaptable examples in this repository and are marked below; the rest are
+starting points you would write yourself.
 
-| Proposed skill | Inputs | Output and boundary |
-| --- | --- | --- |
-| `citation-audit` | Section, source notes, bibliography, original passages | Report of supported, unsupported, and unverified claims; no automatic reference replacement |
-| `evidence-to-section` | Accepted outline and verified claim records | One section draft with evidence pointers and TODOs; no invented findings |
-| `scientific-consistency` | Manuscript, figures, metric definitions, result summaries | Located discrepancies in numbers, terms, scope, and uncertainty; scientific decisions left open |
-| `logic-review` | Research question, outline, section, claim records | Report of missing premises, contradictions, unsupported inferences, and alternative explanations |
-| `proof-review` | Theorem or proposition, proof, definitions, cited prerequisites | Located gaps in inference, assumptions, domains, and edge cases; no invented proof steps |
-| `math-review` | Equations, notation, derivations, and result records | Located inconsistencies in notation, assumptions, transformations, units, or numerical claims; no silent equation changes |
-| `algorithm-review` | Algorithm description, pseudocode, implementation, and analysis records | Located ambiguities and mismatches in inputs, outputs, state, termination, correctness, or complexity; no invented bounds or behavior |
-| `writing-review` | Section, audience, terminology, writing rules | Report of unclear sentences, weak paragraph flow, repetition, and undefined terms |
-| `language-edit` | Named section, writing rules, permitted style sample | Small prose diff plus meaning-sensitive edits flagged for review |
-| `author-style` | Reviewed section, agreed style profile, permitted author samples | Natural prose in the author's voice, with scientific meaning preserved and sensitive edits flagged |
-| `reviewer-response` | Reviewer comment, revision record, current diff | Response tied to completed changes; unfinished experiments identified as pending |
+| Proposed skill | Example included | Inputs | Output and boundary |
+| --- | --- | --- | --- |
+| `evidence-review` | Yes | Section, source notes, bibliography, original passages, result records, metric definitions | Report of supported, unsupported, and unverified claims, plus located discrepancies in numbers, units, terms, scope, and uncertainty; no automatic reference replacement and no new analysis |
+| `evidence-to-section` | No | Accepted outline and verified claim records | One section draft with evidence pointers and TODOs; no invented findings |
+| `logic-review` | Yes | Research question, outline, section, claim records | Report of missing premises, contradictions, unsupported inferences, and alternative explanations |
+| `proof-review` | Yes | Theorem or proposition, proof, definitions, cited prerequisites | Located gaps in inference, assumptions, domains, and edge cases; no invented proof steps |
+| `math-review` | Yes | Equations, notation, derivations, and result records | Located inconsistencies in notation, assumptions, transformations, units, or numerical claims; no silent equation changes |
+| `algorithm-review` | Yes | Algorithm description, pseudocode, implementation, and analysis records | Located ambiguities and mismatches in inputs, outputs, state, termination, correctness, or complexity; no invented bounds or behavior |
+| `writing-review` | Yes | Section, audience, terminology, writing rules | Report of unclear sentences, weak paragraph flow, repetition, and undefined terms |
+| `language-edit` | No | Named section, writing rules, permitted style sample | Small prose diff plus meaning-sensitive edits flagged for review |
+| `author-style` | Yes | Reviewed section, agreed style profile, permitted author samples | Natural prose in the author's voice, with scientific meaning preserved and sensitive edits flagged |
+| `reviewer-response` | No | Reviewer comment, revision record, current diff | Response tied to completed changes; unfinished experiments identified as pending |
 
 ### Available Example Skills and Installation
 
 This repository includes seven ready-to-adapt, **project-local** Codex and Claude
 Code wrappers in the [agentic writing example](../examples/agentic_writing/).
 They are examples, not independently validated assessments of a manuscript.
-Each wrapper refers to the example's shared `workflows/` files, so copy and adapt
-those runbooks before using a wrapper in another project.
+Each wrapper refers to the example's shared `manuscript/workflows/` runbooks, so
+copy and adapt those runbooks before using a wrapper in another project.
 
 | Example skill | Purpose | Codex wrapper | Claude Code wrapper |
 | --- | --- | --- | --- |
@@ -266,24 +373,51 @@ those runbooks before using a wrapper in another project.
 | `author-style` | Review or, when explicitly requested, make small style edits while checking for changes in scientific meaning. | [`author-style`](../examples/agentic_writing/.agents/skills/author-style/SKILL.md) | [`author-style`](../examples/agentic_writing/.claude/skills/author-style/SKILL.md) |
 
 To install one of these examples in a manuscript repository, first copy and
-adapt the corresponding runbook in `workflows/` and merge the example's
-`AGENTS.md` or `CLAUDE.md` guidance into the repository's existing instruction
-file. Do not overwrite existing instructions. Then place the wrapper directory
-at `.agents/skills/<skill-name>/` for Codex or
-`.claude/skills/<skill-name>/` for Claude Code. For example, a Codex project
+adapt the corresponding runbook into your shared-procedure directory, then merge
+the example's `AGENTS.md` guidance into the repository's existing instruction
+file — `AGENTS.md` for Codex or `CLAUDE.md` for Claude Code. Do not overwrite
+existing instructions; the example ships one shared instruction file, not one per
+agent. Then place the wrapper directory at `.agents/skills/<skill-name>/` for
+Codex or `.claude/skills/<skill-name>/` for Claude Code. Skill directories stay
+at the project root because each agent discovers them there; only the runbooks
+follow your own layout.
+
+The example uses `manuscript/workflows/`, so a Codex project adopting it as-is
 would contain:
 
 ```text
 <project-root>/
-├── AGENTS.md                 # Merge the applicable example guidance.
-├── workflows/
-│   ├── review.md
-│   └── logic-review.md        # Copy and adapt these shared procedures.
+├── AGENTS.md                      # Merge the applicable example guidance.
+├── manuscript/
+│   └── workflows/
+│       ├── review.md
+│       └── logic-review.md        # Copy and adapt these shared procedures.
 └── .agents/
     └── skills/
         └── logic-review/
-            └── SKILL.md      # Copy and adapt the thin wrapper.
+            └── SKILL.md           # Copy and adapt the thin wrapper.
 ```
+
+A LaTeX-only repository, whose manuscript sources already sit at the root, may
+prefer a shorter directory for the same files:
+
+```text
+<project-root>/
+├── AGENTS.md
+├── main.tex
+├── sections/
+├── editorial/
+│   ├── review.md
+│   └── logic-review.md
+└── .agents/
+    └── skills/
+        └── logic-review/
+            └── SKILL.md
+```
+
+Either layout works. The wrapper `SKILL.md` is what tells the agent where to
+read, so whichever directory you choose, use one location consistently and edit
+the copied wrapper's paths to match it.
 
 From the root of this guide, use the following PowerShell commands only when
 `<project-root>\.agents\skills\logic-review` does not already exist. They create
@@ -298,7 +432,7 @@ if (Test-Path -LiteralPath $skillTarget) {
     throw "Refusing to overwrite existing skill: $skillTarget"
 }
 
-New-Item -ItemType Directory -Path (Split-Path -Parent $skillTarget) -Force
+New-Item -ItemType Directory -Path (Split-Path -Parent $skillTarget) -Force | Out-Null
 Copy-Item -Recurse -Path '.\examples\agentic_writing\.agents\skills\logic-review' -Destination $skillTarget
 ```
 
@@ -309,11 +443,13 @@ discovery, then invoke `$logic-review` (or another installed name) with a target
 section and draft version. In Claude Code, invoke the corresponding
 `/logic-review` command.
 
-For a reusable external skill, prefer an installable plugin or use Codex's
+For a reusable external skill, prefer an installable plugin. In Codex, use
 `$skill-installer` to inspect curated skills or request a specific repository
-skill. The official documentation describes local discovery, the installer, and
-plugin distribution; the older `openai/skills` catalog is deprecated in favor of
-the current [OpenAI Plugins repository](https://github.com/openai/plugins).
+skill; OpenAI's curated plugin examples are in the
+[OpenAI Plugins repository](https://github.com/openai/plugins). In Claude Code,
+register a marketplace with `/plugin marketplace add <owner>/<repo>` and install
+from it with `/plugin install <name>@<marketplace>`, as described in
+[Discover and install plugins](https://code.claude.com/docs/en/discover-plugins).
 Treat any external writing skill as untrusted until you have inspected its
 instructions, scripts, data access, and license. Do not install a skill merely
 because its name suggests it can verify citations or scientific correctness.
@@ -330,9 +466,8 @@ wrappers above.
 
 | Proposed skill | Closest external candidate | Fit and limitation |
 | --- | --- | --- |
-| `citation-audit` | [`citation-auditor`](https://github.com/yaotingsun/academic-publishing-skills) from Academic Publishing Skills | Directly named citation-audit workflow. Confirm that its source-access and metadata steps suit the bibliography manager and citation format in use. |
+| `evidence-review` | [`citation-auditor`](https://github.com/yaotingsun/academic-publishing-skills) from Academic Publishing Skills for the citation half; [`paper-review`](https://github.com/WenyuChiou/academic-writing-skills) and Academic Publishing Skills' `statistical-rigor-helper`, `figure-checker`, and `table-checker` for the consistency half | No single external skill covers both halves. Confirm that `citation-auditor`'s source-access and metadata steps suit the bibliography manager and citation format in use. The consistency candidates separate statistical, figure, and table checks, and none establishes correctness without the underlying records. |
 | `evidence-to-section` | [`academic-writing-skills`](https://github.com/WenyuChiou/academic-writing-skills) | Covers evidence-led drafting from an outline and approved evidence. It is a broad workflow rather than a small, independently installable drafting pass. |
-| `scientific-consistency` | [`paper-review`](https://github.com/WenyuChiou/academic-writing-skills) and Academic Publishing Skills' `statistical-rigor-helper`, `figure-checker`, and `table-checker` | The first covers manuscript-wide consistency; the latter collection separates statistical, figure, and table checks. Neither establishes correctness without the underlying records. |
 | `logic-review` | [`paper-review`](https://github.com/WenyuChiou/academic-writing-skills) | Includes an argument-and-structure pass and is read-only by default. Keep the local `logic-review` wrapper when a smaller, bounded report is preferable. |
 | `proof-review` | No verified general-purpose external review skill found | Do not use a proof-writing skill as a proof verifier. Retain the repository's read-only `proof-review` procedure, and have a qualified human verify any proof. |
 | `math-review` | No verified general-purpose external review skill found | A mathematics/LaTeX writing skill can format or draft equations but does not validate a derivation. Retain the local read-only review procedure and check against definitions and calculations. |
@@ -359,6 +494,15 @@ a drafting and formatting aid, not a review or verification skill; do not map it
 to `proof-review`, `math-review`, or `algorithm-review` without adding the
 independent checks required by those local procedures.
 
+Two further candidates orchestrate a whole pipeline rather than a single pass:
+the ten-stage [`academic-pipeline`](https://claudemarketplaces.com/skills/imbad0202/academic-research-skills/academic-pipeline)
+orchestrator skill, and [`ndcorder/research-agent`](https://github.com/ndcorder/research-agent),
+a Claude Code toolkit that drafts LaTeX papers through multi-agent
+orchestration. Both are small and unvetted, and neither listing site is
+affiliated with Anthropic. A pipeline that runs from literature review to a
+finished draft also moves the author's checkpoints inside the automation; if you
+test one, keep the evidence and review gates in this section as external checks.
+
 Before adopting any candidate, pin or record the reviewed revision, inspect all
 `SKILL.md` files and bundled scripts, test it on a copied manuscript or synthetic
 example, and keep only the instructions that match the project's evidence,
@@ -366,43 +510,45 @@ privacy, and review rules. The broad Academic Writing Skills repository had 48
 GitHub stars when this section was checked; that is a discovery signal only, not
 evidence of quality or suitability.
 
-Start with `citation-audit` and `language-edit` if those are your recurring
+Start with `evidence-review` and `language-edit` if those are your recurring
 bottlenecks. Keep their procedures in shared Markdown files and use thin
 agent-specific wrappers, following
 [guide section 15's reusable workflow pattern](15_Agentic_Workflow.md#reusable-workflows).
 
-For example, save a citation-audit runbook as
-`manuscript/workflows/citation-audit.md` in the sample project. Its procedure can
-be:
+For a skill with no example in this repository, write the runbook first. For
+example, save a language-edit runbook as `manuscript/workflows/language-edit.md`
+in the sample project. Its procedure can be:
 
-1. Read the writing rules and the manuscript section named in the request.
-2. List externally sourced claims and their existing citation keys.
-3. Check bibliographic metadata against the original source or publisher record.
-4. Compare each claim with the relevant original passage and its limitations.
-5. Report the manuscript location, source location, assessment, and next action.
-6. Mark unavailable sources unverified and unsupported claims unsupported.
-   Do not edit the manuscript or bibliography during this audit.
+1. Read the writing rules, the style profile, and the manuscript section named
+   in the request.
+2. Edit only that section for grammar, clarity, repetition, and paragraph flow.
+3. Preserve numbers, units, equations, citation keys, labels, negation, causal
+   language, scope, and stated uncertainty.
+4. Compare the edited text with the original sentence by sentence and list every
+   change that could affect scientific meaning.
+5. Leave any sentence that needs a scientific decision unedited and report it.
+6. Return the diff, the flagged sentences, and the checks performed.
 
-Wrap that runbook in `.agents/skills/citation-audit/SKILL.md` for Codex or
-`.claude/skills/citation-audit/SKILL.md` for Claude Code:
+Wrap that runbook in `.agents/skills/language-edit/SKILL.md` for Codex or
+`.claude/skills/language-edit/SKILL.md` for Claude Code:
 
 ```markdown
 ---
-name: citation-audit
-description: Audit manuscript citations and source support when requested.
+name: language-edit
+description: Edit manuscript prose for clarity while preserving scientific meaning.
 ---
 
-# Audit manuscript citations
+# Edit manuscript language
 
-Resolve paths from the project root. Read manuscript/writing-rules.md and
-manuscript/workflows/citation-audit.md, then follow the runbook for the section
-named in the request. If no section is named, request the target before auditing.
-Return a read-only report with precise manuscript and source locations.
-Do not invent source metadata or treat unavailable sources as verified.
+Resolve paths from the project root. Read manuscript/writing-rules.md,
+manuscript/style.md, and manuscript/workflows/language-edit.md, then follow the
+runbook for the section named in the request. If no section is named, request
+the target before editing. Edit only that section and return a small diff.
+Flag every edit that may change scientific meaning instead of resolving it.
 ```
 
-After creating the runbook and wrapper, invoke `$citation-audit` in Codex or
-`/citation-audit` in Claude Code with the target section. Verify that the agent
+After creating the runbook and wrapper, invoke `$language-edit` in Codex or
+`/language-edit` in Claude Code with the target section. Verify that the agent
 reads the shared procedure. See the
 [official Codex skills documentation](https://learn.chatgpt.com/docs/build-skills)
 and [Claude Code skills documentation](https://code.claude.com/docs/en/skills)
@@ -424,6 +570,13 @@ help keep the reviews focused when the manuscript is substantial. More agents
 also add coordination and review effort, and their findings may share the same
 blind spots.
 
+Orchestration frameworks implement this split directly: LlamaIndex's
+agents-as-tools example coordinates separate research, writing, and review
+agents beneath one orchestrator
+([Multi-Agent Report Generation](https://developers.llamaindex.ai/python/examples/agent/agents_as_tools/)).
+Borrow the role separation from such designs, but keep acceptance of each
+finding with the author rather than with a downstream agent.
+
 Use the following roles as an optional review team. They refer to the proposed
 skills above and do not require a particular product's multi-agent feature:
 
@@ -433,7 +586,7 @@ skills above and do not require a particular product's multi-agent feature:
 | Proof reviewer | `proof-review` | Does each proof step follow from its stated assumptions and prerequisites? Are domains, quantifiers, and edge cases handled? |
 | Mathematics reviewer | `math-review` | Are notation, derivations, assumptions, units, and numerical claims internally consistent and supported? |
 | Algorithm reviewer | `algorithm-review` | Are inputs, outputs, state changes, termination, and correctness or complexity claims specified and consistent with the implementation? |
-| Evidence reviewer | `citation-audit`, `scientific-consistency` | Do sources and results support the claims? Do values, definitions, and uncertainty agree across the manuscript? |
+| Evidence reviewer | `evidence-review` | Do sources and results support the claims? Do values, definitions, and uncertainty agree across the manuscript? |
 | Writing reviewer | `writing-review` | Can the intended reader follow each sentence and paragraph? Are transitions meaningful and terms defined? |
 | Style reviewer | Review procedure from `author-style` | Does the prose follow the agreed author voice? Where do generic phrasing, inflated language, or mechanical repetition obscure meaning? |
 
@@ -591,6 +744,11 @@ Separate argument development from language polishing so you can see what each
 pass changes. The sequence below is a starting point; skip passes that your
 manuscript does not need.
 
+Automated research pipelines stage the work the same way, from literature review
+through drafting and revision ([Schmidgall et al., 2025](https://arxiv.org/pdf/2501.04227);
+[Liu et al., 2025](https://arxiv.org/html/2504.18765v1)). The difference here is
+where each stage ends: at an author decision rather than at the next agent call.
+
 ### 1. Outline from Supported Findings
 
 Supply the research question, intended contribution, audience, and evidence
@@ -687,10 +845,16 @@ Use this checklist for a section handoff or final manuscript review:
   cited passages support the statements.
 - Review the diff for changes to meaning and unintended edits in commands,
   equations, labels, and bibliography entries.
+- Confirm that every edit from a revision pass has a stated reason, and restore
+  the author's original wording wherever that reason is only preference.
 - Resolve TODO notes and verify the rendered manuscript, including references
   and figure placement. Run the project's documented build if one exists.
 - Record manuscript and research revisions, evidence used, assistance performed,
   checks completed, and remaining questions in the task record.
+  Carnegie Mellon University Libraries' [LLM Documentation
+  Guide](https://guides.library.cmu.edu/LLMDocumentationGuide) lists what such a
+  record usually needs: the model and version, the settings, the prompts, and
+  the iterations that led to the retained text.
 - Check the current rules of your institution, collaborators, and target venue
   for permitted AI use and disclosure. Record any required disclosure from the
   work actually performed; this section does not establish a universal policy.
@@ -701,3 +865,67 @@ Use this checklist for a section handoff or final manuscript review:
 The reviewable output is a manuscript change together with its evidence and
 unresolved questions. Human authors remain responsible for accepting the text
 and the scientific claims it makes.
+
+## Further Reading
+
+These are starting points for evaluation rather than endorsements. Read each one
+against the evidence, privacy, and disclosure rules in this section; links were
+checked in September 2026.
+
+Reasoning effort and overthinking:
+
+- Gaurav Srivastava et al., [Do LLMs Overthink Basic Math Reasoning? Benchmarking
+  the Accuracy-Efficiency Tradeoff in Language Models](https://aclanthology.org/2026.findings-acl.1285/),
+  Findings of ACL 2026
+- Xinliang Frederick Zhang et al., [Do LLMs Really Need 10+ Thoughts for "Find the
+  Time 1000 Days Later"? Towards Structural Understanding of LLM Overthinking](https://aclanthology.org/2026.acl-long.773/),
+  ACL 2026 ([DeepMind summary](https://deepmind.google/research/publications/203490/))
+
+LLM agents across the research workflow:
+
+- Samuel Schmidgall et al., [Agent Laboratory: Using LLM Agents as Research
+  Assistants](https://arxiv.org/pdf/2501.04227) — an end-to-end pipeline from
+  literature review through a written report. Read it for which stages were
+  automated and which human decisions were removed to make that possible.
+- Chengwei Liu et al., [A Vision for Auto Research with LLM
+  Agents](https://arxiv.org/html/2504.18765v1) — a proposed multi-agent framework
+  spanning eight research phases. It is a position paper describing an intended
+  system, not a validated one.
+- [LLM Agents as AI Scientists: A Survey](https://openreview.net/forum?id=bfdUWy6rUA)
+  — surveys agent contributions to hypothesis discovery, experiment
+  implementation, paper writing, and peer review. Hosted on OpenReview; check its
+  review status and venue before citing it.
+
+Documenting and disclosing LLM use:
+
+- Carnegie Mellon University Libraries, [LLM Documentation
+  Guide](https://guides.library.cmu.edu/LLMDocumentationGuide) — practical
+  guidance on recording prompts, models, and settings so assisted work stays
+  reproducible and disclosable. It pairs with the task record in
+  [Check Before Sharing](#check-before-sharing). Your own institution's and
+  venue's rules still govern.
+
+Multi-agent orchestration patterns:
+
+- LlamaIndex, [Multi-Agent Report Generation using Agents as
+  Tools](https://developers.llamaindex.ai/python/examples/agent/agents_as_tools/)
+  — a worked orchestrator, research, writing, and review split. The role
+  separation matches [Review with Separate Roles](#review-with-separate-roles),
+  though report generation is a lower-stakes task than a manuscript.
+- [`ndcorder/research-agent`](https://github.com/ndcorder/research-agent), listed
+  on [Svelte Themes](https://sveltethemes.dev/ndcorder/research-agent) — a Claude
+  Code toolkit that orchestrates agents to produce LaTeX papers. It is small and
+  unvetted; inspect it before use, and do not let an autonomous drafting pipeline
+  produce claims you have not checked against evidence.
+- [`academic-pipeline`](https://claudemarketplaces.com/skills/imbad0202/academic-research-skills/academic-pipeline)
+  by imbad0202 — a ten-stage orchestrator skill listed on a third-party
+  marketplace that is not affiliated with Anthropic. Evaluate it with the checks
+  in [External Skill Sets to Evaluate](#external-skill-sets-to-evaluate).
+
+Vendor commentary:
+
+- Suprmind, [Best AI for Writing Research Papers: A Multi-LLM Workflow That
+  Holds](https://suprmind.ai/hub/insights/best-ai-for-writing-research-papers-a-multi-llm-workflow-that-holds/)
+  — describes a multi-model drafting-and-critique workflow. It is marketing for
+  the publisher's own product, so treat its model comparisons as claims rather
+  than measurements.

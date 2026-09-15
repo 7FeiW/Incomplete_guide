@@ -6,9 +6,9 @@
 ## Context
 
 Read linked targets explicitly, resolving paths relative to this file:
-- [Project context](project-context.md) for layout and build tasks.
-- [Author style](style.md) for writing and style tasks.
-- [Review contract](workflows/review.md) for manuscript reviews.
+- [Project context](manuscript/project-context.md) for layout and build tasks.
+- [Author style](manuscript/style.md) for writing and style tasks.
+- [Review contract](manuscript/workflows/review.md) for manuscript reviews.
 - Read the requested section, relevant evidence, and task plan. Report missing files.
 
 ## Evidence and Meaning

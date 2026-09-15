@@ -7,20 +7,21 @@
 
 ```text
 paper-project/
-├── paper.tex
-├── sections/
-│   ├── introduction.tex
-│   ├── methods.tex
-│   ├── results.tex
-│   └── discussion.tex
-├── references.bib
-├── figures/
-├── supplementary/
-├── evidence/
 ├── AGENTS.md
-├── project-context.md
-├── style.md
-└── workflows/
+└── manuscript/
+    ├── paper.tex
+    ├── sections/
+    │   ├── introduction.tex
+    │   ├── methods.tex
+    │   ├── results.tex
+    │   └── discussion.tex
+    ├── references.bib
+    ├── figures/
+    ├── supplementary/
+    ├── evidence/
+    ├── project-context.md
+    ├── style.md
+    └── workflows/
 ```
 
 `paper.tex` is the example LaTeX entry point; `sections/` contains its prose.

@@ -3,8 +3,8 @@
 > This is a paper voice profile, not a universal academic style.
 > Adapt it to the author, audience, and venue. Scientific accuracy takes precedence.
 
-Use this profile for writing and style tasks. Follow [AGENTS.md](AGENTS.md) and
-the [author-style runbook](workflows/author-style.md) when revising prose.
+Use this profile for writing and style tasks. Follow [AGENTS.md](../AGENTS.md)
+and the [author-style runbook](workflows/author-style.md) when revising prose.
 
 When drafting or revising paper prose, preserve the author's established academic voice.
 

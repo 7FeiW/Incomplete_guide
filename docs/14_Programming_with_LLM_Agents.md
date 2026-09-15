@@ -149,6 +149,74 @@ current model catalog and task-selection guidance before choosing or replacing a
 model. For OpenAI models, see [OpenAI's model-selection guide](https://developers.openai.com/api/docs/guides/model-selection)
 and [current model guidance](https://developers.openai.com/api/docs/guides/latest-model?model=gpt-5.5).
 
+### Control Overthinking and Self-Revision
+
+More reasoning carries its own failure mode. A benchmark of 53 models on basic
+arithmetic reports that reasoning models emit roughly 6,780 output tokens where
+standard models emit 378, sometimes at lower accuracy; that accuracy collapses
+when a long chain is truncated by a token limit, falling from 72% to 44% at
+1,024 tokens; and that larger reasoning budgets give sharply diminishing returns
+while introducing contradictions and accumulated errors in long chains
+([Srivastava et al., Findings of ACL 2026](https://aclanthology.org/2026.findings-acl.1285/)).
+A structural analysis of the same behavior traces it to over-verification and
+over-exploration—re-checking a sub-result that is already settled, or opening
+alternatives the task does not need—and argues that overthinking should be
+defined by the utility of each reasoning step rather than by response length
+([Zhang et al., ACL 2026](https://aclanthology.org/2026.acl-long.773/),
+[DeepMind summary](https://deepmind.google/research/publications/203490/)).
+
+In a coding session the symptom is recognizable: a correct first patch that a
+"let me double-check that" pass rewrites into a broken one, a one-line fix
+delivered as a refactor, or an agent that keeps editing while it is still
+investigating. Asking for more thinking makes this more likely, not less. For
+work that matters, structure the request instead.
+
+1. **State the difficulty and the stopping condition.** Say when a task is
+   small: "Give one concise solution. Do not explore alternatives unless the
+   first one fails a check listed below."
+2. **Separate solving from checking.** Ask for the implementation, then run a
+   targeted verification step: "Check this diff for logic errors, off-by-one
+   errors, and unhandled inputs. Change it only where you can name the specific
+   defect."
+3. **Require an explicit change criterion.** "Keep the current implementation
+   unless you can point to a failing test, a contradicted requirement, or a
+   specific incorrect line." Without a criterion, a review pass will find
+   something to change because it was asked to review.
+4. **Verify outside the model.** Run the tests, the linter, and the type
+   checker; execute the code; compute numbers with Python rather than in prose;
+   read the library documentation instead of accepting a recalled API. Another
+   model pass is not verification.
+5. **Bound the reasoning budget for bounded work.** Each additional reasoning
+   token is another opportunity to introduce an error, so raise the effort only
+   for problems that genuinely need multi-step analysis, using the comparison
+   described above.
+6. **Keep actions reversible.** Commit or branch before a large edit, and
+   require a plan before anything you cannot undo: "Do not delete files,
+   force-push, run migrations, submit jobs, or modify data before showing me the
+   proposed command and waiting for confirmation." [Tool Controls](#tool-controls)
+   covers the permission settings that enforce this.
+
+A request carrying these constraints:
+
+```text
+Implement the duplicate-ID rejection in src/project/dataset.py.
+
+This is a small, local change. Give one concise implementation. Do not explore
+alternative designs, refactor surrounding code, or add configuration options.
+
+Report the diff, then verify in a separate step:
+- uv run pytest tests/test_dataset.py -q
+- uv run ruff check src/project/dataset.py
+
+Revise the implementation only for a failure you can attribute to a specific
+line or a specific requirement above. Do not rewrite working code for style.
+Do not run training, modify datasets, or commit.
+```
+
+This is the same separation used in [Review and Validation](#review-and-validation):
+the agent's confidence is not a check, and a second pass is useful only when it
+has a stated criterion for changing something.
+
 ## Preparation
 
 A useful request combines two kinds of context: repository guidance that applies
@@ -569,6 +637,10 @@ Before relying on a server:
   specialized workflows into scoped instructions or skills.
 - **Untrusted external content:** Treat MCP results, issues, and web pages as
   data, not instructions or authorization.
+- **Overthinking and self-inflicted revision:** A verification pass rewrites a
+  correct answer, or a bounded fix returns as a refactor. State the stopping
+  condition and the criterion for changing an answer, bound the reasoning
+  budget, and verify with tests rather than another model pass.
 
 ## Related Guide Section: Agentic Research Workflow
 
@@ -599,3 +671,9 @@ someone else—or another agent session—can pick up the work safely.
 - [OpenAI model-selection guide](https://developers.openai.com/api/docs/guides/model-selection)
 - [NIST AI 600-1: Generative AI Profile](https://doi.org/10.6028/NIST.AI.600-1)
 - [Responsible use of GitHub Copilot agents](https://docs.github.com/en/copilot/responsible-use/agents)
+- Gaurav Srivastava et al., [Do LLMs Overthink Basic Math Reasoning? Benchmarking
+  the Accuracy-Efficiency Tradeoff in Language Models](https://aclanthology.org/2026.findings-acl.1285/),
+  Findings of ACL 2026
+- Xinliang Frederick Zhang et al., [Do LLMs Really Need 10+ Thoughts for "Find the
+  Time 1000 Days Later"? Towards Structural Understanding of LLM Overthinking](https://aclanthology.org/2026.acl-long.773/),
+  ACL 2026 ([DeepMind summary](https://deepmind.google/research/publications/203490/))
