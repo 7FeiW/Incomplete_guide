@@ -27,3 +27,4 @@ Below are the documents in the `docs/` folder (click to open):
 - [Using Apptainer on Compute Canada](docs/13_Apptainer_Compute_Canada.md)
 - [Programming with LLM Agents](docs/14_Programming_with_LLM_Agents.md)
 - [Agentic Research Workflow: Knowledge, Rules, and Plans](docs/15_Agentic_Workflow.md)
+- [Academic Writing with Codex and Claude](docs/16_Academic_Writing_with_LLM_Agents.md)

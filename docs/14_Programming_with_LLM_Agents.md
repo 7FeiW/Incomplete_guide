@@ -115,7 +115,7 @@ prompts. Run commands from the project root in its configured environment.
 See [chapter 15's setup walkthrough](15_Agentic_Workflow.md#step-by-step-setup)
 for the layout, environment setup, and shared instruction files.
 
-The accompanying [shared documentation examples](../examples/ai_coding_examples/docs/)
+The accompanying [shared documentation examples](../examples/agentic%20coding/docs/)
 live outside the agent-specific folders. In the sample project, use `docs/rules/`
 for constraints, `docs/knowledge/` for explanations and procedures,
 `docs/plans/` for plans with their status and progress, and `docs/findings/`
@@ -202,7 +202,7 @@ routine checks, important boundaries, and where detailed project knowledge
 lives. Chapter 15 explains how to organize them without duplication.
 
 Keep shared rules in `docs/rules/` and have each agent's entry point direct it to
-the relevant files. The [shared rules examples](../examples/ai_coding_examples/docs/rules/)
+the relevant files. The [shared rules examples](../examples/agentic%20coding/docs/rules/)
 illustrate this content; tool-specific instruction files provide the entry points.
 
 ### Task Requests

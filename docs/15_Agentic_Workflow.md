@@ -7,10 +7,11 @@ dataset. This continues the example in
 The setup, plans, prompts, and reusable workflow below all use this task.
 
 The workflow applies across LLM agents. The supplementary
-[shared documentation examples](../examples/ai_coding_examples/docs/) contain
+[shared documentation examples](../examples/agentic%20coding/docs/) contain
 the image-classifier architecture and sample plan, plus rules from a Python
 mass-spectrometry project that need adaptation before use here. Agent-specific
-examples remain in [claude/](../examples/ai_coding_examples/claude/).
+examples include an [AGENTS.md entry point](../examples/agentic%20coding/AGENTS.md)
+for Codex and [claude/](../examples/agentic%20coding/claude/) for Claude Code.
 For a Copilot entry-point template, see the
 [Copilot example in chapter 14](14_Programming_with_LLM_Agents.md#copilot-example).
 
@@ -266,7 +267,7 @@ guidance. These give reviewers concrete criteria for checking generated code:
   and who must release resources. Extend the existing owner through its interface
   rather than duplicating logic or changing another component's internal state.
 
-The [shared code-style example](../examples/ai_coding_examples/docs/rules/code-style.md#flat-logic-and-short-call-paths)
+The [shared code-style example](../examples/agentic%20coding/docs/rules/code-style.md#flat-logic-and-short-call-paths)
 contains adaptable instructions for both concerns. Keep the detailed rules in
 your project's canonical coding guide and have agent entry points refer to it.
 Record the actual component responsibilities in `docs/architecture.md`; rules
@@ -302,11 +303,11 @@ or install an agent client. The example paths below belong to the sample project
 not to this documentation repository.
 
 The guide stores shared example documents under
-`examples/ai_coding_examples/docs/`; in your project, the equivalent location is
+`examples/agentic coding/docs/`; in your project, the equivalent location is
 `docs/`. The shared example folder contains `plans/` and `rules/`
 directories. Create `findings/` and `knowledge/` in your project when needed.
 It includes architecture and rules examples
-plus a [sample duplicate-ID plan](../examples/ai_coding_examples/docs/plans/duplicate-sample-ids.md)
+plus a [sample duplicate-ID plan](../examples/agentic%20coding/docs/plans/duplicate-sample-ids.md)
 for this chapter's image-classifier task. Use the templates below to populate
 the other directories as work proceeds.
 
@@ -693,7 +694,7 @@ configuration. See
 [Claude Code skills](https://code.claude.com/docs/en/slash-commands) and
 [Codex skills](https://learn.chatgpt.com/docs/build-skills).
 
-The example's legacy [`commands/`](../examples/ai_coding_examples/claude/commands/)
+The example's legacy [`commands/`](../examples/agentic%20coding/claude/commands/)
 can be converted into thin skills that share the same runbook and scripts.
 
 ## System Audit
