@@ -210,6 +210,7 @@ sample-project/
     ├── outline.md
     ├── claims.md
     ├── sources.md
+    ├── notation.md
     ├── writing-rules.md
     ├── style.md
     ├── workflows/
@@ -255,6 +256,8 @@ ask the agent to read that file before editing:
 
 - Read manuscript/README.md and the evidence named in the task before editing.
 - Preserve scientific meaning, terminology, units, numbers, and citation keys.
+- Use the symbols, abbreviations, and macros defined in manuscript/notation.md.
+  Report a conflict between the draft and that file instead of renaming either.
 - Distinguish observations, interpretations, and untested hypotheses.
 - Never fabricate citations. If a required citation is unknown, add a
   descriptive `% TODO: cite ...` comment that identifies the claim requiring
@@ -275,6 +278,44 @@ These are instructions for the example project, not hard access controls.
 Review unresolved notes before export because LaTeX comments may disappear from
 the rendered manuscript.
 
+### Keep One Notation Register
+
+A paper accumulates symbols, abbreviations, and unit conventions faster than any
+one drafting session tracks them. The same quantity acquires two symbols in
+different sections, a symbol defined in the methods reappears in the discussion
+with a slightly different meaning, and a figure axis keeps a label an earlier
+draft retired. Each is a small error that a reader interprets as carelessness in
+the analysis.
+
+Agents make this likelier, not less likely. A drafting pass over one section
+cannot see what the other sections defined, so it invents a locally reasonable
+symbol. A language pass will happily rewrite `n` as `N` for consistency with the
+sentence it is editing.
+
+Keep `manuscript/notation.md` as the definition of record and name it in the
+tasks that touch equations. A workable register holds:
+
+- a symbol table with each symbol's meaning, type or domain, units, and the
+  section that introduces it;
+- the typographic conventions, such as which face marks a vector, what a hat or
+  bar means, and what subscripts and superscripts index;
+- the LaTeX macros the manuscript defines for notation, so an edit uses the
+  macro instead of expanding it;
+- abbreviations with their expansions and first use; and
+- reserved symbols the field already assigns a meaning, and retired symbols with
+  their replacements, so a leftover occurrence is recognizable as one.
+
+The [agentic writing example](../examples/agentic_writing/manuscript/notation.md)
+includes an adaptable register with these parts.
+
+Two rules make the register worth maintaining. First, define a symbol there
+before it enters the draft, and have review passes report a conflict between the
+draft and the register rather than resolving it. Second, treat a rename as its
+own revision pass: update the register, search the sources including
+figure-generating code and captions, commit the change on its own, and
+regenerate affected figures. A symbol baked into a figure image does not change
+when the LaTeX source does.
+
 ## Set Up Manuscript Agent Rules
 
 Put recurring constraints in agent instructions so each writing task starts with
@@ -294,6 +335,8 @@ For manuscript tasks:
 - Read manuscript/README.md and manuscript/writing-rules.md before working.
 - Read manuscript/claims.md, manuscript/sources.md, and the evidence relevant
   to the requested section. Identify inaccessible or missing sources.
+- Read manuscript/notation.md before drafting or reviewing equations, symbols,
+  units, or abbreviations.
 - Read the task plan named in the request when one exists.
 - Follow the requested scope and distinguish drafting, language editing,
   scientific review, and new analysis.
@@ -312,6 +355,7 @@ manuscript. A useful starting set is:
 | Preserve scientific meaning | Keep negation, causal language, scope, uncertainty, numbers, units, and equations intact during language edits |
 | Citation integrity | Preserve existing citation keys; verify new metadata and supporting passages before proposing a reference |
 | Consistent terminology | Follow agreed definitions and abbreviations; report conflicting usage before choosing a new term |
+| Stable notation | Use the symbols, units, and macros in the notation register; report undefined or conflicting symbols rather than introducing or renaming one |
 | Preserve author voice | Use direct prose and supplied style examples; avoid adding promotional language or unsupported novelty claims |
 | Separate writing from analysis | Report requests for new calculations or experiments as separate work unless the task authorizes them |
 | Protect manuscript structure | Preserve labels, cross-references, figure paths, bibliography structure, and the existing export procedure |
@@ -351,9 +395,9 @@ starting points you would write yourself.
 | `evidence-to-section` | No | Accepted outline and verified claim records | One section draft with evidence pointers and TODOs; no invented findings |
 | `logic-review` | Yes | Research question, outline, section, claim records | Report of missing premises, contradictions, unsupported inferences, and alternative explanations |
 | `proof-review` | Yes | Theorem or proposition, proof, definitions, cited prerequisites | Located gaps in inference, assumptions, domains, and edge cases; no invented proof steps |
-| `math-review` | Yes | Equations, notation, derivations, and result records | Located inconsistencies in notation, assumptions, transformations, units, or numerical claims; no silent equation changes |
+| `math-review` | Yes | Equations, the notation register, derivations, and result records | Located inconsistencies in notation, assumptions, transformations, units, or numerical claims; no silent equation changes |
 | `algorithm-review` | Yes | Algorithm description, pseudocode, implementation, and analysis records | Located ambiguities and mismatches in inputs, outputs, state, termination, correctness, or complexity; no invented bounds or behavior |
-| `writing-review` | Yes | Section, audience, terminology, writing rules | Report of unclear sentences, weak paragraph flow, repetition, and undefined terms |
+| `writing-review` | Yes | Section, audience, terminology, notation register, writing rules | Report of unclear sentences, weak paragraph flow, repetition, and undefined terms |
 | `language-edit` | No | Named section, writing rules, permitted style sample | Small prose diff plus meaning-sensitive edits flagged for review |
 | `author-style` | Yes | Reviewed section, agreed style profile, permitted author samples | Natural prose in the author's voice, with scientific meaning preserved and sensitive edits flagged |
 | `reviewer-response` | No | Reviewer comment, revision record, current diff | Response tied to completed changes; unfinished experiments identified as pending |
@@ -867,6 +911,8 @@ Use this checklist for a section handoff or final manuscript review:
 - Check consequential claims against original sources and experiment records.
 - Reconcile numbers, units, sample counts, and uncertainty across prose, tables,
   figures, captions, and the abstract.
+- Check every symbol and abbreviation against the notation register, including
+  figure axes, table headers, and the supplementary material.
 - Verify references exist, metadata is correct, citation keys resolve, and the
   cited passages support the statements.
 - Review the diff for changes to meaning and unintended edits in commands,

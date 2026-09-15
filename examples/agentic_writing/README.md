@@ -8,6 +8,7 @@ It contains no paper sources; the project layout is illustrative.
 - [AGENTS.md](AGENTS.md): concise evidence and review rules.
 - [manuscript/style.md](manuscript/style.md): preserved voice profile; adapt to the author and venue.
 - [manuscript/project-context.md](manuscript/project-context.md): illustrative paper layout and validation notes.
+- [manuscript/notation.md](manuscript/notation.md): symbols, abbreviations, and notation conventions of record.
 - [Review coordination](manuscript/workflows/review.md).
 - [Logic review](manuscript/workflows/logic-review.md).
 - [Proof review](manuscript/workflows/proof-review.md).

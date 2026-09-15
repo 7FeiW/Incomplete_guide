@@ -20,6 +20,7 @@ paper-project/
     ├── supplementary/
     ├── evidence/
     ├── project-context.md
+    ├── notation.md
     ├── style.md
     └── workflows/
 ```
@@ -31,6 +32,10 @@ publication figures; `supplementary/` holds additional methods and results.
 experiment records. Preserve code revisions, environments, configurations,
 seeds where applicable, data provenance, and result locations in those records.
 Keep large outputs and restricted data in their established storage locations.
+
+`notation.md` is the definition of record for symbols, abbreviations, units, and
+notation conventions. Define a symbol there before it enters the draft, and keep
+renames in their own revision pass.
 
 Markdown or Word projects can use their existing manuscript entry point instead.
 The review procedures do not require LaTeX or this exact directory structure.

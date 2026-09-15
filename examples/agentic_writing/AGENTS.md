@@ -8,6 +8,8 @@
 Read linked targets explicitly, resolving paths relative to this file:
 - [Project context](manuscript/project-context.md) for layout and build tasks.
 - [Author style](manuscript/style.md) for writing and style tasks.
+- [Notation register](manuscript/notation.md) for equations, symbols, and
+  abbreviations.
 - [Review contract](manuscript/workflows/review.md) for manuscript reviews.
 - Read the requested section, relevant evidence, and task plan. Report missing files.
 
@@ -18,6 +20,8 @@ Read linked targets explicitly, resolving paths relative to this file:
 - Distinguish observations, interpretations, hypotheses, and proposed work.
 - Preserve numbers, units, equations, citation keys, labels, negation, causal
   language, scope, and uncertainty during language and style edits.
+- Use the symbols and abbreviations defined in the notation register. Report a
+  conflict between the draft and the register instead of renaming either one.
 - Flag missing support with descriptive `% TODO:` comments in LaTeX or HTML TODO
   comments in Markdown. Never insert empty citation commands.
 - Ask when scientific decisions cannot be resolved from evidence; continue

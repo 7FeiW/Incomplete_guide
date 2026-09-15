@@ -1,8 +1,9 @@
 # Review Algorithms
 
 Read the [review contract](review.md), target algorithm description or
-pseudocode, definitions of inputs and outputs, stated assumptions, relevant
-implementation, and supplied complexity analysis or experiment records.
+pseudocode, definitions of inputs and outputs, the
+[notation register](../notation.md), stated assumptions, relevant implementation, and supplied complexity analysis or
+experiment records.
 
 Check that inputs, outputs, state changes, termination conditions, and edge
 cases are specified; that the prose, pseudocode, and implementation agree; and

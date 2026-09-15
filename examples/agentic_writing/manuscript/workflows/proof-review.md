@@ -1,8 +1,8 @@
 # Review Mathematical Proofs
 
 Read the [review contract](review.md), target proof, theorem or proposition
-statement, definitions, notation, and cited prerequisites. Read the proof in
-the source format used by the manuscript.
+statement, definitions, the [notation register](../notation.md), and cited
+prerequisites. Read the proof in the source format used by the manuscript.
 
 Check that each inference follows from stated assumptions or an identified
 result; that quantifiers, domains, and edge cases are handled; and that the
