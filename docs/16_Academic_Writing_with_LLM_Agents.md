@@ -295,6 +295,54 @@ Treat any external writing skill as untrusted until you have inspected its
 instructions, scripts, data access, and license. Do not install a skill merely
 because its name suggests it can verify citations or scientific correctness.
 
+### External Skill Sets to Evaluate
+
+There is no central, cross-agent usage registry for academic-writing skills, so
+GitHub stars, downloads, or a skill's name do not establish that it is widely
+used, maintained, or scientifically reliable. The following are the broadest
+public collections located for the proposed skills in this chapter as of
+September 2026. They are candidates to inspect and test with synthetic or
+non-confidential material, not endorsements and not a substitute for the local
+wrappers above.
+
+| Proposed skill | Closest external candidate | Fit and limitation |
+| --- | --- | --- |
+| `citation-audit` | [`citation-auditor`](https://github.com/yaotingsun/academic-publishing-skills) from Academic Publishing Skills | Directly named citation-audit workflow. Confirm that its source-access and metadata steps suit the bibliography manager and citation format in use. |
+| `evidence-to-section` | [`academic-writing-skills`](https://github.com/WenyuChiou/academic-writing-skills) | Covers evidence-led drafting from an outline and approved evidence. It is a broad workflow rather than a small, independently installable drafting pass. |
+| `scientific-consistency` | [`paper-review`](https://github.com/WenyuChiou/academic-writing-skills) and Academic Publishing Skills' `statistical-rigor-helper`, `figure-checker`, and `table-checker` | The first covers manuscript-wide consistency; the latter collection separates statistical, figure, and table checks. Neither establishes correctness without the underlying records. |
+| `logic-review` | [`paper-review`](https://github.com/WenyuChiou/academic-writing-skills) | Includes an argument-and-structure pass and is read-only by default. Keep the local `logic-review` wrapper when a smaller, bounded report is preferable. |
+| `proof-review` | No verified general-purpose external review skill found | Do not use a proof-writing skill as a proof verifier. Retain the repository's read-only `proof-review` procedure, and have a qualified human verify any proof. |
+| `math-review` | No verified general-purpose external review skill found | A mathematics/LaTeX writing skill can format or draft equations but does not validate a derivation. Retain the local read-only review procedure and check against definitions and calculations. |
+| `algorithm-review` | No verified general-purpose external review skill found | Keep the local procedure focused on specified inputs, outputs, invariants, termination, and stated complexity; verify conclusions against code and formal analysis. |
+| `writing-review` | [`paper-review`](https://github.com/WenyuChiou/academic-writing-skills) or Academic Publishing Skills' `manuscript-copyeditor` | The former is a review pass; the latter is an editing workflow. Choose a read-only review before an editing pass when preserving scientific meaning is important. |
+| `language-edit` | Academic Publishing Skills' [`manuscript-copyeditor`](https://github.com/yaotingsun/academic-publishing-skills) | Closest dedicated copyediting workflow. Review diffs for changed negation, uncertainty, units, notation, and citations. |
+| `author-style` | [`academic-writing-skills`](https://github.com/WenyuChiou/academic-writing-skills) | Covers terminology, flow, and stock phrasing, but is not a dedicated author-voice matcher. Keep the local style profile and require explicit approval for edits. |
+| `reviewer-response` | Academic Publishing Skills' [`revision-responder`](https://github.com/yaotingsun/academic-publishing-skills) | Directly targeted at responding to revisions. Connect every response to a completed, checked change and leave pending work explicit. |
+
+The two broad collections have different packaging. Academic Writing Skills
+provides the `academic-writing-skills` and `paper-review` workflows and documents
+both a Claude Code marketplace installation and copying the skill folders into a
+directory scanned by Codex. Academic Publishing Skills provides separate Claude
+Code plugins, including `citation-auditor`, `manuscript-copyeditor`,
+`statistical-rigor-helper`, `figure-checker`, `table-checker`,
+`revision-responder`, and `proof-checker`; inspect each plugin before installing
+only the parts needed. Its `proof-checker` concerns publication proofs, not the
+validity of mathematical proofs.
+
+For computational or applied-mathematics manuscript *authoring*, the
+[`claude-latex-skill`](https://github.com/hameefy/claude-latex-skill) covers
+LaTeX, theorems, proofs, algorithms, and numerical-experiment documents. It is
+a drafting and formatting aid, not a review or verification skill; do not map it
+to `proof-review`, `math-review`, or `algorithm-review` without adding the
+independent checks required by those local procedures.
+
+Before adopting any candidate, pin or record the reviewed revision, inspect all
+`SKILL.md` files and bundled scripts, test it on a copied manuscript or synthetic
+example, and keep only the instructions that match the project's evidence,
+privacy, and review rules. The broad Academic Writing Skills repository had 48
+GitHub stars when this section was checked; that is a discovery signal only, not
+evidence of quality or suitability.
+
 Start with `citation-audit` and `language-edit` if those are your recurring
 bottlenecks. Keep their procedures in shared Markdown files and use thin
 agent-specific wrappers, following
