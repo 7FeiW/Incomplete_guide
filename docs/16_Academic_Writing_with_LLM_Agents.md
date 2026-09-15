@@ -10,17 +10,14 @@ research repository. The prompts also work as starting points in a chat interfac
 when you supply the relevant text. File access and available tools depend on the
 client and its permissions; ask the assistant to identify what it actually read.
 
-Published agent systems aim much higher than this. A survey of LLM agents as AI
-scientists catalogs contributions across hypothesis discovery, experiment
-implementation, paper writing, and peer review
-([LLM Agents as AI Scientists](https://openreview.net/forum?id=bfdUWy6rUA));
-Agent Laboratory reports an end-to-end pipeline from literature review through a
-written report ([Schmidgall et al., 2025](https://arxiv.org/pdf/2501.04227));
-and a proposed auto-research framework coordinates agents across eight phases of
-the research lifecycle ([Liu et al., 2025](https://arxiv.org/html/2504.18765v1)).
-Read them for what can be automated. None of them changes who is accountable for
-a claim, which is why this section automates only steps whose output an author
-can check.
+Published agent systems aim much higher than this. Agent Laboratory reports an
+end-to-end pipeline from literature review through a written report
+([Schmidgall et al., 2025](https://arxiv.org/pdf/2501.04227)), and a proposed
+auto-research framework coordinates agents across eight phases of the research
+lifecycle ([Liu et al., 2025](https://arxiv.org/html/2504.18765v1)); both are
+preprints describing systems rather than validated results. Read them for what
+can be automated. Neither changes who is accountable for a claim, which is why
+this section automates only steps whose output an author can check.
 
 Use [guide section 14](14_Programming_with_LLM_Agents.md) for the agent working loop and
 [guide section 15](15_Agentic_Workflow.md) for shared knowledge, rules, and plans. Here,
@@ -81,15 +78,22 @@ Both providers expose reasoning depth as a named effort setting, and both advise
 starting at the documented default and moving only on evidence. For OpenAI
 models, GPT-5.5 defaults to `medium`, described as the balanced starting point;
 raise it to `high` or `xhigh` only when an evaluation shows a measurable quality
-gain over the added latency and cost. For Claude models, the `effort` parameter
-takes `low`, `medium`, `high`, `xhigh`, or `max`, and both the API and Claude
-Code default to `high`; the guidance is to step down to `medium` or `low` for
-routine work once your own checks show quality holds, and to reserve `xhigh` and
-`max` for long-horizon work that justifies the token cost. In Claude Code,
-`/model` selects the model and the effort selector sets the level. Effort is a
-behavioral signal rather than a fixed token budget, so a level that is too high
-for a bounded task can produce overthinking: in manuscript work that appears as
-unrequested rewriting, invented structure, or speculative scientific commentary.
+gain over the added latency and cost. For Claude models, both the available
+`effort` levels and the default are model- and surface-dependent, so check the
+provider documentation for the model you actually use. Recent models such as
+Claude Opus 5 and Claude Sonnet 5 accept `low`, `medium`, `high`, `xhigh`, and
+`max`; earlier ones accept a narrower set, and some do not accept the parameter
+at all. The API default on models that support the parameter is `high`, whereas
+Claude Code defaults to `xhigh` on the models where that level exists. Whatever
+the default is for your model, the guidance is the same: step down to `medium`
+or `low` for routine work once your own checks show quality holds, and reserve
+the top levels for long-horizon work that justifies the token cost. In Claude
+Code, `/model` selects the model and the effort selector sets the level, and the
+selector shows which levels that model supports. Effort is a behavioral signal
+rather than a fixed token budget, so a level that is too high for a bounded task
+can produce overthinking, which
+[Constrain Overthinking in Manuscript Work](#constrain-overthinking-in-manuscript-work)
+covers below.
 
 | Paper task | Starting reasoning effort | Why | When to increase it |
 | --- | --- | --- | --- |
@@ -428,6 +432,10 @@ required shared workflows or merge instruction files for you.
 $projectRoot = '<project-root>'
 $skillTarget = Join-Path $projectRoot '.agents\skills\logic-review'
 
+if (-not (Test-Path -LiteralPath $projectRoot -PathType Container)) {
+    throw "Project root does not exist: $projectRoot"
+}
+
 if (Test-Path -LiteralPath $skillTarget) {
     throw "Refusing to overwrite existing skill: $skillTarget"
 }
@@ -570,12 +578,12 @@ help keep the reviews focused when the manuscript is substantial. More agents
 also add coordination and review effort, and their findings may share the same
 blind spots.
 
-Orchestration frameworks implement this split directly: LlamaIndex's
-agents-as-tools example coordinates separate research, writing, and review
-agents beneath one orchestrator
+Orchestration frameworks implement that separation of roles directly:
+LlamaIndex's agents-as-tools example coordinates separate research, writing, and
+review agents beneath one orchestrator
 ([Multi-Agent Report Generation](https://developers.llamaindex.ai/python/examples/agent/agents_as_tools/)).
-Borrow the role separation from such designs, but keep acceptance of each
-finding with the author rather than with a downstream agent.
+Borrow that structure, but keep acceptance of each finding with the author
+rather than with a downstream agent.
 
 Use the following roles as an optional review team. They refer to the proposed
 skills above and do not require a particular product's multi-agent feature:
@@ -688,8 +696,23 @@ authorship. Keep any disclosure record tied to the assistance actually performed
 ## Connect Claims to Evidence
 
 A bibliography entry tells you where a source is identified. It does not prove
-that the source supports a particular sentence. Keep a compact claim record
-while drafting, especially for quantitative findings and literature comparisons.
+that the source supports a particular sentence.
+
+This is measurable, not hypothetical. Across 636 citations generated for 42
+topics, 55% of GPT-3.5's citations and 18% of GPT-4's were fabricated outright;
+among the citations that did refer to real work, 43% and 24% respectively
+carried at least one substantive error, most often a wrong volume, page range,
+date, or author name ([Walters and Wilder, *Scientific Reports* 13:14045,
+2023](https://doi.org/10.1038/s41598-023-41032-5)). A comparison on
+systematic-review references reported hallucination rates of 39.6% for GPT-3.5,
+28.6% for GPT-4, and 91.4% for Bard ([Chelli et al., *Journal of Medical
+Internet Research*, 2024](https://doi.org/10.2196/53164)). Those rates are tied
+to the models and prompts tested and will not transfer to your tool, but the
+failure mode does: a plausible citation is not evidence that the work exists,
+and a real citation is not evidence that it says what your sentence claims.
+
+Keep a compact claim record while drafting, especially for quantitative findings
+and literature comparisons.
 
 For each consequential claim, record:
 
@@ -744,10 +767,13 @@ Separate argument development from language polishing so you can see what each
 pass changes. The sequence below is a starting point; skip passes that your
 manuscript does not need.
 
-Automated research pipelines stage the work the same way, from literature review
-through drafting and revision ([Schmidgall et al., 2025](https://arxiv.org/pdf/2501.04227);
-[Liu et al., 2025](https://arxiv.org/html/2504.18765v1)). The difference here is
-where each stage ends: at an author decision rather than at the next agent call.
+Automated research pipelines also divide the work into ordered stages rather
+than one undifferentiated generation step
+([Schmidgall et al., 2025](https://arxiv.org/pdf/2501.04227);
+[Liu et al., 2025](https://arxiv.org/html/2504.18765v1)), though their stage
+boundaries are their own and do not map one-to-one onto the passes below. The
+difference that matters here is that each pass ends at an author decision and a
+reviewable diff rather than at the next agent call.
 
 ### 1. Outline from Supported Findings
 
@@ -884,17 +910,34 @@ Reasoning effort and overthinking:
 LLM agents across the research workflow:
 
 - Samuel Schmidgall et al., [Agent Laboratory: Using LLM Agents as Research
-  Assistants](https://arxiv.org/pdf/2501.04227) — an end-to-end pipeline from
-  literature review through a written report. Read it for which stages were
-  automated and which human decisions were removed to make that possible.
+  Assistants](https://arxiv.org/pdf/2501.04227) — arXiv preprint. An end-to-end
+  pipeline from literature review through a written report. Read it for which
+  stages were automated and which human decisions were removed to make that
+  possible.
 - Chengwei Liu et al., [A Vision for Auto Research with LLM
-  Agents](https://arxiv.org/html/2504.18765v1) — a proposed multi-agent framework
-  spanning eight research phases. It is a position paper describing an intended
-  system, not a validated one.
+  Agents](https://arxiv.org/html/2504.18765v1) — arXiv preprint. A proposed
+  multi-agent framework spanning eight research phases: a position paper
+  describing an intended system, not a validated one.
 - [LLM Agents as AI Scientists: A Survey](https://openreview.net/forum?id=bfdUWy6rUA)
-  — surveys agent contributions to hypothesis discovery, experiment
-  implementation, paper writing, and peer review. Hosted on OpenReview; check its
-  review status and venue before citing it.
+  — a readable overview of agent contributions to hypothesis discovery,
+  experiment implementation, paper writing, and peer review. It is a student
+  course project submitted to the
+  [UIUC Spring 2025 CS598 LLM Agent Workshop](https://openreview.net/group?id=illinois.edu/UIUC/Spring_2025/CS598_LLM_Agent_Workshop),
+  a class exercise that uses OpenReview to simulate peer review, so it is not
+  peer-reviewed literature. Use it to find primary sources, and cite those
+  instead.
+
+Citation integrity and verification:
+
+- William H. Walters and Esther Isabelle Wilder, [Fabrication and errors in the
+  bibliographic citations generated by ChatGPT](https://doi.org/10.1038/s41598-023-41032-5),
+  *Scientific Reports* 13:14045, 2023 — measures fabricated citations and
+  substantive metadata errors across 636 generated citations.
+- Mikaël Chelli et al., [Hallucination Rates and Reference Accuracy of ChatGPT
+  and Bard for Systematic Reviews](https://doi.org/10.2196/53164), *Journal of
+  Medical Internet Research*, 2024 — per-model hallucination rates on systematic
+  review references, and why these tools should not be the primary means of
+  assembling one.
 
 Documenting and disclosing LLM use:
 
