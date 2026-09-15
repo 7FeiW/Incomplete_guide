@@ -10,6 +10,9 @@ It contains no paper sources; the project layout is illustrative.
 - [project-context.md](project-context.md): illustrative paper layout and validation notes.
 - [Review coordination](workflows/review.md).
 - [Logic review](workflows/logic-review.md).
+- [Proof review](workflows/proof-review.md).
+- [Mathematics review](workflows/math-review.md).
+- [Algorithm review](workflows/algorithm-review.md).
 - [Evidence review](workflows/evidence-review.md).
 - [Writing review](workflows/writing-review.md).
 - [Author style](workflows/author-style.md).
@@ -29,8 +32,9 @@ It contains no paper sources; the project layout is illustrative.
    evidence, target draft, and review scope before proceeding.
 
 Invoke `$logic-review` in Codex or `/logic-review` in Claude Code with the
-section and draft version. Other names are `evidence-review`, `writing-review`,
-and `author-style`. Specify review or edit for style work; review is the default.
+section and draft version. Other names are `proof-review`, `math-review`,
+`algorithm-review`, `evidence-review`, `writing-review`, and `author-style`.
+Specify review or edit for style work; review is the default.
 
 Run roles sequentially or in separate sessions. This example does not configure
 automatic agent spawning. See [Chapter 16](../../docs/16_Academic_Writing_with_LLM_Agents.md).

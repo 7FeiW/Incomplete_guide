@@ -216,6 +216,9 @@ claims that these skills are installed or published:
 | `evidence-to-section` | Accepted outline and verified claim records | One section draft with evidence pointers and TODOs; no invented findings |
 | `scientific-consistency` | Manuscript, figures, metric definitions, result summaries | Located discrepancies in numbers, terms, scope, and uncertainty; scientific decisions left open |
 | `logic-review` | Research question, outline, section, claim records | Report of missing premises, contradictions, unsupported inferences, and alternative explanations |
+| `proof-review` | Theorem or proposition, proof, definitions, cited prerequisites | Located gaps in inference, assumptions, domains, and edge cases; no invented proof steps |
+| `math-review` | Equations, notation, derivations, and result records | Located inconsistencies in notation, assumptions, transformations, units, or numerical claims; no silent equation changes |
+| `algorithm-review` | Algorithm description, pseudocode, implementation, and analysis records | Located ambiguities and mismatches in inputs, outputs, state, termination, correctness, or complexity; no invented bounds or behavior |
 | `writing-review` | Section, audience, terminology, writing rules | Report of unclear sentences, weak paragraph flow, repetition, and undefined terms |
 | `language-edit` | Named section, writing rules, permitted style sample | Small prose diff plus meaning-sensitive edits flagged for review |
 | `author-style` | Reviewed section, agreed style profile, permitted author samples | Natural prose in the author's voice, with scientific meaning preserved and sensitive edits flagged |
@@ -223,7 +226,7 @@ claims that these skills are installed or published:
 
 ### Available Example Skills and Installation
 
-This repository includes four ready-to-adapt, **project-local** Codex and Claude
+This repository includes seven ready-to-adapt, **project-local** Codex and Claude
 Code wrappers in the [agentic writing example](../examples/agentic_writing/).
 They are examples, not independently validated assessments of a manuscript.
 Each wrapper refers to the example's shared `workflows/` files, so copy and adapt
@@ -232,6 +235,9 @@ those runbooks before using a wrapper in another project.
 | Example skill | Purpose | Codex wrapper | Claude Code wrapper |
 | --- | --- | --- | --- |
 | `logic-review` | Find missing premises, unsupported inferences, contradictions, and alternative explanations without editing. | [`logic-review`](../examples/agentic_writing/.agents/skills/logic-review/SKILL.md) | [`logic-review`](../examples/agentic_writing/.claude/skills/logic-review/SKILL.md) |
+| `proof-review` | Find gaps in a stated mathematical proof without supplying missing proof steps. | [`proof-review`](../examples/agentic_writing/.agents/skills/proof-review/SKILL.md) | [`proof-review`](../examples/agentic_writing/.claude/skills/proof-review/SKILL.md) |
+| `math-review` | Report notation, derivation, assumption, unit, and numerical-consistency issues without editing equations. | [`math-review`](../examples/agentic_writing/.agents/skills/math-review/SKILL.md) | [`math-review`](../examples/agentic_writing/.claude/skills/math-review/SKILL.md) |
+| `algorithm-review` | Review an algorithm's specification, pseudocode, implementation alignment, and supported claims without editing. | [`algorithm-review`](../examples/agentic_writing/.agents/skills/algorithm-review/SKILL.md) | [`algorithm-review`](../examples/agentic_writing/.claude/skills/algorithm-review/SKILL.md) |
 | `evidence-review` | Check whether supplied evidence and citations support the manuscript's claims; leave unavailable evidence unverified. | [`evidence-review`](../examples/agentic_writing/.agents/skills/evidence-review/SKILL.md) | [`evidence-review`](../examples/agentic_writing/.claude/skills/evidence-review/SKILL.md) |
 | `writing-review` | Report clarity, structure, terminology, and flow problems without changing the draft. | [`writing-review`](../examples/agentic_writing/.agents/skills/writing-review/SKILL.md) | [`writing-review`](../examples/agentic_writing/.claude/skills/writing-review/SKILL.md) |
 | `author-style` | Review or, when explicitly requested, make small style edits while checking for changes in scientific meaning. | [`author-style`](../examples/agentic_writing/.agents/skills/author-style/SKILL.md) | [`author-style`](../examples/agentic_writing/.claude/skills/author-style/SKILL.md) |
@@ -353,6 +359,9 @@ skills above and do not require a particular product's multi-agent feature:
 | Reviewer role | Skill or skills | Questions to answer |
 | --- | --- | --- |
 | Argument reviewer | `logic-review` | Does the argument answer the research question? Do conclusions follow from the stated premises? Are alternatives and limitations addressed? |
+| Proof reviewer | `proof-review` | Does each proof step follow from its stated assumptions and prerequisites? Are domains, quantifiers, and edge cases handled? |
+| Mathematics reviewer | `math-review` | Are notation, derivations, assumptions, units, and numerical claims internally consistent and supported? |
+| Algorithm reviewer | `algorithm-review` | Are inputs, outputs, state changes, termination, and correctness or complexity claims specified and consistent with the implementation? |
 | Evidence reviewer | `citation-audit`, `scientific-consistency` | Do sources and results support the claims? Do values, definitions, and uncertainty agree across the manuscript? |
 | Writing reviewer | `writing-review` | Can the intended reader follow each sentence and paragraph? Are transitions meaningful and terms defined? |
 | Style reviewer | Review procedure from `author-style` | Does the prose follow the agreed author voice? Where do generic phrasing, inflated language, or mechanical repetition obscure meaning? |
@@ -366,8 +375,9 @@ they finish. For a small section, sequential passes may be easier to manage.
 A useful process is:
 
 1. Record the draft revision and any uncommitted changes included in the review.
-2. Run argument and evidence reviews; run writing and style reviews on the same
-   draft if feedback on presentation is also useful.
+2. Run the argument, proof, mathematics, algorithm, and evidence reviews that
+   fit the draft; run writing and style reviews on the same draft if feedback on
+   presentation is also useful.
 3. Consolidate duplicate findings and separate scientific issues from optional
    prose suggestions. Preserve disagreements and unavailable-evidence notes.
 4. Have the author resolve scientific questions and choose the revisions.
