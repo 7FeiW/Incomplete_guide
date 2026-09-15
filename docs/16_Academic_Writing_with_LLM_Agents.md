@@ -5,13 +5,13 @@ records, figures, and literature to a clear scientific argument. Codex and Claud
 can help organize and revise that material. The author still needs to decide
 what the evidence supports and verify the manuscript before sharing it.
 
-This chapter focuses on Codex and Claude Code working with manuscript files in a
+This section focuses on Codex and Claude Code working with manuscript files in a
 research repository. The prompts also work as starting points in a chat interface
 when you supply the relevant text. File access and available tools depend on the
 client and its permissions; ask the assistant to identify what it actually read.
 
-Use [chapter 14](14_Programming_with_LLM_Agents.md) for the agent working loop and
-[chapter 15](15_Agentic_Workflow.md) for shared knowledge, rules, and plans. Here,
+Use [guide section 14](14_Programming_with_LLM_Agents.md) for the agent working loop and
+[guide section 15](15_Agentic_Workflow.md) for shared knowledge, rules, and plans. Here,
 the task is turning verified research material into a reviewable manuscript.
 
 ## Table of Contents
@@ -59,14 +59,37 @@ multi-step reasoning, such as reconciling a draft with several supplied evidence
 records. Choose a model that supports the required files, context length, and
 tools; test it on representative material before using it broadly.
 
+Do not select an "Ultra," "Pro," or maximum-reasoning tier merely because the
+task is a paper. Those labels and controls differ between providers, and more
+reasoning is not automatically better. Instead, choose the least reasoning
+effort that produces an adequately reviewed result for the task. For OpenAI
+models with configurable reasoning, official guidance recommends a balanced
+starting point and increasing the effort only when evaluation shows a measurable
+quality benefit over the additional time and cost.
+
+| Paper task | Starting reasoning effort | Why | When to increase it |
+| --- | --- | --- | --- |
+| Drafting from an accepted outline; grammar, clarity, and format edits | Low or moderate | The scope and supporting material are already bounded, so the primary need is clear, controlled prose and a reviewable diff. | The edit must reconcile several supplied constraints, such as a journal guide, terminology list, and style profile. |
+| Outline critique; argument structure; evidence and citation review | Moderate | The agent must compare claims, sources, limitations, and section goals without silently resolving scientific questions. | The review repeatedly misses cross-section conflicts or cannot trace an inference through the supplied evidence. |
+| Reconciling a long manuscript with figures, tables, result records, or multiple supplied sources | High, after a representative comparison | The task may require many dependent checks and long-context synthesis. | Use it only when a lower setting demonstrably misses material discrepancies that the higher setting finds. |
+| Formal proof, mathematical derivation, algorithm, or statistical claim review | High only as an additional review pass | These tasks can require multi-step analysis, but a model response is not verification. | Do not increase effort as a substitute for checking the original definitions, calculations, code, and qualified human review. |
+
+For a recurring task, compare the same source packet and rubric at two effort
+levels. Record errors that matter for the manuscript—changed numbers, units,
+uncertainty, citations, or claim scope—alongside latency and cost. Raise the
+setting only if it catches relevant problems reliably enough to justify the
+trade-off. A higher setting does not make unverified sources, incomplete context,
+or an ambiguous writing request reliable.
+
 For a recurring workflow, compare candidates using the same source packets and
 review rubric. Measure the errors that matter: changed numbers or uncertainty,
 unsupported claims, missed citations, and editing effort. Route difficult cases
 to a more capable model only when that evaluation supports the added time or
 cost. Every model output still requires the evidence and meaning checks in this
-chapter. Current provider guidance changes; for OpenAI models, consult
+section. Current provider guidance changes; for OpenAI models, consult
 [OpenAI's model-selection guide](https://developers.openai.com/api/docs/guides/model-selection)
-when matching a model to a writing task.
+and [current model guidance](https://developers.openai.com/api/docs/guides/latest-model?model=gpt-5.5)
+when matching a model and reasoning effort to a writing task.
 
 ## Prepare the Manuscript Context
 
@@ -105,7 +128,7 @@ Link to canonical findings and experiment records rather than copying them into
 multiple manuscript notes. An experiment record should identify the code
 revision, environment, configuration, seeds where applicable, input provenance,
 and output location, as described in
-[chapter 15](15_Agentic_Workflow.md#experiment-records).
+[guide section 15](15_Agentic_Workflow.md#experiment-records).
 
 For repository instructions, Codex uses `AGENTS.md` and Claude Code supports
 `CLAUDE.md`. Their loading rules differ; see the
@@ -186,7 +209,7 @@ manuscript. A useful starting set is:
 
 These rules can live in the shared writing file so both agents use the same
 constraints. For directory-specific instructions and permission controls, use
-the mechanisms described in [chapter 15](15_Agentic_Workflow.md#agent-guidance).
+the mechanisms described in [guide section 15](15_Agentic_Workflow.md#agent-guidance).
 
 Check the setup in a fresh session before delegating a revision:
 
@@ -300,7 +323,7 @@ because its name suggests it can verify citations or scientific correctness.
 There is no central, cross-agent usage registry for academic-writing skills, so
 GitHub stars, downloads, or a skill's name do not establish that it is widely
 used, maintained, or scientifically reliable. The following are the broadest
-public collections located for the proposed skills in this chapter as of
+public collections located for the proposed skills in this section as of
 September 2026. They are candidates to inspect and test with synthetic or
 non-confidential material, not endorsements and not a substitute for the local
 wrappers above.
@@ -346,7 +369,7 @@ evidence of quality or suitability.
 Start with `citation-audit` and `language-edit` if those are your recurring
 bottlenecks. Keep their procedures in shared Markdown files and use thin
 agent-specific wrappers, following
-[chapter 15's reusable workflow pattern](15_Agentic_Workflow.md#reusable-workflows).
+[guide section 15's reusable workflow pattern](15_Agentic_Workflow.md#reusable-workflows).
 
 For example, save a citation-audit runbook as
 `manuscript/workflows/citation-audit.md` in the sample project. Its procedure can
@@ -670,7 +693,7 @@ Use this checklist for a section handoff or final manuscript review:
   checks completed, and remaining questions in the task record.
 - Check the current rules of your institution, collaborators, and target venue
   for permitted AI use and disclosure. Record any required disclosure from the
-  work actually performed; this chapter does not establish a universal policy.
+  work actually performed; this section does not establish a universal policy.
 - Before supplying material, confirm that its confidentiality, consent, license,
   and applicable service terms permit that use. Local file access alone does not
   establish that processing stays on your machine.

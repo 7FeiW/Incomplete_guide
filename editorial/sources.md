@@ -2,7 +2,7 @@
 
 Use this file as a compact record when a change adds or materially revises an
 externally verifiable claim. It is intentionally empty until a source is checked
-for a specific revision. Existing chapter links are not automatically verified
+for a specific revision. Existing section links are not automatically verified
 by this record.
 
 For each source, add an entry using this template:
@@ -10,7 +10,7 @@ For each source, add an entry using this template:
 ```markdown
 ## <short source title>
 
-- Guide location: <chapter path and section>.
+- Guide location: <guide path and section>.
 - Claim supported: <bounded statement>.
 - Source: [<descriptive title>](<authoritative URL>).
 - Source location: <section, heading, table, or other precise location>.
@@ -20,4 +20,4 @@ For each source, add an entry using this template:
 
 Do not record inaccessible pages, search snippets, or remembered references as
 verified. If the source cannot be checked, leave a descriptive HTML TODO comment
-in the affected chapter instead.
+in the affected section instead.

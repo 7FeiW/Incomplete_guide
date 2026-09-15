@@ -20,7 +20,7 @@ Technical accuracy takes priority over stylistic consistency.
 
 - Prefer small, realistic examples that readers can adapt. Explain inputs,
   outputs, placeholders, and platform assumptions when they affect the result.
-- Keep terminology and capitalization consistent within and across chapters.
+- Keep terminology and capitalization consistent within and across sections.
 - Distinguish universal practices from optional choices and
   environment-specific guidance.
 - Avoid inflated claims, vague importance statements, unexplained jargon, and

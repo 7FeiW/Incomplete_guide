@@ -1,9 +1,9 @@
 # Agentic Research Workflow: Knowledge, Rules, and Plans
 
-This chapter follows a sample project that trains image classifiers from sample
+This section follows a sample project that trains image classifiers from sample
 manifests. The task is to reject duplicate sample IDs before constructing a
 dataset. This continues the example in
-[chapter 14](14_Programming_with_LLM_Agents.md#task-requests).
+[guide section 14](14_Programming_with_LLM_Agents.md#task-requests).
 The setup, plans, prompts, and reusable workflow below all use this task.
 
 The workflow applies across LLM agents. The supplementary
@@ -13,7 +13,7 @@ mass-spectrometry project that need adaptation before use here. Agent-specific
 examples include an [AGENTS.md entry point](../examples/agentic_coding/AGENTS.md)
 for Codex and [claude/](../examples/agentic_coding/claude/) for Claude Code.
 For a Copilot entry-point template, see the
-[Copilot example in chapter 14](14_Programming_with_LLM_Agents.md#copilot-example).
+[Copilot example in guide section 14](14_Programming_with_LLM_Agents.md#copilot-example).
 
 LLM-agent products change frequently. Verify tool-specific feature details in the
 official documentation for the agent being configured.
@@ -244,7 +244,7 @@ block an event, but they remain model-dependent. Prefer a deterministic command
 hook when a script can express the rule, and use sandbox, permission, or
 operating-system controls when the action itself must be impossible.
 
-The Codex documentation linked in this chapter does not currently document an
+The Codex documentation linked in this section does not currently document an
 equivalent repository lifecycle-hook interface. For Codex, keep guidance in
 `AGENTS.md`, use command rules and sandbox permissions for tool access, and put
 deterministic repository checks in explicit scripts or CI. Recheck the official
@@ -318,7 +318,7 @@ The guide stores shared example documents under
 directories. Create `findings/` and `knowledge/` in your project when needed.
 It includes architecture and rules examples
 plus a [sample duplicate-ID plan](../examples/agentic_coding/docs/plans/duplicate-sample-ids.md)
-for this chapter's image-classifier task. Use the templates below to populate
+for this section's image-classifier task. Use the templates below to populate
 the other directories as work proceeds.
 
 ### 1. Establish the Starting Point

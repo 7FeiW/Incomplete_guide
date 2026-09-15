@@ -6,7 +6,7 @@ two documents conflict.
 
 ## Scope and Audience
 
-- Treat the named numbered chapter as the writing scope unless the task names
+- Treat the named numbered section as the writing scope unless the task names
   other files.
 - Write for research programmers with varied software-engineering experience.
 - Preserve the guide's practical Python research-workflow focus. Present
@@ -28,9 +28,9 @@ two documents conflict.
 
 ## Editing and Review
 
-- Read the complete target chapter, related chapters, and existing duplicated
+- Read the complete target section, related sections, and existing duplicated
   guidance before editing.
-- Make the smallest change that resolves the task. Preserve chapter filenames,
+- Make the smallest change that resolves the task. Preserve section filenames,
   reading order, and existing technical meaning unless a task explicitly changes
   them.
 - For a language edit, check the diff for altered claims, commands, links,

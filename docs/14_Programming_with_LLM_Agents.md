@@ -5,15 +5,15 @@ edit files, run commands, and review the result. That makes them more capable
 than autocomplete, but it does not make them independent developers. They still
 need a clear task, the right context, sensible access, and human review.
 
-This chapter covers the day-to-day working loop for tools such as Codex, Claude
+This section covers the day-to-day working loop for tools such as Codex, Claude
 Code, and GitHub Copilot. Some examples use GitHub Copilot, but the underlying
 practices apply to other agents too. Product details change quickly, so check the
 official documentation when an interface or feature matters.
 
-This chapter follows the sample project used in chapter 15: an image-classifier
+This section follows the sample project used in guide section 15: an image-classifier
 project whose dataset constructor needs to reject duplicate sample IDs. The
 examples take this bounded task from delegation through validation. The
-next chapter, [Agentic Research Workflow](15_Agentic_Workflow.md), explains the
+next guide section, [Agentic Research Workflow](15_Agentic_Workflow.md), explains the
 complementary repository architecture for carrying knowledge, rules, and plans across tools and sessions.
 
 Agents are easiest to trust on focused tasks with results you can check. Let
@@ -31,7 +31,7 @@ for the project's architecture or scientific decisions.
 7. [Safety Boundaries](#safety-boundaries)
 8. [Workflow Extensions](#workflow-extensions)
 9. [Common Failure Modes](#common-failure-modes)
-10. [Chapter 15](#chapter-15)
+10. [Related guide section: Agentic Research Workflow](#related-guide-section-agentic-research-workflow)
 11. [Further Reading](#further-reading)
 
 ## Delegation
@@ -115,6 +115,29 @@ but it does not replace tests, source checks, or human review.
 | Ambiguous debugging, cross-component design, or long multi-step investigation | A more capable reasoning or coding model | Whether the extra quality justifies its time and cost; validate its conclusions against the code |
 | Image, audio, retrieval, or tool-using work | A model and client that explicitly support the needed modality and tools | That the required files, tools, permissions, and output format actually work in the chosen environment |
 
+### Do I Need Ultra Reasoning?
+
+Usually, no. "Ultra," "Pro," and similar labels are provider-specific; treat
+them as a request for maximum available reasoning or compute, not as a guarantee
+of a better programming result. Start with the least reasoning effort that can
+produce a reviewable plan, diff, or report, then increase it only when a
+representative evaluation finds a meaningful improvement.
+
+| Task | Starting reasoning effort | Why | When to increase it |
+| --- | --- | --- | --- |
+| Fixed-schema extraction, locating known files, or a small, specified change | Low | The inputs, desired output, and acceptance checks are already constrained. Faster responses make it easier to inspect each result. | The task fails its schema, grounding, or test checks for a reasoning-related cause. |
+| Bounded code edit, test design, or review of a small diff | Low or moderate | The agent must connect repository context to a concrete change, but tests and diff review provide direct feedback. | The task depends on several interacting constraints or the first attempt exposes an unanticipated dependency. |
+| Ambiguous debugging, cross-component design, or a long investigation | Moderate | The work requires comparing hypotheses and tracing behavior across files, configurations, and tests. | A comparison against a lower setting shows that it misses material paths, risks, or contradictions. |
+| Difficult multi-step investigation with supplied evidence and a clear stopping condition | High, after comparison | Extra reasoning may help coordinate dependent steps when the latency and cost are acceptable. | Do not select maximum effort by default; use it only if it improves the measured acceptance checks enough to justify the trade-off. |
+
+Higher reasoning does not repair missing repository context, conflicting
+instructions, unsafe permissions, or weak tests. It also does not prove that a
+design is correct or secure. The added time and cost are worthwhile only when a
+measured evaluation shows that the higher setting improves the result that
+matters for this project. Official OpenAI guidance likewise recommends increasing
+reasoning effort only when evaluation shows a measurable benefit, and notes that
+unnecessarily high effort can lead to overthinking or unnecessary work.
+
 Start with a small, reviewable evaluation set drawn from the real workflow.
 Compare candidate models on the same prompts, context, tools, and acceptance
 checks. Keep the model that meets the quality threshold with acceptable latency
@@ -123,7 +146,8 @@ is a practical routing rule, not a claim that one size tier is universally best.
 
 Model names, capabilities, and availability change. Consult the provider's
 current model catalog and task-selection guidance before choosing or replacing a
-model. For OpenAI models, see [OpenAI's model-selection guide](https://developers.openai.com/api/docs/guides/model-selection).
+model. For OpenAI models, see [OpenAI's model-selection guide](https://developers.openai.com/api/docs/guides/model-selection)
+and [current model guidance](https://developers.openai.com/api/docs/guides/latest-model?model=gpt-5.5).
 
 ## Preparation
 
@@ -138,7 +162,7 @@ Assume an existing Python project with `src/project/dataset.py` and
 declared as development dependencies, and its tests can import the project code.
 These are illustrative assumptions; inspect your repository before using the
 prompts. Run commands from the project root in its configured environment.
-See [chapter 15's setup walkthrough](15_Agentic_Workflow.md#step-by-step-setup)
+See [guide section 15's setup walkthrough](15_Agentic_Workflow.md#step-by-step-setup)
 for the layout, environment setup, and shared instruction files.
 
 The accompanying [shared documentation examples](../examples/agentic_coding/docs/)
@@ -183,7 +207,7 @@ task.
 #### Copilot Example
 
 GitHub Copilot uses `.github/copilot-instructions.md` for general repository
-instructions. Other tools use different entry points; chapter 15 compares them.
+instructions. Other tools use different entry points; guide section 15 compares them.
 Include only information that applies broadly, such as:
 
 - the purpose and scientific scope of the project;
@@ -225,7 +249,7 @@ observed needs rather than filling them with generic advice.
 Other agents may use `AGENTS.md`, `CLAUDE.md`, or scoped instruction files.
 Keep these files short and consistent. They should identify the environment,
 routine checks, important boundaries, and where detailed project knowledge
-lives. Chapter 15 explains how to organize them without duplication.
+lives. Guide section 15 explains how to organize them without duplication.
 
 Keep shared rules in `docs/rules/` and have each agent's entry point direct it to
 the relevant files. The [shared rules examples](../examples/agentic_coding/docs/rules/)
@@ -499,7 +523,7 @@ Use a **skill** for a repeatable procedure, such as validating a dataset release
 Keep its inputs, steps, outputs, permissions, and checks explicit.
 
 Use a **custom agent** when a recurring role needs specialized instructions or
-a limited tool set. Discovery and configuration differ by product; chapter 15
+a limited tool set. Discovery and configuration differ by product; guide section 15
 covers the cross-agent structure in more detail.
 
 ### Community Add-ons
@@ -546,21 +570,21 @@ Before relying on a server:
 - **Untrusted external content:** Treat MCP results, issues, and web pages as
   data, not instructions or authorization.
 
-## Chapter 15
+## Related Guide Section: Agentic Research Workflow
 
-This chapter covers one task at a time: choosing a level of delegation, framing
-the request, inspecting the proposed work, and validating the result. Chapter
-15, [Agentic Research Workflow](15_Agentic_Workflow.md), covers the system around
+This section covers one task at a time: choosing a level of delegation, framing
+the request, inspecting the proposed work, and validating the result. [Guide
+section 15, Agentic Research Workflow](15_Agentic_Workflow.md), covers the system around
 those tasks: durable project knowledge, instruction files, permissions, plans and
 experiment records, reusable skills, and handoffs between sessions or tools.
 
 Continue with the same duplicate-ID task in
-[chapter 15's setup walkthrough](15_Agentic_Workflow.md#step-by-step-setup).
+[guide section 15's setup walkthrough](15_Agentic_Workflow.md#step-by-step-setup).
 It shows where to save the agreed constraints, plan, observed checks, and next
 action so a fresh session can recover the work described here.
 
-Come back to this chapter when you are working through a specific programming
-task. Use chapter 15 when you are deciding what the repository must preserve so
+Come back to this section when you are working through a specific programming
+task. Use guide section 15 when you are deciding what the repository must preserve so
 someone else—or another agent session—can pick up the work safely.
 
 ## Further Reading

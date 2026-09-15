@@ -5,8 +5,8 @@ Markdown guide to practical Python computational-research workflows.
 
 ## Layout
 
-- `README.md`: guide entry point and chapter list.
-- `docs/`: numbered chapters; filenames define reading order.
+- `README.md`: guide entry point and section list.
+- `docs/`: numbered guide sections; filenames define reading order.
 - `examples/`: supporting examples.
 - `editorial/`: writing rules, style profile, source record, and review runbook.
 
@@ -26,10 +26,10 @@ Markdown guide to practical Python computational-research workflows.
    placeholder or add a blank Markdown or HTML figure placeholder with a
    descriptive TODO comment, then ask what the figure should contain.
 
-- Read the complete target chapter, nearby related chapters, and existing
+- Read the complete target section, nearby related sections, and existing
   duplicated guidance before editing. Prefer improving the canonical section.
-- Preserve numbered chapter filenames. When adding, removing, or renaming a
-  chapter, update `README.md` and every affected relative link.
+- Preserve numbered section filenames. When adding, removing, or renaming a
+  section, update `README.md` and every affected relative link.
 - For documentation edits, read
   [`editorial/writing-rules.md`](editorial/writing-rules.md) and
   [`editorial/style.md`](editorial/style.md). For material external claims,
