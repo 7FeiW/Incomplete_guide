@@ -86,6 +86,16 @@ stable project knowledge from changing plans and findings:
 | `docs/plans/`          | Task objectives, steps, status, progress, blockers, and validation evidence               |
 | `docs/rules/`          | Shared scientific, data-handling, and engineering constraints                             |
 
+When a workflow uses more than one model, record the routing rule with the task
+plan or workflow: the task category, chosen model or capability tier, input and
+tool requirements, acceptance checks, and when to escalate a task. For example,
+a smaller model may handle a fixed-format extraction step, while a more capable
+model investigates an ambiguous failure. Do not route by model size alone;
+compare candidates on representative work using the same checks, latency, and
+cost limits. Revisit the rule when the task, provider model catalog, or measured
+quality changes. [OpenAI's model-selection guide](https://developers.openai.com/api/docs/guides/model-selection)
+is one current provider reference for matching capabilities to workloads.
+
 Keep each fact in one canonical file and link to it elsewhere. Use `README.md`
 for setup and navigation, and use `docs/` for detailed project knowledge. This
 keeps the record accessible to humans and agents without tying it to one tool's
@@ -748,6 +758,7 @@ and the [Codex `AGENTS.md` guide](https://learn.chatgpt.com/docs/agent-configura
 - [Codex skills](https://learn.chatgpt.com/docs/build-skills)
 - [Codex memories](https://learn.chatgpt.com/docs/customization/memories)
 - [Codex command rules](https://learn.chatgpt.com/docs/agent-configuration/rules)
+- [OpenAI model-selection guide](https://developers.openai.com/api/docs/guides/model-selection)
 
 ### Claude Code
 

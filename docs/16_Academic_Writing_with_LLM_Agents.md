@@ -17,15 +17,16 @@ the task is turning verified research material into a reviewable manuscript.
 ## Table of Contents
 
 1. [Choose a Bounded Writing Task](#choose-a-bounded-writing-task)
-2. [Prepare the Manuscript Context](#prepare-the-manuscript-context)
-3. [Set Up Manuscript Agent Rules](#set-up-manuscript-agent-rules)
-4. [Use Focused Writing Skills](#use-focused-writing-skills)
-5. [Review with Separate Roles](#review-with-separate-roles)
-6. [Preserve Author Style](#preserve-author-style)
-7. [Connect Claims to Evidence](#connect-claims-to-evidence)
-8. [Draft and Revise in Passes](#draft-and-revise-in-passes)
-9. [Review Figures and Reviewer Responses](#review-figures-and-reviewer-responses)
-10. [Check Before Sharing](#check-before-sharing)
+2. [Choose a Model for the Writing Task](#choose-a-model-for-the-writing-task)
+3. [Prepare the Manuscript Context](#prepare-the-manuscript-context)
+4. [Set Up Manuscript Agent Rules](#set-up-manuscript-agent-rules)
+5. [Use Focused Writing Skills](#use-focused-writing-skills)
+6. [Review with Separate Roles](#review-with-separate-roles)
+7. [Preserve Author Style](#preserve-author-style)
+8. [Connect Claims to Evidence](#connect-claims-to-evidence)
+9. [Draft and Revise in Passes](#draft-and-revise-in-passes)
+10. [Review Figures and Reviewer Responses](#review-figures-and-reviewer-responses)
+11. [Check Before Sharing](#check-before-sharing)
 
 ## Choose a Bounded Writing Task
 
@@ -47,6 +48,25 @@ assessment of novelty or methodological correctness needs your own literature
 and scientific review. If you compare Codex and Claude for your workflow, give
 them the same bounded task and judge factual accuracy, meaning preservation,
 review effort, and the usability of the resulting edits.
+
+## Choose a Model for the Writing Task
+
+The largest model is not necessary for every manuscript task. A smaller or
+faster model may be sufficient for a fixed-format task such as extracting
+citation keys, checking a checklist, or identifying repeated terminology. Use a
+more capable model when the work genuinely needs long-context synthesis or
+multi-step reasoning, such as reconciling a draft with several supplied evidence
+records. Choose a model that supports the required files, context length, and
+tools; test it on representative material before using it broadly.
+
+For a recurring workflow, compare candidates using the same source packets and
+review rubric. Measure the errors that matter: changed numbers or uncertainty,
+unsupported claims, missed citations, and editing effort. Route difficult cases
+to a more capable model only when that evaluation supports the added time or
+cost. Every model output still requires the evidence and meaning checks in this
+chapter. Current provider guidance changes; for OpenAI models, consult
+[OpenAI's model-selection guide](https://developers.openai.com/api/docs/guides/model-selection)
+when matching a model to a writing task.
 
 ## Prepare the Manuscript Context
 

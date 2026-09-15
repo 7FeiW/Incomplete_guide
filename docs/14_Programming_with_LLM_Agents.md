@@ -23,15 +23,16 @@ for the project's architecture or scientific decisions.
 ## Table of Contents
 
 1. [Delegation](#delegation)
-2. [Preparation](#preparation)
-3. [Work Cycle](#work-cycle)
-4. [Tool Controls](#tool-controls)
-5. [Review and Validation](#review-and-validation)
-6. [Safety Boundaries](#safety-boundaries)
-7. [Workflow Extensions](#workflow-extensions)
-8. [Common Failure Modes](#common-failure-modes)
-9. [Chapter 15](#chapter-15)
-10. [Further Reading](#further-reading)
+2. [Choose a Model for the Task](#choose-a-model-for-the-task)
+3. [Preparation](#preparation)
+4. [Work Cycle](#work-cycle)
+5. [Tool Controls](#tool-controls)
+6. [Review and Validation](#review-and-validation)
+7. [Safety Boundaries](#safety-boundaries)
+8. [Workflow Extensions](#workflow-extensions)
+9. [Common Failure Modes](#common-failure-modes)
+10. [Chapter 15](#chapter-15)
+11. [Further Reading](#further-reading)
 
 ## Delegation
 
@@ -98,6 +99,31 @@ example.
 
 Delegate work with clear inputs, boundaries, and checks. Keep human control when
 the task depends on domain judgment or has serious consequences.
+
+## Choose a Model for the Task
+
+The largest available model does not need to perform every task. Choose a model
+for the work's required capability, available tools and input modalities,
+latency, cost, and the quality you measure on representative tasks. A larger
+model may help with an unfamiliar codebase or a difficult multi-step problem,
+but it does not replace tests, source checks, or human review.
+
+| Task characteristics | Starting choice | What to check before wider use |
+| --- | --- | --- |
+| Repetitive, well-defined work such as classification, extraction into a fixed schema, or locating known files | A smaller or faster model | Schema validity, recall, and errors on representative inputs |
+| Bounded code edits, test drafting, or summaries that need repository context | A balanced coding or general-purpose model | Diff size, test results, factual grounding, latency, and cost |
+| Ambiguous debugging, cross-component design, or long multi-step investigation | A more capable reasoning or coding model | Whether the extra quality justifies its time and cost; validate its conclusions against the code |
+| Image, audio, retrieval, or tool-using work | A model and client that explicitly support the needed modality and tools | That the required files, tools, permissions, and output format actually work in the chosen environment |
+
+Start with a small, reviewable evaluation set drawn from the real workflow.
+Compare candidate models on the same prompts, context, tools, and acceptance
+checks. Keep the model that meets the quality threshold with acceptable latency
+and cost; route only the difficult or failed cases to a more capable model. This
+is a practical routing rule, not a claim that one size tier is universally best.
+
+Model names, capabilities, and availability change. Consult the provider's
+current model catalog and task-selection guidance before choosing or replacing a
+model. For OpenAI models, see [OpenAI's model-selection guide](https://developers.openai.com/api/docs/guides/model-selection).
 
 ## Preparation
 
@@ -546,5 +572,6 @@ someone else—or another agent session—can pick up the work safely.
 - [About agent skills](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills)
 - [VS Code MCP configuration reference](https://code.visualstudio.com/docs/agents/reference/mcp-configuration)
 - [Model Context Protocol documentation](https://modelcontextprotocol.io/docs)
+- [OpenAI model-selection guide](https://developers.openai.com/api/docs/guides/model-selection)
 - [NIST AI 600-1: Generative AI Profile](https://doi.org/10.6028/NIST.AI.600-1)
 - [Responsible use of GitHub Copilot agents](https://docs.github.com/en/copilot/responsible-use/agents)
