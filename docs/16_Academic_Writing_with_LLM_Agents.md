@@ -224,17 +224,17 @@ claims that these skills are installed or published:
 ### Available Example Skills and Installation
 
 This repository includes four ready-to-adapt, **project-local** Codex and Claude
-Code wrappers in the [agentic writing example](../examples/agentic%20writing/).
+Code wrappers in the [agentic writing example](../examples/agentic_writing/).
 They are examples, not independently validated assessments of a manuscript.
 Each wrapper refers to the example's shared `workflows/` files, so copy and adapt
 those runbooks before using a wrapper in another project.
 
 | Example skill | Purpose | Codex wrapper | Claude Code wrapper |
 | --- | --- | --- | --- |
-| `logic-review` | Find missing premises, unsupported inferences, contradictions, and alternative explanations without editing. | [`logic-review`](../examples/agentic%20writing/.agents/skills/logic-review/SKILL.md) | [`logic-review`](../examples/agentic%20writing/.claude/skills/logic-review/SKILL.md) |
-| `evidence-review` | Check whether supplied evidence and citations support the manuscript's claims; leave unavailable evidence unverified. | [`evidence-review`](../examples/agentic%20writing/.agents/skills/evidence-review/SKILL.md) | [`evidence-review`](../examples/agentic%20writing/.claude/skills/evidence-review/SKILL.md) |
-| `writing-review` | Report clarity, structure, terminology, and flow problems without changing the draft. | [`writing-review`](../examples/agentic%20writing/.agents/skills/writing-review/SKILL.md) | [`writing-review`](../examples/agentic%20writing/.claude/skills/writing-review/SKILL.md) |
-| `author-style` | Review or, when explicitly requested, make small style edits while checking for changes in scientific meaning. | [`author-style`](../examples/agentic%20writing/.agents/skills/author-style/SKILL.md) | [`author-style`](../examples/agentic%20writing/.claude/skills/author-style/SKILL.md) |
+| `logic-review` | Find missing premises, unsupported inferences, contradictions, and alternative explanations without editing. | [`logic-review`](../examples/agentic_writing/.agents/skills/logic-review/SKILL.md) | [`logic-review`](../examples/agentic_writing/.claude/skills/logic-review/SKILL.md) |
+| `evidence-review` | Check whether supplied evidence and citations support the manuscript's claims; leave unavailable evidence unverified. | [`evidence-review`](../examples/agentic_writing/.agents/skills/evidence-review/SKILL.md) | [`evidence-review`](../examples/agentic_writing/.claude/skills/evidence-review/SKILL.md) |
+| `writing-review` | Report clarity, structure, terminology, and flow problems without changing the draft. | [`writing-review`](../examples/agentic_writing/.agents/skills/writing-review/SKILL.md) | [`writing-review`](../examples/agentic_writing/.claude/skills/writing-review/SKILL.md) |
+| `author-style` | Review or, when explicitly requested, make small style edits while checking for changes in scientific meaning. | [`author-style`](../examples/agentic_writing/.agents/skills/author-style/SKILL.md) | [`author-style`](../examples/agentic_writing/.claude/skills/author-style/SKILL.md) |
 
 To install one of these examples in a manuscript repository, first copy and
 adapt the corresponding runbook in `workflows/` and merge the example's
@@ -270,7 +270,7 @@ if (Test-Path -LiteralPath $skillTarget) {
 }
 
 New-Item -ItemType Directory -Path (Split-Path -Parent $skillTarget) -Force
-Copy-Item -Recurse -Path '.\examples\agentic writing\.agents\skills\logic-review' -Destination $skillTarget
+Copy-Item -Recurse -Path '.\examples\agentic_writing\.agents\skills\logic-review' -Destination $skillTarget
 ```
 
 Replace `logic-review` consistently to install one of the other example skills.
