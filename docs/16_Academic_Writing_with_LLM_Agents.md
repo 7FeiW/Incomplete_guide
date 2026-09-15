@@ -82,20 +82,24 @@ sample-project/
 │   └── plans/
 └── manuscript/
     ├── README.md
+    ├── main.tex
+    ├── references.bib
     ├── outline.md
     ├── claims.md
     ├── sources.md
     ├── writing-rules.md
     ├── sections/
-    │   ├── methods.md
-    │   └── results.md
+    │   ├── methods.tex
+    │   └── results.tex
     └── figures/
 ```
 
-`manuscript/README.md` should identify the manuscript entry point, target
-audience, current stage, and any existing build or export procedure. The section
-files can instead be LaTeX or another format supported by your project. Keep
-large outputs and restricted data in their established storage locations.
+This example uses LaTeX for the manuscript: `manuscript/main.tex` is its entry
+point, and `manuscript/sections/` holds included source files. Keep
+`manuscript/README.md` for the target audience, current stage, and documented
+build or export procedure. The Markdown files hold supporting planning and
+evidence records. Keep large outputs and restricted data in their established
+storage locations.
 
 Link to canonical findings and experiment records rather than copying them into
 multiple manuscript notes. An experiment record should identify the code
@@ -119,15 +123,24 @@ ask the agent to read that file before editing:
 - Read manuscript/README.md and the evidence named in the task before editing.
 - Preserve scientific meaning, terminology, units, numbers, and citation keys.
 - Distinguish observations, interpretations, and untested hypotheses.
-- Do not invent references, results, procedures, or claims of novelty.
-- Flag missing evidence with an HTML TODO comment in Markdown drafts.
+- Never fabricate citations. If a required citation is unknown, add a
+  descriptive `% TODO: cite ...` comment that identifies the claim requiring
+  support. Do not insert an empty `\cite{}` command or invent authors, titles,
+  venues, or publication years.
+- Ask when scientific content, the intended argument, or the correct technical
+  phrasing cannot be established from the repository or supplied evidence.
+- Do not create thesis figures unless the user explicitly overrides this rule.
+  During review-only tasks, report the missing figure without changing the file.
+  When an edit requires a figure placeholder, preserve an existing placeholder
+  or add a blank figure environment with a descriptive TODO comment, then ask
+  what the figure should contain.
 - Edit only the files named in the task; report any proposed scientific changes.
 - Report sources actually read and checks actually performed.
 ```
 
-These are instructions for the example project, not hard access controls. For
-LaTeX drafts, use `% TODO:` comments instead of HTML comments. Review unresolved
-notes before export because comments may disappear from the rendered manuscript.
+These are instructions for the example project, not hard access controls.
+Review unresolved notes before export because LaTeX comments may disappear from
+the rendered manuscript.
 
 ## Set Up Manuscript Agent Rules
 
@@ -179,7 +192,7 @@ Check the setup in a fresh session before delegating a revision:
 
 ```text
 Read the repository instructions and manuscript/writing-rules.md.
-For a language edit to manuscript/sections/results.md, summarize the applicable
+For a language edit to manuscript/sections/results.tex, summarize the applicable
 constraints, evidence files, permitted edits, and expected checks. Identify
 missing files or conflicting instructions. Do not edit files.
 ```
@@ -365,7 +378,7 @@ A useful process is:
 For example, give an argument reviewer this brief:
 
 ```text
-Review manuscript/sections/results.md using the logic-review procedure.
+Review manuscript/sections/results.tex using the logic-review procedure.
 Read the research question, accepted outline, claim records, and shared rules.
 Check premises, inference steps, contradictions, causal claims, generalization,
 and alternative explanations. Do not edit files or rewrite sentences for style.
@@ -427,7 +440,7 @@ edit. Its runbook can follow these steps:
 For example, after the scientific revisions are accepted:
 
 ```text
-Apply the author-style procedure to manuscript/sections/results.md.
+Apply the author-style procedure to manuscript/sections/results.tex.
 Read manuscript/style.md and manuscript/writing-rules.md first. Improve natural
 flow and remove generic or inflated phrasing while preserving technical meaning,
 evidence, uncertainty, and citations. Do not add content from style samples.
@@ -459,7 +472,7 @@ the placeholders with verified project evidence; this is not an example result:
 ## C1: Model comparison on the held-out split
 
 - Proposed claim: <bounded comparison supported by the analysis>.
-- Manuscript location: sections/results.md, model-comparison paragraph.
+- Manuscript location: sections/results.tex, model-comparison paragraph.
 - Evidence: <run-record path and exact result artifact or field>.
 - Metric definition: <metric, aggregation, units, and evaluation population>.
 - Conditions: <split, seeds, preprocessing, and baseline configuration>.
@@ -476,7 +489,7 @@ extraction against the original for equations, tables, symbols, and page numbers
 Ask the agent to separate discovery from verification:
 
 ```text
-Audit the literature claims in manuscript/sections/methods.md against
+Audit the literature claims in manuscript/sections/methods.tex against
 manuscript/sources.md and the source passages supplied for this task.
 For each claim, report its location, citation key, supporting passage location,
 and whether the passage supports its scope. Mark sources you cannot access as
@@ -485,10 +498,10 @@ unverified. Do not create bibliography entries or edit the draft.
 
 If external search is available, ask for candidate sources and verify them before
 adding them. Do not let the assistant fill a citation gap from memory. In a
-Markdown working draft, a useful unresolved note is:
+LaTeX working draft, a useful unresolved note is:
 
-```markdown
-<!-- TODO: verify a primary source for this preprocessing choice and its limits. -->
+```latex
+% TODO: verify a primary source for this preprocessing choice and its limits.
 ```
 
 ## Draft and Revise in Passes
@@ -517,7 +530,7 @@ earlier experiment used. For results, provide checked summaries and metric
 definitions; leave new analysis as a separate task with its own validation.
 
 ```text
-Draft manuscript/sections/results.md using the accepted outline and only the
+Draft manuscript/sections/results.tex using the accepted outline and only the
 verified entries in manuscript/claims.md. Read the linked evidence first.
 Separate observed results from interpretation. Preserve values, units, and
 uncertainty descriptions. Add TODO comments for missing support. Do not change
@@ -540,7 +553,7 @@ support from the relevant analysis.
 ### 4. Edit Language While Preserving Meaning
 
 ```text
-Edit manuscript/sections/results.md for grammar, clarity, and repetition.
+Edit manuscript/sections/results.tex for grammar, clarity, and repetition.
 Follow manuscript/writing-rules.md. Preserve numbers, citation keys, technical
 terms, comparisons, scope, and confidence. Keep the author's direct style.
 If a sentence needs a scientific decision, flag it separately rather than
