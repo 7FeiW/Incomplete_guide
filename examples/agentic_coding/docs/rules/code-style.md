@@ -40,7 +40,7 @@ Insert directly under the H1, before any other content:
 ```
 
 For plans, use `PROPOSED`, `IN PROGRESS`, `BLOCKED`, `COMPLETED`, `ABANDONED`, or
-`SUPERSEDED`, as defined in [chapter 15's plan lifecycle](../../../../docs/15_Agentic_Workflow.md#task-plans).
+`SUPERSEDED`, as defined in [guide section 15's plan lifecycle](../../../../docs/15_Agentic_Workflow.md#task-plans).
 Update the banner and date when work changes. Keep progress, blockers, validation
 evidence, and the next action in the same plan; do not create a separate state
 document or copy those details into an index.

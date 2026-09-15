@@ -2,7 +2,7 @@
 
 > **Status:** REFERENCE · **Updated:** 2026-09-04
 >
-> Illustrative image-classifier project used in chapters 14 and 15.
+> Illustrative image-classifier project used in guide sections 14 and 15.
 
 This project trains image classifiers from sample manifests. This document maps
 the dataset-validation boundary used by the
@@ -16,7 +16,7 @@ using the example.
 
 Paths below are relative to the sample Python project's root. The source files
 and environment are assumed to exist; the shared documents are created during
-chapter 15's setup.
+guide section 15's setup.
 
 ```text
 sample-project/
@@ -40,7 +40,7 @@ sample-project/
 
 The guide supplies this architecture and the
 [sample duplicate-ID plan](plans/duplicate-sample-ids.md). Create the validation
-rules using the chapter 15 template. The other files in
+rules using the guide section 15 template. The other files in
 this example directory's `rules/` folder originate from a mass-spectrometry
 project and need adaptation before use here.
 

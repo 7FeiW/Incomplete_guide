@@ -37,4 +37,4 @@ section and draft version. Other names are `proof-review`, `math-review`,
 Specify review or edit for style work; review is the default.
 
 Run roles sequentially or in separate sessions. This example does not configure
-automatic agent spawning. See [Chapter 16](../../docs/16_Academic_Writing_with_LLM_Agents.md).
+automatic agent spawning. See [Guide section 16](../../docs/16_Academic_Writing_with_LLM_Agents.md).

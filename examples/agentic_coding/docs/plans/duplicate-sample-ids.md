@@ -5,9 +5,9 @@
 > Sample plan only. Repository inspection, implementation, and validation are pending.
 
 This plan follows the image-classifier example in
-[chapter 14](../../../../docs/14_Programming_with_LLM_Agents.md#sample-project)
+[guide section 14](../../../../docs/14_Programming_with_LLM_Agents.md#sample-project)
 and the plan workflow in
-[chapter 15](../../../../docs/15_Agentic_Workflow.md#task-plans).
+[guide section 15](../../../../docs/15_Agentic_Workflow.md#task-plans).
 The Python paths below belong to that illustrative project; its source code and
 environment are not included in this documentation repository. The neighboring
 [architecture example](../architecture.md) describes the same sample project;
@@ -36,7 +36,7 @@ All paths in this table are relative to the target Python project's root.
 | --- | --- |
 | `src/project/dataset.py` | Inspect the validation path, then add the duplicate-ID check. |
 | `tests/test_dataset.py` | Add regression cases and checks for preserved behavior. |
-| `docs/rules/data-validation.md` | Read the agreed constraints created in chapter 15's setup. |
+| `docs/rules/data-validation.md` | Read the agreed constraints created in guide section 15's setup. |
 | `docs/plans/duplicate-sample-ids.md` | Save this plan and update its status, evidence, and next action. |
 
 Before editing, read the target repository's instructions, architecture, and
