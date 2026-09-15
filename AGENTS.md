@@ -12,6 +12,20 @@ Markdown guide to practical Python computational-research workflows.
 
 ## Working Rules
 
+### Non-negotiable Writing Rules
+
+1. Never fabricate citations. If a required citation is unknown, add a
+   descriptive HTML TODO comment that identifies the claim requiring support.
+   Do not insert an empty citation or invent authors, titles, venues, or
+   publication years.
+2. Ask when scientific content, the intended argument, or the correct technical
+   phrasing cannot be established from the repository or supplied evidence.
+3. Do not create thesis figures unless the user explicitly overrides this rule.
+   During review-only tasks, report the missing figure without changing the
+   file. When an edit requires a figure placeholder, preserve an existing
+   placeholder or add a blank Markdown or HTML figure placeholder with a
+   descriptive TODO comment, then ask what the figure should contain.
+
 - Read the complete target chapter, nearby related chapters, and existing
   duplicated guidance before editing. Prefer improving the canonical section.
 - Preserve numbered chapter filenames. When adding, removing, or renaming a
