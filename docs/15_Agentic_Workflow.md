@@ -23,6 +23,7 @@ official documentation for the agent being configured.
 1. [The Idea](#the-idea)
    - [Project Record](#project-record)
    - [Agent Guidance](#agent-guidance)
+     - [Configure Subagents by Role](#configure-subagents-by-role)
    - [Local Context](#local-context)
 2. [Step-by-Step Setup](#step-by-step-setup)
 3. [An Agent-Assisted Task Example](#an-agent-assisted-task-example)
@@ -67,6 +68,18 @@ flowchart TB
     H["Human-defined task"] --> A
     A --> V["Human review of changes and evidence"]
     V --> U["Update the project record<br/>Progress, evidence, and next action"]
+
+    classDef record fill:#DBEAFE,stroke:#2563EB,color:#111827
+    classDef guidance fill:#EDE9FE,stroke:#7C3AED,color:#111827
+    classDef local fill:#F3F4F6,stroke:#4B5563,color:#111827
+    classDef agent fill:#DCFCE7,stroke:#16A34A,color:#111827
+    classDef human fill:#FEF3C7,stroke:#D97706,color:#111827
+
+    class R,U record
+    class G guidance
+    class C local
+    class A agent
+    class H,V human
 ```
 
 **Figure 1.** Read from top to bottom: the agent uses three sources of context to
@@ -159,6 +172,22 @@ flowchart TB
     S --> M["Compact summaries, metrics, and figures"]
     M --> H["Human analysis and review<br/>With agent assistance as needed"]
     H --> F["Record supported findings<br/>Link to results and analysis"]
+
+    classDef input fill:#DBEAFE,stroke:#2563EB,color:#111827
+    classDef compute fill:#DCFCE7,stroke:#16A34A,color:#111827
+    classDef raw fill:#F3F4F6,stroke:#4B5563,color:#111827
+    classDef analysis fill:#CFFAFE,stroke:#0891B2,color:#111827
+    classDef evidence fill:#EDE9FE,stroke:#7C3AED,color:#111827
+    classDef human fill:#FEF3C7,stroke:#D97706,color:#111827
+    classDef finding fill:#D1FAE5,stroke:#059669,color:#111827
+
+    class C,P input
+    class E compute
+    class R raw
+    class S analysis
+    class M evidence
+    class H human
+    class F finding
 ```
 
 **Figure 2.** Read from top to bottom: recorded inputs define the run, and scripts
@@ -208,6 +237,223 @@ Claude Code uses `.claude/rules/`; Codex uses nested `AGENTS.md` files and
 `AGENTS.override.md`. Keep shared constraints in `docs/rules/` and make scoped
 files point to them. Codex `.rules` files control command permissions and are not
 substitutes for project knowledge.
+
+#### Configure Subagents by Role
+
+A subagent is a separate agent thread that the main session delegates a bounded
+task to. Both Codex and Claude Code let a project define named subagent roles in
+version-controlled files and give each role its own model and reasoning effort.
+
+A useful starting pattern is to reserve a more capable model and higher
+reasoning effort for judgment-heavy work such as planning, architecture, and
+audit, then give a faster, lower-cost model a bounded implementation task with
+explicit checks. This is a routing heuristic, not a guarantee: compare both
+roles on representative tasks and move work to the stronger model when the
+worker misses requirements or cannot complete the checks. Record the routing
+rule you settle on with the task plan, as described in
+[Project Record](#project-record).
+
+| Agent       | Project roles       | User roles            | Role file format               |
+| ----------- | ------------------- | --------------------- | ------------------------------ |
+| Codex       | `.codex/agents/`    | `~/.codex/agents/`    | TOML                           |
+| Claude Code | `.claude/agents/`   | `~/.claude/agents/`   | Markdown with YAML frontmatter |
+
+Check the current documentation for model names, supported reasoning levels, and
+configuration fields before adapting the examples below. Both products change
+these frequently.
+
+##### Codex Subagent Roles
+
+The following current Codex example sets a lower-cost default for spawned
+agents, then overrides it for a read-only reasoning role. See the
+[Codex subagent documentation](https://learn.chatgpt.com/docs/agent-configuration/subagents).
+
+In `.codex/config.toml`:
+
+```toml
+[agents]
+enabled = true
+max_concurrent_threads_per_session = 4
+default_subagent_model = "gpt-5.6-terra"
+default_subagent_reasoning_effort = "medium"
+```
+
+In `.codex/agents/reasoner.toml`:
+
+```toml
+name = "reasoner"
+description = "Read-only planner, designer, and auditor for consequential or ambiguous changes."
+model = "gpt-5.6"
+model_reasoning_effort = "high"
+sandbox_mode = "read-only"
+developer_instructions = """
+Inspect the repository evidence before proposing a plan, design, or audit finding.
+State assumptions, risks, affected files, acceptance checks, and unresolved questions.
+Do not edit files. Return a concise recommendation with file references.
+"""
+```
+
+In `.codex/agents/worker.toml`:
+
+```toml
+name = "worker"
+description = "Implementation agent for an accepted, bounded plan with explicit checks."
+model = "gpt-5.6-terra"
+model_reasoning_effort = "medium"
+sandbox_mode = "workspace-write"
+developer_instructions = """
+Implement only the accepted plan. Preserve unrelated changes and do not expand scope.
+Run the specified checks, inspect the final diff, and report observed results.
+Stop and return the blocker if the plan conflicts with repository evidence.
+"""
+```
+
+Each custom-agent file must define `name`, `description`, and
+`developer_instructions`; `model`, `model_reasoning_effort`, and `sandbox_mode`
+specialize the role. If neither the role nor the global `[agents]` table selects
+a model or reasoning effort, the subagent inherits those settings from its
+parent. An explicit model or effort requested when spawning an agent can
+override the corresponding global default, while values in the selected custom
+agent file take precedence.
+
+##### Claude Code Subagent Roles
+
+Claude Code stores each role as one Markdown file whose YAML frontmatter
+configures the role and whose body is the role's system prompt. Only `name` and
+`description` are required; `model`, `effort`, `tools`, and `disallowedTools`
+specialize the role. The `model` field accepts an alias such as `opus`,
+`sonnet`, or `haiku`, a full model identifier, or `inherit` to reuse the main
+conversation's model. The `effort` field accepts `low`, `medium`, `high`,
+`xhigh`, or `max`. See the
+[Claude Code subagent documentation](https://code.claude.com/docs/en/sub-agents).
+
+In `.claude/agents/reasoner.md`:
+
+```markdown
+---
+name: reasoner
+description: Read-only planner, designer, and auditor for consequential or ambiguous changes.
+model: opus
+effort: high
+tools: Read, Grep, Glob
+---
+
+Inspect the repository evidence before proposing a plan, design, or audit finding.
+State assumptions, risks, affected files, acceptance checks, and unresolved questions.
+Return a concise recommendation with file references.
+```
+
+In `.claude/agents/worker.md`:
+
+```markdown
+---
+name: worker
+description: Implementation agent for an accepted, bounded plan with explicit checks.
+model: sonnet
+effort: medium
+disallowedTools: WebFetch, WebSearch
+---
+
+Implement only the accepted plan. Preserve unrelated changes and do not expand scope.
+Run the specified checks, inspect the final diff, and report observed results.
+Stop and return the blocker if the plan conflicts with repository evidence.
+```
+
+Claude Code has no per-role sandbox field equivalent to Codex `sandbox_mode`.
+Make a role read-only through its tool list instead: `tools` is an allowlist and
+`disallowedTools` is a denylist, and omitting both inherits the session's tools.
+The `reasoner` role above cannot edit files because its allowlist excludes
+`Edit`, `Write`, and `Bash`. Use `permissionMode` and the session permission
+settings for the remaining approval behavior.
+
+To make a cheaper model the default for every subagent that does not set
+`model`, set `CLAUDE_CODE_SUBAGENT_MODEL` in `.claude/settings.json`:
+
+```json
+{
+  "env": {
+    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
+  }
+}
+```
+
+A subagent's model resolves in this order: the model requested when the agent is
+spawned, then the role file's `model` field, then
+`CLAUDE_CODE_SUBAGENT_MODEL`, then the main conversation's model.
+
+For the plan-versus-implement split alone, the built-in `opusplan` model
+setting is a smaller alternative to custom roles: it uses Opus in plan mode and
+switches to Sonnet for execution. Select it with `/model opusplan`. Custom roles
+are still needed when a role also requires its own tool restrictions, system
+prompt, or audit step.
+
+##### Using the Roles
+
+Use the roles in stages rather than asking both to edit concurrently:
+
+```text
+Have reasoner inspect the task and return a read-only plan with risks and checks.
+After I accept the plan, assign each independent, bounded work package to a
+worker with a matching role, such as implementation, testing, documentation, or
+data review. Give each role only the model, tools, and permissions it needs.
+Then have reasoner audit the combined result against the accepted plan and
+report findings without editing files.
+```
+
+```mermaid
+flowchart TB
+    T["Task and acceptance criteria"] --> R1["Reasoner: plan or design<br/>More capable model<br/>Read-only"]
+    R1 --> H1["Human accepts the plan"]
+    H1 --> P["Independent, bounded<br/>role-specific work packages"]
+    P --> W1["Implementation worker<br/>Lower-cost coding model<br/>Workspace write"]
+    P --> W2["Test worker<br/>Lower-cost validation model<br/>Tests and diagnostics"]
+    P --> WN["Other specialist<br/>Documentation, data, or tooling<br/>Task-matched tools"]
+    W1 --> V["Combined result and deterministic checks<br/>Tests, lint, types, and diff"]
+    W2 --> V
+    WN --> V
+    V --> R2["Reasoner: audit<br/>More capable model<br/>Read-only"]
+    R2 --> H2{"Human decision"}
+    H2 -->|Accept| D["Hand off or merge"]
+    H2 -->|Revise| P
+
+    classDef task fill:#DBEAFE,stroke:#2563EB,color:#111827
+    classDef reasoner fill:#EDE9FE,stroke:#7C3AED,color:#111827
+    classDef human fill:#FEF3C7,stroke:#D97706,color:#111827
+    classDef implementation fill:#DCFCE7,stroke:#16A34A,color:#111827
+    classDef testing fill:#FFE4E6,stroke:#E11D48,color:#111827
+    classDef specialist fill:#FCE7F3,stroke:#C026D3,color:#111827
+    classDef checks fill:#CFFAFE,stroke:#0891B2,color:#111827
+    classDef outcome fill:#F3F4F6,stroke:#4B5563,color:#111827
+
+    class T,P task
+    class R1,R2 reasoner
+    class H1,H2 human
+    class W1 implementation
+    class W2 testing
+    class WN specialist
+    class V checks
+    class D outcome
+```
+
+**Figure 3.** A staged subagent workflow routes planning, design, and audit to a
+more capable read-only reasoner. One or more lower-cost workers implement
+independent, bounded parts of the accepted plan before their results are
+combined. Each worker can have a different role, model, tool set, and permission
+scope. Deterministic checks and a human decision gate each revision or handoff.
+
+Keep the worker's task narrow enough that tests, linting, type checks, or another
+observable acceptance check can detect mistakes. Use parallel subagents first
+for independent, read-heavy work; simultaneous write-heavy agents can create
+conflicts and coordination overhead. Each subagent performs its own model and
+tool work, so adding agents can increase total token use even when the worker's
+model is cheaper.
+
+A subagent does not see the parent session's conversation history or the files
+that session already read. It receives only its own instructions, the delegated
+task, and the repository, so anything a role needs must be in the
+version-controlled record or in the delegation prompt. This is the same
+constraint as [Evidence-Based Resumption](#evidence-based-resumption), applied
+within a single session.
 
 #### Advisory and Enforced Rules
 
@@ -717,6 +963,7 @@ Audit the same layers regardless of which LLM agent is used:
 | Knowledge    | Does every required fact resolve to a current, shared source?                          |
 | Plans        | Can a new human or agent identify each task's status, goal, evidence, and next action? |
 | Skills       | Which reusable workflows are discoverable, and are their inputs and outputs explicit?  |
+| Subagents    | Which roles exist, and which model, effort, and tools does each one use?               |
 | Permissions  | Which actions are allowed, prompted, sandboxed, or forbidden?                          |
 | Automation   | Which hooks, scripts, and CI checks can change or validate work?                       |
 | Tools        | Which external services, environments, and data stores are available?                  |
@@ -727,6 +974,7 @@ Use the tool's own inspection features for the implementation details:
 | ----------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------- |
 | Instructions and local memory | Inspect with `/memory`        | Check the applicable `AGENTS.md` chain; inspect local memories with `/memories` where supported |
 | Skills                        | Inspect with `/skills`        | Inspect with `/skills` or explicitly invoke `$<skill-name>`                                     |
+| Subagent roles                | Review `.claude/agents/` and `~/.claude/agents/`, plus any subagent model default in settings | Review `.codex/agents/` and `~/.codex/agents/`, plus the `[agents]` table in the Codex configuration |
 | Permissions                   | Inspect with `/permissions`   | Review sandbox and approval settings, plus any applicable `.rules` files                          |
 | Configuration                 | Use `/doctor` and `/status` | Review the active Codex client configuration and repository instructions                           |
 
@@ -742,7 +990,9 @@ Audit the workflow periodically:
 - mark stopped plans ABANDONED or SUPERSEDED and record the reason;
 - verify that documented commands still run;
 - test permission rules and hooks in a safe environment;
-- review skills for excessive permissions and stale paths; and
+- review skills for excessive permissions and stale paths;
+- recheck subagent roles against the current model catalog and configuration
+  fields, and confirm that each role still passes its acceptance checks; and
 - confirm that experiment records still identify their code, data, and
   environment.
 
@@ -755,6 +1005,7 @@ and the [Codex `AGENTS.md` guide](https://learn.chatgpt.com/docs/agent-configura
 ### Codex
 
 - [Codex `AGENTS.md`](https://learn.chatgpt.com/docs/agent-configuration/agents-md)
+- [Codex subagents and custom agents](https://learn.chatgpt.com/docs/agent-configuration/subagents)
 - [Codex skills](https://learn.chatgpt.com/docs/build-skills)
 - [Codex memories](https://learn.chatgpt.com/docs/customization/memories)
 - [Codex command rules](https://learn.chatgpt.com/docs/agent-configuration/rules)
@@ -768,6 +1019,8 @@ and the [Codex `AGENTS.md` guide](https://learn.chatgpt.com/docs/agent-configura
 - [Configure permissions](https://code.claude.com/docs/en/permissions)
 - [Automate workflows with hooks](https://code.claude.com/docs/en/hooks-guide)
 - [Extend Claude with skills](https://code.claude.com/docs/en/slash-commands)
+- [Delegate work to subagents](https://code.claude.com/docs/en/sub-agents)
+- [Configure models and reasoning effort](https://code.claude.com/docs/en/model-config)
 - [Manage Claude Code sessions](https://code.claude.com/docs/en/sessions)
 - [Debug Claude Code configuration](https://code.claude.com/docs/en/debug-your-config)
 
