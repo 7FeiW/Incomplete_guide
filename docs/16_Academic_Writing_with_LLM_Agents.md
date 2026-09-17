@@ -1,5 +1,12 @@
 # Academic Writing with Codex and Claude
 
+> "In God we trust, everything else we verify"
+
+> **Working principle:** AI is the worker; the human author is the brain. Verify
+> every AI-produced statement, citation, and edit against the underlying
+> evidence. A human author must sign off on every change before it is retained
+> or shared.
+
 Writing a paper from a Python research project means connecting code, experiment
 records, figures, and literature to a clear scientific argument. Codex and Claude
 can help organize and revise that material. The author still needs to decide
@@ -255,6 +262,8 @@ ask the agent to read that file before editing:
 # Manuscript writing rules
 
 - Read manuscript/README.md and the evidence named in the task before editing.
+- Treat AI output as a proposal. The human author verifies and explicitly
+  approves every retained change, citation, and scientific claim.
 - Preserve scientific meaning, terminology, units, numbers, and citation keys.
 - Use the symbols, abbreviations, and macros defined in manuscript/notation.md.
   Report a conflict between the draft and that file instead of renaming either.
@@ -263,6 +272,11 @@ ask the agent to read that file before editing:
   descriptive `% TODO: cite ...` comment that identifies the claim requiring
   support. Do not insert an empty `\cite{}` command or invent authors, titles,
   venues, or publication years.
+- Add an entry to `references.bib` only after at least two independently checked
+  records identify the same work and its metadata. Use the original work or its
+  publisher record as one check where available; record the other source and
+  the verification result in `manuscript/sources.md`. A metadata match does not
+  establish that the work supports the manuscript claim.
 - Ask when scientific content, the intended argument, or the correct technical
   phrasing cannot be established from the repository or supplied evidence.
 - Do not create manuscript figures unless the user explicitly overrides this rule.
@@ -787,6 +801,40 @@ Read the original source before accepting a claim. A search snippet or abstract
 may establish a lead but may omit conditions needed for your sentence. Check PDF
 extraction against the original for equations, tables, symbols, and page numbers.
 
+### Validate a Candidate Reference Before Adding It
+
+Treat a candidate citation as unverified until more than one independent record
+identifies the same work. For example, compare the publisher or original-work
+record with a Crossref metadata record, or use CheckIfExist to locate records
+from its listed scholarly indexes and then inspect two of those records. Do not
+count a tool's repeated display of the same upstream record as two checks.
+
+Before adding the entry to `references.bib`, record in `sources.md` the checked
+records, access dates, and agreement on title, authors, year, venue, and a
+persistent identifier such as a DOI. Then read the original work and record the
+specific passage that supports the manuscript claim. Crossref and CheckIfExist
+can help find or compare bibliographic metadata; neither result by itself proves
+the scientific claim, replaces the original work, or authorizes adding the
+entry. The human author must review the evidence and explicitly approve the
+entry and its use in the draft.
+
+If fewer than two records can be checked, leave a descriptive TODO rather than
+adding a provisional citation. This rule may require an exception for material
+with only one authoritative record; document the reason and require explicit
+human approval before adding such an entry.
+
+Use a separate discovery-and-verification task, for example:
+
+```text
+For each proposed reference, use CheckIfExist, Crossref, and other accessible
+scholarly indexes only to locate candidate records. Do not edit references.bib.
+Report the records checked, whether at least two independent records identify
+the same work, and any disagreement in title, authors, year, venue, or DOI.
+For candidates with matching metadata, locate the original work and the passage
+relevant to the stated claim. Mark all candidates unverified until I review and
+explicitly approve them.
+```
+
 Ask the agent to separate discovery from verification:
 
 ```text
@@ -984,6 +1032,15 @@ Citation integrity and verification:
   Medical Internet Research*, 2024 — per-model hallucination rates on systematic
   review references, and why these tools should not be the primary means of
   assembling one.
+- Diletta Abbonato, [CheckIfExist: Detecting Citation Hallucinations in the Era
+  of AI-Generated Content](https://arxiv.org/abs/2602.15871), arXiv:2602.15871,
+  2026 — describes a tool that compares candidate references with records from
+  multiple scholarly indexes. Treat its result as a lead for human review, not
+  proof that a cited work supports a claim.
+- [Crossref REST API](https://www.crossref.org/documentation/retrieve-metadata/rest-api/)
+  — documentation for retrieving scholarly metadata deposited with Crossref.
+  Compare its metadata with another record and the original work before adding
+  a bibliography entry.
 
 Documenting and disclosing LLM use:
 
