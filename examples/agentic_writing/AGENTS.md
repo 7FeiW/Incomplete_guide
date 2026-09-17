@@ -15,6 +15,8 @@ Read linked targets explicitly, resolving paths relative to this file:
 
 ## Evidence and Meaning
 
+- Treat AI output as a proposal. The human author verifies and explicitly
+  approves every retained change, citation, and scientific claim.
 - Never fabricate citations, passages, procedures, results, measurements, or
   completed experiments. Identify supporting source and result locations.
 - Distinguish observations, interpretations, hypotheses, and proposed work.
@@ -24,6 +26,10 @@ Read linked targets explicitly, resolving paths relative to this file:
   conflict between the draft and the register instead of renaming either one.
 - Flag missing support with descriptive `% TODO:` comments in LaTeX or HTML TODO
   comments in Markdown. Never insert empty citation commands.
+- Add a bibliography entry only after two independently checked records identify
+  the same work, including the original work or publisher record where available.
+  Record the checks in the source notes; the human author must approve the entry
+  and its use for the claim.
 - Ask when scientific decisions cannot be resolved from evidence; continue
   independent work and report unresolved questions.
 - Style samples guide expression, not facts. Do not copy their text.

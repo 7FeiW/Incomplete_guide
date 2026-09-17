@@ -22,6 +22,32 @@ Do not record inaccessible pages, search snippets, or remembered references as
 verified. If the source cannot be checked, leave a descriptive HTML TODO comment
 in the affected section instead.
 
+## CheckIfExist reference verification
+
+- Guide location: `docs/16_Academic_Writing_with_LLM_Agents.md`, "Validate a
+  Candidate Reference Before Adding It" and "Further Reading."
+- Claim supported: CheckIfExist compares candidate references with records from
+  multiple scholarly indexes and is useful for locating and checking candidate
+  bibliographic metadata.
+- Source: [CheckIfExist: Detecting Citation Hallucinations in the Era of
+  AI-Generated Content](https://arxiv.org/abs/2602.15871).
+- Source location: Abstract.
+- Checked: 2026-09-17.
+- Limits or follow-up: The work is an arXiv preprint. Its tool output is treated
+  as a lead for human review, not as evidence that a source supports a claim.
+
+## Crossref REST API metadata retrieval
+
+- Guide location: `docs/16_Academic_Writing_with_LLM_Agents.md`, "Validate a
+  Candidate Reference Before Adding It" and "Further Reading."
+- Claim supported: Crossref provides a REST API for retrieving deposited
+  scholarly metadata.
+- Source: [Crossref REST API documentation](https://www.crossref.org/documentation/retrieve-metadata/rest-api/).
+- Source location: "REST API" overview and "Endpoints."
+- Checked: 2026-09-17.
+- Limits or follow-up: Crossref metadata is a bibliographic record, not proof
+  that the cited work supports a manuscript claim.
+
 ## Codex subagents and custom agents
 
 - Guide location: `docs/15_Agentic_Workflow.md`, "Configure Codex Subagents by
