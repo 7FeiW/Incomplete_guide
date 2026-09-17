@@ -272,6 +272,24 @@ external data, cluster settings, or decisions from another conversation. Put
 reusable facts in the repository, then tell the agent what to inspect for this
 task.
 
+#### Keep Context Focused and Compact
+
+Do not treat the largest available context window as a target. Give the agent
+the smallest set of files, excerpts, decisions, and acceptance checks that it
+needs for the current task. Keep the task focused on one outcome; split an
+unrelated investigation, refactor, or research decision into a separate
+request or plan. Focused context makes it easier to identify which requirement
+or source supports each change and to review the result.
+
+Context compaction is a useful option when a session becomes long. Replace
+settled discussion with a short, reviewed handoff that records the objective,
+decisions, relevant paths, evidence, constraints, completed checks, open
+questions, and next action. Link to the canonical repository records instead
+of copying large logs, datasets, or transcripts. Keep the original records
+available, and check the compacted handoff against them before relying on it for
+a consequential change: a summary can omit a qualification or an unresolved
+question.
+
 #### Copilot Example
 
 GitHub Copilot uses `.github/copilot-instructions.md` for general repository

@@ -139,6 +139,31 @@ questions, record validation evidence, and preserve stopped plans with their
 reasons. On resumption, compare the plan with the current Git revision, working
 tree, and linked experiment records.
 
+##### Resolving Plan Conflicts
+
+A conflict occurs when people or agents working on the same plan propose
+incompatible requirements, interpretations, implementation choices, or claims
+about what the repository evidence shows. Do not let the most recent edit, the
+loudest contributor, or agreement between models decide it. Mark the plan
+**BLOCKED** when the disagreement affects the next action, and pause writes to
+the shared plan and affected files while it is resolved. Read-only investigation
+that can narrow the disagreement may continue if its scope is explicit.
+
+Record the competing positions, the exact decision in dispute, the supporting
+evidence and its location, the affected files or experiments, and the decision
+owner. The owner should choose a resolution based on project requirements and
+evidence: retain the current plan, revise its objective or acceptance criteria,
+or split independent alternatives into separate plans or branches. Do not merge
+competing implementations merely to remove a conflict; compare them against the
+same stated checks first.
+
+After the decision, record its rationale and evidence in the canonical plan,
+update the status and instructions, and point every contributor to that version
+before implementation resumes. Keep the rejected alternative and its useful
+evidence in the record when it could prevent the conflict from recurring. A
+scientific disagreement remains an open question until the responsible person
+or supported project record resolves it.
+
 ##### Experiment Records
 
 Use a version-controlled configuration file as the main description of a run.
@@ -538,6 +563,20 @@ reproducible project record.
 Use local context for machine-specific commands, unconfirmed observations, and
 personal preferences. Move shared knowledge, decisions, workarounds, and task
 progress into the project record.
+
+**Keep local context bounded and centered on the current task.** Provide the
+relevant files, evidence, constraints, and acceptance checks, but do not fill
+the session with unrelated history or source material. Split unrelated goals
+into separate plans or requests so that each agent can work toward one
+reviewable outcome.
+
+When a session becomes long, compact its settled discussion into a short,
+reviewed handoff. Record the objective, decisions, relevant paths, supporting
+evidence, constraints, completed or failed checks, unresolved questions, and
+next action; link to canonical records rather than copying transcripts, logs,
+or datasets. Keep those originals available and verify the handoff against them
+before making a consequential change. The task-plan update and handoff in the
+workflow below provide places to keep that compact record.
 
 #### Evidence-Based Resumption
 
