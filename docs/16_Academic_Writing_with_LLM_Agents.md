@@ -2,10 +2,7 @@
 
 > "In God we trust, everything else we verify"
 
-> **Working principle:** AI is the worker; the human author is the brain. Verify
-> every AI-produced statement, citation, and edit against the underlying
-> evidence. A human author must sign off on every change before it is retained
-> or shared.
+**Working principle:** AI is the worker; the human author is the brain. Verifyevery AI-  produced statement, citation, and edit against the underlying evidence. A human author must sign off on every change before it is retained or shared.
 
 Writing a paper from a Python research project means connecting code, experiment
 records, figures, and literature to a clear scientific argument. Codex and Claude
