@@ -1,6 +1,6 @@
 # Academic Writing with Codex and Claude
 
-> "In God we trust, everything else we verify"
+> "In God we trust, everything else we verify."
 
 **Working principle:** Agent is the worker; the human author is the brain. Verify every gent produced statement, citation, and edit against the underlying evidence. A human author must sign off on every change before it is retained or shared.
 
