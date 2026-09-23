@@ -117,3 +117,19 @@ Using Apptainer in batch jobs (example Slurm script snippet):
 module load apptainer
 apptainer exec --bind $HOME/data:/data image.sif python /data/script.py
 ```
+
+## What to Ask an LLM AGNET
+
+Avoid: “Run this on the cluster.”
+
+Ask instead:
+
+```text
+Inspect the project's documented remote-compute setup, job script, environment,
+input/output paths, and the target site's published constraints that I provide.
+Report missing prerequisites, site-specific assumptions, likely storage or
+resource issues, and a dry-run or small-test plan. State the exact proposed
+submission command, requested resources, and output locations. Do not connect
+to a remote system, transfer data, build images, or submit a job without my
+explicit approval.
+```

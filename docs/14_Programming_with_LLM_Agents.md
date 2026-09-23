@@ -32,7 +32,8 @@ for the project's architecture or scientific decisions.
 8. [Workflow Extensions](#workflow-extensions)
 9. [Common Failure Modes](#common-failure-modes)
 10. [Related guide section: Agentic Research Workflow](#related-guide-section-agentic-research-workflow)
-11. [Further Reading](#further-reading)
+11. [What to Ask an LLM AGNET](#what-to-ask-an-llm-agnet)
+12. [Further Reading](#further-reading)
 
 ## Delegation
 
@@ -676,6 +677,33 @@ action so a fresh session can recover the work described here.
 Come back to this section when you are working through a specific programming
 task. Use guide section 15 when you are deciding what the repository must preserve so
 someone else—or another agent session—can pick up the work safely.
+
+## What to Ask an LLM AGNET
+
+Avoid requests such as “fix this,” “clean up the repository,” or “make it
+faster.” They omit the outcome, evidence, scope, and authority that an agent
+needs to produce a reviewable result.
+
+Use this adaptable request instead:
+
+```text
+Goal: <bounded outcome>.
+
+First inspect: <relevant files, tests, configuration, logs, and documentation>.
+Report: the current behavior, evidence for the likely cause or gap, affected
+paths, and a small ordered plan with risks and validation checks.
+
+Constraints: preserve <interfaces, data, numerical behavior, or other limits>;
+do not <unsafe or out-of-scope actions>.
+
+For now, do not edit. Ask questions where repository evidence cannot establish
+the intended scientific or technical behavior.
+```
+
+After accepting the plan, replace “For now, do not edit” with the approved file
+scope and exact validation commands. Require the agent to show the diff and
+observed command results, and to report any check it could not run. The prompts
+in the other guide sections supply topic-specific inspection targets.
 
 ## Further Reading
 

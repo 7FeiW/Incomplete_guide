@@ -87,3 +87,18 @@ Use logging levels consistently:
     - Example:
         - `"Epoch 5: Batch 34 - loss=1.128, accuracy=71.2%"`
         - `"Data augmentation: rotating image 42 by 15 degrees"`
+
+## What to Ask an LLM AGNET
+
+Avoid: “Add better logging.”
+
+Ask instead:
+
+```text
+Inspect the logging setup and a representative run log. Report whether the logs
+make a run diagnosable and reproducible: include configuration identity, code
+revision where available, progress, failures, resource use, and only necessary
+metrics. Flag noisy per-step output and any possible sensitive values. Propose
+the smallest changes and expected log examples. Do not expose credentials or
+research data, alter retention settings, or edit code until I approve the plan.
+```

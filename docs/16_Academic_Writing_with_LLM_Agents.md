@@ -41,7 +41,8 @@ the task is turning verified research material into a reviewable manuscript.
 10. [Require Reproducible Figures and Analyses](#require-reproducible-figures-and-analyses)
 11. [Review Figures and Reviewer Responses](#review-figures-and-reviewer-responses)
 12. [Check Before Sharing](#check-before-sharing)
-13. [Further Reading](#further-reading)
+13. [What to Ask an LLM AGNET](#what-to-ask-an-llm-agnet)
+14. [Further Reading](#further-reading)
 
 ## Choose a Bounded Writing Task
 
@@ -1042,6 +1043,27 @@ Use this checklist for a section handoff or final manuscript review:
 The reviewable output is a manuscript change together with its evidence and
 unresolved questions. Human authors remain responsible for accepting the text
 and the scientific claims it makes.
+
+## What to Ask an LLM AGNET
+
+Avoid: “Make this paper better” or “find citations for this.”
+
+Ask instead:
+
+```text
+Read <manuscript section>, the supplied claim and evidence records, relevant
+source passages, and the manuscript writing rules. Report unsupported claims,
+missing definitions, mismatches between prose and evidence, and language that
+may change the stated scope or uncertainty. Propose a bounded revision plan and
+identify the evidence needed for each substantive change. Do not invent or add
+citations, change results or figures, contact coauthors, or edit the manuscript
+until I approve the plan.
+```
+
+For a language-only pass, name the exact file and require preservation of
+numbers, units, citation keys, terminology, scope, and uncertainty. For a
+literature task, request candidate records and source passages for review rather
+than bibliography edits.
 
 ## Further Reading
 

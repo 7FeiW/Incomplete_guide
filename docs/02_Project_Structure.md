@@ -8,6 +8,7 @@
 4. [General Best Practices](#general-best-practices)
 5. [Working with SLURM](#working-with-slurm)
 6. [Working with Apptainer](#working-with-apptainer)
+7. [What to Ask an LLM AGNET](#what-to-ask-an-llm-agnet)
 
 Projects vary in goals, lifecycles, and complexity. Choose a structure that aligns with the primary purpose of the project rather than forcing a single canonical layout. Below are three common research project setups, each optimized for different use cases.
 
@@ -282,3 +283,19 @@ apptainer/
 An [Apptainer definition file](https://apptainer.org/docs/user/latest/definition_files.html) describes the base image and container setup. Track this recipe and the helper scripts in Git. Store built `.sif` container images in a documented location outside ordinary Git tracking, and record the image checksum or immutable identifier with each experiment. The recipe alone does not identify the exact image used for a run.
 
 Document the input and output paths the run helper exposes inside the container, along with its prerequisites. See [Writing Definition Files](13_Apptainer_Compute_Canada.md#writing-definition-files) and [Binding Directories and Data](13_Apptainer_Compute_Canada.md#binding-directories-and-data) for details. Storage paths, modules, and resource settings in that section are site-specific examples.
+
+## What to Ask an LLM AGNET
+
+Avoid: “Reorganize my project.”
+
+Ask instead:
+
+```text
+Inspect this repository's tree, package configuration, entry points, tests,
+data documentation, and output conventions. Compare them with the project
+structures in this guide. Report what already fits, structural problems that
+block testing, reuse, or reproducibility, and a small ordered adoption plan
+with affected paths and checks. Preserve existing import and execution behavior;
+do not move files, rewrite history, or alter data/output locations until I
+approve the plan.
+```

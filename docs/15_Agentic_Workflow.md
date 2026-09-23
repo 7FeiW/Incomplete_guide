@@ -18,18 +18,39 @@ For a Copilot entry-point template, see the
 LLM-agent products change frequently. Verify tool-specific feature details in the
 official documentation for the agent being configured.
 
+```mermaid
+flowchart LR
+    H1["Human defines task and accepts plan"] --> A["Agent reads Project Record, Agent Guidance, and Local Context"]
+    A --> P["Plan state changes"]
+    P --> S["Subagents execute or review bounded work"]
+    S --> E["Evidence and artifacts"]
+    E --> H2["Human review"]
+    H2 --> R["Project Record updated"]
+    R --> N["Next cycle"]
+```
+
+**Figure 1. 30-second mental model.** The Project Record persists across
+cycles; Agent Guidance constrains how work is done, while Local Context helps
+only the current session. Human review is the decision gate before the record
+becomes the starting evidence for the next task.
+
 ## Table of Contents
 
 1. [The Idea](#the-idea)
    - [Project Record](#project-record)
    - [Agent Guidance](#agent-guidance)
      - [Configure Subagents by Role](#configure-subagents-by-role)
+     - [Security and Permissions](#security-and-permissions)
    - [Local Context](#local-context)
 2. [Step-by-Step Setup](#step-by-step-setup)
 3. [An Agent-Assisted Task Example](#an-agent-assisted-task-example)
 4. [Reusable Workflows](#reusable-workflows)
-5. [System Audit](#system-audit)
-6. [Further Reading](#further-reading)
+5. [Failure Modes and Recovery](#failure-modes-and-recovery)
+6. [Evaluation and Observability](#evaluation-and-observability)
+7. [System Audit](#system-audit)
+8. [Non-Goals and Adoption Path](#non-goals-and-adoption-path)
+9. [What to Ask an LLM AGNET](#what-to-ask-an-llm-agnet)
+10. [Further Reading](#further-reading)
 
 ## The Idea
 
@@ -40,7 +61,20 @@ project rules, and plans. **Humans remain responsible for scientific decisions,
 consequential actions, and final results.** Humans should track and verify all
 project records.
 
-Both an LLM agent and a human need information to perform each task well. This information falls into three categories:
+Both an LLM agent and a human need information to perform each task well. This
+document uses these three terms consistently:
+
+| Layer | Source of truth? | Lifetime | Who writes | Examples |
+| --- | --- | --- | --- | --- |
+| **Project Record** | Yes | Persistent and version-controlled | Humans; agents through review | `docs/plans/`, `docs/knowledge/`, `docs/findings/` |
+| **Agent Guidance** | Yes, for operating constraints | Versioned | Maintainers | Instructions, scoped rules, hooks |
+| **Local Context** | No | Session or cache | Tool or runtime | Chat history, temporary files |
+
+The distinction prevents a common failure: treating chat history as project
+memory. If another person or a fresh session must rely on it, review it and add
+it to the Project Record.
+
+The layers mean:
 
 1. **Project record:** Version-controlled knowledge, plans, project rules, and
    research working notes shared by humans and LLM agents. These records help
@@ -82,7 +116,7 @@ flowchart TB
     class H,V human
 ```
 
-**Figure 1.** Read from top to bottom: the agent uses three sources of context to
+**Figure 2.** Read from top to bottom: the agent uses three sources of context to
 perform a human-defined task. Review and record updates prepare the next session.
 The final update goes into the same project record shown at the top.
 
@@ -91,13 +125,13 @@ The final update goes into the same project record shown at the top.
 The `docs/` directory is the tool-neutral project record. Its files separate
 stable project knowledge from changing plans and findings:
 
-| Path                     | Contents                                                                                  |
-| ------------------------ | ----------------------------------------------------------------------------------------- |
-| `docs/architecture.md` | Components, entry points, interfaces, and data flow                                       |
-| `docs/knowledge/`      | Project explanations and reusable procedures for development, experiments, and operations |
-| `docs/findings/`       | Verified observations, measurements, negative results, and conclusions                    |
-| `docs/plans/`          | Task objectives, steps, status, progress, blockers, and validation evidence               |
-| `docs/rules/`          | Shared scientific, data-handling, and engineering constraints                             |
+| Path | Purpose | Allowed content | Forbidden content | Owner | Update trigger |
+| --- | --- | --- | --- | --- | --- |
+| `docs/architecture.md` | Component map | Interfaces, boundaries, data flow | Task narration | Technical lead or designated maintainer | Architecture changes |
+| `docs/knowledge/` | Reusable procedures | Reviewed runbooks and explanations | Raw chat logs | Procedure owner | A practice becomes reusable |
+| `docs/findings/` | Durable conclusions | Supported observations and links to evidence | Unverified claims | Research owner | Review supports a conclusion |
+| `docs/plans/` | Task state | Objectives, status, blockers, and validation evidence | Raw chat logs | Task owner | Plan state changes |
+| `docs/rules/` | Shared constraints | Scientific, data-handling, and engineering rules | Tool-session notes | Maintainers | A constraint is adopted or revised |
 
 When a workflow uses more than one model, record the routing rule with the task
 plan or workflow: the task category, chosen model or capability tier, input and
@@ -215,7 +249,7 @@ flowchart TB
     class F finding
 ```
 
-**Figure 2.** Read from top to bottom: recorded inputs define the run, and scripts
+**Figure 3.** Read from top to bottom: recorded inputs define the run, and scripts
 turn stored outputs into compact evidence for analysis and review. Raw results
 remain in their storage location; supported findings enter the project record.
 
@@ -460,7 +494,7 @@ flowchart TB
     class D outcome
 ```
 
-**Figure 3.** A staged subagent workflow routes planning, design, and audit to a
+**Figure 4.** A staged subagent workflow routes planning, design, and audit to a
 more capable read-only reasoner. One or more lower-cost workers implement
 independent, bounded parts of the accepted plan before their results are
 combined. Each worker can have a different role, model, tool set, and permission
@@ -472,6 +506,17 @@ for independent, read-heavy work; simultaneous write-heavy agents can create
 conflicts and coordination overhead. Each subagent performs its own model and
 tool work, so adding agents can increase total token use even when the worker's
 model is cheaper.
+
+Choose the coordination pattern to fit the dependency and write-conflict risk,
+rather than using subagents by default:
+
+| Pattern | Use when | Avoid when | Example |
+| --- | --- | --- | --- |
+| Orchestrator-workers | Planning precedes independent implementation | The task is tiny or strictly sequential | Main agent plans; workers implement bounded packages |
+| Sequential pipeline | Each output is an input to the next step | Steps are independent | Specification → design → code → test |
+| Parallel fan-out/gather | Investigation is independent and read-heavy | Concurrent writes would conflict | Repository audit or multi-file search |
+| Generator-critic | Quality matters more than latency | Cost or latency is critical | Code or plan review |
+| Hierarchical | A large task has separable sub-goals | The team or repository is small | Multi-module migration |
 
 A subagent does not see the parent session's conversation history or the files
 that session already read. It receives only its own instructions, the delegated
@@ -486,6 +531,27 @@ Instructions guide model behavior but do not enforce hard restrictions. Use the
 runtime, operating system, sandbox, or continuous integration (CI) when an
 action must be blocked. Use hooks or CI for deterministic checks, and keep
 permissions narrow.
+
+#### Security and Permissions
+
+Use least privilege: give each role only the repository scope and commands
+needed for its accepted work. Instructions are **soft guidance**. Sandboxes,
+permission prompts, hooks, operating-system controls, and CI are **hard
+enforcement** when correctly configured. A human still reviews consequential
+actions and results.
+
+| Role | Read | Write | Execute | Approval required |
+| --- | --- | --- | --- | --- |
+| Reasoner | Broad project evidence | None | Read-only tools | No, within its read scope |
+| Worker | Task-scoped files | Task-scoped files | Allowed validation commands | Sometimes, for elevated or external actions |
+| Human | All project resources in scope | All | All | — |
+| CI or hook | Repository scope | Repository outputs | Fixed commands | — |
+
+Treat this table as a policy model, not a claim about a particular client’s
+defaults. Configure and test the actual sandbox, approval, hook, and CI rules in
+the selected environment. Do not give a worker credentials, broad network
+access, or permission to change unrelated project state merely because the task
+is convenient to automate.
 
 ##### Hooks
 
@@ -588,6 +654,10 @@ Transcripts may be stale. Resume work from repository evidence:
 3. Compare the repository with assumptions in the plan.
 4. Report any mismatch before making changes.
 ```
+
+For a reusable version with the Git history check and plan update, copy and
+adapt the [Evidence-Based Resumption Checklist](../examples/agentic_coding/docs/plans/RESUMPTION_CHECKLIST.md)
+into the target project's `docs/plans/` directory.
 
 ## Step-by-Step Setup
 
@@ -992,6 +1062,44 @@ configuration. See
 The example's legacy [`commands/`](../examples/agentic_coding/claude/commands/)
 can be converted into thin skills that share the same runbook and scripts.
 
+## Failure Modes and Recovery
+
+Use a short, recorded recovery loop: stop the affected write, preserve the
+evidence, determine the mismatch from the repository or CI, update the plan,
+and resume only after the owner accepts the corrected next action.
+
+| Failure mode | Symptom and detection | Recovery | Prevention |
+| --- | --- | --- | --- |
+| Agent edits the wrong file | Diff contains an out-of-scope path | Revert only the confirmed out-of-scope change; update the plan | Name permitted paths and review each diff |
+| Plan drifts from code | Code or tests contradict a recorded assumption | Mark the plan BLOCKED or revise it before further implementation | Compare plan, Git state, and tests at checkpoints |
+| Documentation becomes stale | Commands, paths, or status no longer match the repository | Correct the canonical record and link affected plans | Update documentation in the same reviewed change |
+| Subagent contradicts the main agent | Incompatible claims or implementations | Pause shared writes; record positions and evidence; assign a decision owner | Give bounded tasks and require file-based evidence |
+| Task is blocked | A dependency, missing decision, or failed prerequisite prevents progress | Mark BLOCKED with owner, evidence, and next action | Surface open questions during planning |
+| Tests pass locally but fail in CI | CI result differs from local validation | Record both environments; reproduce the narrowest CI failure before changing code | Keep environment identity and CI commands in the plan |
+
+Do not erase a failed attempt simply because a later change succeeds. Its
+observed cause and recovery can prevent the next session from repeating it.
+
+## Evaluation and Observability
+
+Measure the workflow from its records, traces, and Git history before changing
+roles, prompts, or automation. Counts alone do not establish quality: interpret
+them with task scope, review outcomes, and the actual evidence.
+
+| Measure | Practical definition | Evidence source |
+| --- | --- | --- |
+| Plan completion rate | Completed plans divided by plans started in a defined period | Plan status history |
+| Rework rate | Reviewed tasks that need another implementation cycle | Plan revisions and review records |
+| Blocked duration | Time from BLOCKED to a recorded resolution | Plan timestamps |
+| Context tokens per task | Context used for one task, where the client exposes it | Client traces or logs |
+| Cost per task | Attributed model and tool cost for one task | Provider usage records or traces |
+| Review latency | Time from handoff to recorded human decision | Review and plan timestamps |
+| Escaped defects | Defects found after a task was accepted | Issues, CI, and incident records |
+
+Choose a stable reporting period and keep definitions unchanged long enough to
+compare results. Do not collect prompts, source code, or credentials in shared
+logs unless the project’s data policy explicitly permits it.
+
 ## System Audit
 
 Audit the same layers regardless of which LLM agent is used:
@@ -1038,6 +1146,46 @@ Audit the workflow periodically:
 For tool-specific diagnostics, see the
 [Claude Code configuration debugging guide](https://code.claude.com/docs/en/debug-your-config)
 and the [Codex `AGENTS.md` guide](https://learn.chatgpt.com/docs/agent-configuration/agents-md).
+
+## Non-Goals and Adoption Path
+
+This workflow is not a replacement for an issue tracker, fully autonomous coding
+without review, or CI/CD. It provides a durable record and decision gates around
+agent-assisted work; projects still need their own ownership, release, security,
+and data-governance processes.
+
+Adopt it incrementally:
+
+1. **Day 1:** Create `docs/plans/`, add a small Project Record, and establish
+   basic Agent Guidance.
+2. **Week 1:** Add bounded subagent roles and human review gates to selected
+   tasks.
+3. **Month 1:** Add tested hooks or CI enforcement and review the observability
+   measures above.
+
+Keep only practices that improve an observed project need. A solo, low-risk task
+may need only a plan and review, while a multi-contributor research codebase may
+need the full set of controls.
+
+## What to Ask an LLM AGNET
+
+Avoid: “Set up an agent workflow for this project.”
+
+Ask instead:
+
+```text
+Inspect the repository's instructions, documentation, environment, tests, task
+records, and the current working state. Report which durable knowledge, rules,
+plans, findings, and validation procedures already exist; identify gaps that
+would prevent a later agent session from safely resuming work; and propose a
+small ordered setup plan. Keep established facts separate from assumptions and
+open questions. Do not create instruction files, alter permissions, configure
+hooks, or edit project records until I approve the plan.
+```
+
+For a single task, use the more specific prompts in [Programming with LLM
+Agents](14_Programming_with_LLM_Agents.md#what-to-ask-an-llm-agnet) and the relevant
+technical guide section.
 
 ## Further Reading
 

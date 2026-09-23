@@ -350,3 +350,18 @@ pip freeze > requirements.txt
 - conda docs: [https://docs.conda.io/](https://docs.conda.io/)
 - poetry (alternative packaging): [https://python-poetry.org/](https://python-poetry.org/)
 - uv (astral-sh): [https://github.com/astral-sh/uv](https://github.com/astral-sh/uv)
+
+## What to Ask an LLM AGNET
+
+Avoid: “Make my Python environment work.”
+
+Ask instead:
+
+```text
+Inspect the project's Python-version declaration, pyproject.toml, lock files,
+requirements or environment files, documented setup commands, and the exact
+error output I provide. Diagnose the likely compatibility or dependency issue,
+distinguishing observed facts from hypotheses. Propose a minimal recovery plan
+and the checks that would confirm it. Do not upgrade, install, remove, or lock
+dependencies, or replace environment files, until I approve the proposed change.
+```

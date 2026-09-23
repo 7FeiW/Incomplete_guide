@@ -55,6 +55,7 @@ no container build or GPU validation record is included here.
    - 18.2 [Large Language Model (LLM) Inference](#large-language-model-llm-inference)
 19. [Computational Biology Examples](#computational-biology-examples)
 20. [Python Research Workflows](#python-research-workflows)
+21. [What to Ask an LLM AGNET](#what-to-ask-an-llm-agnet)
 
 ---
 
@@ -1571,3 +1572,19 @@ apptainer run-help container.sif
 ---
 
 **This guide covers the essentials of using Apptainer on Compute Canada. For cluster-specific details, always check the official Compute Canada documentation.**
+
+## What to Ask an LLM AGNET
+
+Avoid: “Containerize this and run it on Compute Canada.”
+
+Ask instead:
+
+```text
+Inspect the application, its environment specification, the proposed
+Apptainer definition file, bind paths, and the current cluster documentation
+that I provide. Report compatibility risks, missing runtime libraries, GPU and
+driver assumptions, writable locations, data-access requirements, and a small
+validation plan. Separate portable container steps from site-specific steps.
+Do not pull or build images, transfer data, alter shared storage, or submit an
+interactive or batch job until I explicitly approve the commands and resources.
+```

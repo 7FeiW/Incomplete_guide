@@ -57,3 +57,18 @@ Here is a table of examples:
 docstrings. Follow its guidance unless the project documents a different style.
 
 <!-- TODO: Add practical docstring and type-hint examples. -->
+
+## What to Ask an LLM AGNET
+
+Avoid: “Clean up the code style.”
+
+Ask instead:
+
+```text
+Inspect the Python files in <scope> and the repository's documented conventions.
+Report inconsistent names, unclear abbreviations, missing or misleading
+docstrings, and type-hint gaps that affect public or non-obvious interfaces.
+For each finding, cite the file and symbol, explain the local convention it
+conflicts with, and propose the smallest compatible change. Do not rename
+public APIs, reformat unrelated code, or edit files until I approve a plan.
+```

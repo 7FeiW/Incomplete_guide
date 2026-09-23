@@ -31,3 +31,18 @@ python -m build
 
 These commands build the configured Python project, not this documentation
 repository. See [PyPA's replacement for setup.py commands](https://packaging.python.org/en/latest/discussions/setup-py-deprecated/#what-commands-should-be-used-instead).
+
+## What to Ask an LLM AGNET
+
+Avoid: “Add tests.”
+
+Ask instead:
+
+```text
+Inspect <changed code>, its existing tests, and the documented scientific or
+behavioral requirements. Report missing cases, boundary conditions, error paths,
+and invariants that the current tests do not establish. Propose a focused test
+plan with expected behavior and the smallest relevant commands to run. Distinguish
+unit tests from checks that need data or scientific review. Do not edit tests,
+run expensive jobs, or claim coverage or passing results without observed output.
+```

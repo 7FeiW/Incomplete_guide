@@ -74,3 +74,19 @@ To assess whether your code is CPU-bound, GPU-bound, or memory-bound, you can us
 2. **Dataloader**: One of the more common bottlenecks in GPU-accelerated machine learning tasks is in fact the dataloader, the part of the program that reads data from hard drives and loads them into system memory and GPU memory. A slow dataloader often results in lower GPU usage, since the GPU is waiting for data to be transferred from hard drive/system RAM to VRAM.
 3. **Know Your Hardware**: Understanding what the best hardware for your task is always important. Not all GPUs and CPUs are equal. In terms of CPUs, keep in mind some CPUs have faster AVX2 and/or AVX512 support. In terms of GPUs, some later models will support TF32 and BF16. If your program can take advantage of them, it will lead to 2x to 100x speed increases on the correct hardware.
 4. **Evaluation Code**: While not very common, evaluation step code can also be a bottleneck. Keep in mind that evaluation is performed after each training epoch and would take a significant amount of time. Thus, pick only necessary metrics to monitor during the training process, while performing full-scale evaluation after training is finished.
+
+## What to Ask an LLM AGNET
+
+Avoid: “Make this go fast.”
+
+Ask instead:
+
+```text
+Inspect this training or evaluation workflow and identify measured or plausible
+bottlenecks. Check batched loss and batched computation, unnecessary CPU-GPU
+synchronization, data-loader throughput and worker settings, host-to-device
+transfers, per-step logging or extra metrics, and evaluation frequency. Propose
+a ranked measurement plan and minimal candidate changes, including the metric
+and comparison needed to evaluate each one. Preserve numerical behavior; do not
+edit code or claim a speedup without benchmark evidence.
+```

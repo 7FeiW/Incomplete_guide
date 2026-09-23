@@ -738,3 +738,19 @@ Use this checklist before moving from small-scale experiments to large-scale pro
 | Documentation & runbooks | Make the workflow repeatable and easier to debug |
 
 This structure makes large-scale experimentation safer, more reproducible, and easier to manage.
+
+## What to Ask an LLM AGNET
+
+Avoid: “Scale this pipeline.”
+
+Ask instead:
+
+```text
+Inspect the workflow, one representative unit task, data locations, environment,
+and current resource measurements. Report the work partitioning, startup and I/O
+overhead, likely bottlenecks, failure and retry behavior, reproducibility gaps,
+and estimated resource requirements. Propose a staged plan beginning with a
+measured small or medium run, with success criteria before any full-scale job.
+Do not submit jobs, allocate cloud resources, copy data, or change production
+settings until I approve the plan and its cost or allocation implications.
+```

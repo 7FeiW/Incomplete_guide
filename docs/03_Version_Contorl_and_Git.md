@@ -20,6 +20,7 @@
 - [Why Not Use a Feature-Based Workflow?](#why-not-use-a-feature-based-workflow)
 - [Why Not Use GitHub Flow?](#why-not-use-github-flow)
 - [Further Reading and Tools](#further-reading-and-tools)
+- [What to Ask an LLM AGNET](#what-to-ask-an-llm-agnet)
 
 ## Git Clients and Extensions
 
@@ -244,3 +245,18 @@ Use it when pull requests help the team discuss and check changes. Keep branches
 - [Git command reference](https://git-scm.com/docs).
 - [Pro Git book](https://git-scm.com/book/en/v2).
 - [pre-commit](https://pre-commit.com/).
+
+## What to Ask an LLM AGNET
+
+Avoid: “Fix my Git repository.”
+
+Ask instead:
+
+```text
+Inspect the repository's Git status, recent history, branches, ignore rules,
+and any documented release or collaboration workflow. Explain the current state
+and identify risks such as generated files, missing run records, or uncommitted
+changes. Propose the smallest safe next steps, including exact commands and
+their effects. Do not commit, push, pull, merge, rebase, reset, stash, delete,
+or change ignore rules unless I explicitly approve each action.
+```

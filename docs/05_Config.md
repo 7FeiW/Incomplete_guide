@@ -184,3 +184,18 @@ merged_config = merge_dicts(defaults, overrides)
 print("Merged Config:")
 print(merged_config)
 ```
+
+## What to Ask an LLM AGNET
+
+Avoid: “Fix my configuration.”
+
+Ask instead:
+
+```text
+Inspect the configuration schema, loading code, defaults, overrides, command
+line interface, and one representative configuration file. Report parameters
+that are hard-coded, undocumented, unvalidated, or likely to make a run
+irreproducible. Identify precedence rules and any ambiguity between defaults and
+overrides. Propose a minimal plan with example validation cases. Do not change
+values, rewrite configuration files, or start runs until I approve the plan.
+```
